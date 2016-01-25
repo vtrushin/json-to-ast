@@ -11,15 +11,15 @@ const es6Path = [src + '/Parser.js'];
 const distJsPath = dist;
 
 gulp.task('default', [
-	'clean',
+	//'clean',
 	'es6',
 	'es6:watch'
 ]);
 
 // Delete the dist directory
-gulp.task('clean', function(){
-	return del([dist + '/*']);
-});
+/*gulp.task('clean', function(){
+	return del([dist + '/!*']);
+});*/
 
 gulp.task('es6', function(){
 	gulp.src(es6Path)
