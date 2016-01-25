@@ -22,7 +22,6 @@ export default class JsonParser {
 		}
 
 		/*let i = 0;
-
 		let _tokenTypes = {
 			OPEN_OBJECT:    i++,
 			CLOSE_OBJECT:   i++,
