@@ -21,9 +21,9 @@ export default class JsonParser {
 			this.tokenList = tokenList;
 		}
 
-		let i = 0;
+		/*let i = 0;
 
-		/*let _tokenTypes = {
+		let _tokenTypes = {
 			OPEN_OBJECT:    i++,
 			CLOSE_OBJECT:   i++,
 			OPEN_ARRAY:     i++,
