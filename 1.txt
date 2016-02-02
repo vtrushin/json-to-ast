@@ -1,0 +1,53 @@
+{
+	type: 'object',
+	properties: [
+
+
+		{
+
+			key: {
+				name: 'a'
+			},
+
+			value: {
+
+
+
+			}
+
+		}
+
+
+
+
+
+		{
+			key: 'a',
+			position: ...,
+			value: {
+
+				type: 'object',
+
+
+			}
+		},
+		{
+			key: 'b',
+			position: ...,
+			value: {
+
+				type: 'array',
+				values: [
+
+					{
+						type: 'number',
+						value: '1'
+					}
+
+				]
+
+			}
+		}
+	]
+
+}

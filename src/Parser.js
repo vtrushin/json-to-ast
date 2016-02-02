@@ -51,14 +51,46 @@ export default class JsonParser {
 			token.type === tokenTypes.NULL
 		);
 
+		let ast;
+		let currentContainer;
+
 		let transitions = {
 			'_START_': {
-				'OPEN_OBJECT': tokenTypes.OPEN_OBJECT,
-				'OPEN_ARRAY': tokenTypes.OPEN_ARRAY
+				'OPEN_OBJECT': token => {
+					if (token.type === tokenTypes.OPEN_OBJECT) {
+						ast = {
+							type: 'object'
+						};
+						ast.properties = currentContainer = [];
+						return true;
+					}
+					return false;
+				},
+				'OPEN_ARRAY': token => {
+					if (token.type === tokenTypes.OPEN_ARRAY) {
+						ast = {
+							type: 'array'
+						};
+						ast.items = currentContainer = [];
+						return true;
+					}
+					return false;
+				}
 			},
 
 			'OPEN_OBJECT': {
-				'OBJECT_KEY': tokenTypes.STRING,
+				'OBJECT_KEY': token => {
+					if (token.type === tokenTypes.STRING) {
+						let _currentContainer = currentContainer;
+						currentContainer = [];
+						_currentContainer.push({
+							key: token,
+							value: currentContainer
+						});
+						return true;
+					}
+					return false;
+				},
 				'CLOSE_OBJECT': tokenTypes.CLOSE_OBJECT
 			},
 
@@ -67,9 +99,30 @@ export default class JsonParser {
 			},
 
 			'OBJECT_COLON': {
-				'OBJECT_VALUE': isValue,
-				'OPEN_OBJECT': tokenTypes.OPEN_OBJECT,
-				'OPEN_ARRAY': tokenTypes.OPEN_ARRAY
+				'OBJECT_VALUE': token => {
+					if (isValue(token)) {
+						return true;
+					}
+					return false
+				},
+				'OPEN_OBJECT': token => {
+					if (token.type === tokenTypes.OPEN_OBJECT) {
+						return true;
+					}
+					return false;
+				},
+				'OPEN_ARRAY': token => {
+					if (token.type === tokenTypes.OPEN_ARRAY) {
+						let _currentContainer = currentContainer;
+						currentContainer = [];
+						_currentContainer.push({
+							type: 'array',
+							items: currentContainer
+						});
+						return true;
+					}
+					return false;
+				}
 			},
 
 			'OBJECT_VALUE': {
@@ -82,7 +135,15 @@ export default class JsonParser {
 			},
 
 			'OPEN_ARRAY': {
-				'ARRAY_VALUE': isValue,
+				'ARRAY_VALUE': token => {
+					if (isValue(token)) {
+						currentContainer.push({
+							value: token
+						});
+						return true;
+					}
+					return false;
+				},
 				'OPEN_OBJECT': tokenTypes.OPEN_OBJECT,
 				'OPEN_ARRAY': tokenTypes.OPEN_ARRAY,
 				'CLOSE_ARRAY': tokenTypes.CLOSE_ARRAY
@@ -94,7 +155,17 @@ export default class JsonParser {
 			},
 
 			'ARRAY_COMMA': {
-				'ARRAY_VALUE': isValue
+				'ARRAY_VALUE': token => {
+					if (isValue(token)) {
+						currentContainer.push({
+							value: token
+						});
+						return true;
+					}
+					return false;
+				},
+				'OPEN_OBJECT': tokenTypes.OPEN_OBJECT,
+				'OPEN_ARRAY': tokenTypes.OPEN_ARRAY
 			}
 		};
 
@@ -102,6 +173,7 @@ export default class JsonParser {
 		this.stateManager.setEqualFunction((token, condition) => token.type === condition);
 
 		console.log(this.stateManager.process(this.tokenList));
+		console.log(ast);
 	}
 
 
