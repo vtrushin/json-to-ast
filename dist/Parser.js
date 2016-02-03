@@ -425,16 +425,14 @@ var JsonParser = (function () {
 				return token.type === tokenTypes.STRING || token.type === tokenTypes.NUMBER || token.type === tokenTypes.TRUE || token.type === tokenTypes.FALSE || token.type === tokenTypes.NULL;
 			};
 
-			var ast = undefined;
+			var ast = Object.create(null);
 			var currentContainer = undefined;
 
 			var transitions = {
 				'_START_': {
 					'OPEN_OBJECT': function OPEN_OBJECT(token) {
 						if (token.type === tokenTypes.OPEN_OBJECT) {
-							ast = {
-								type: 'object'
-							};
+							ast.type = 'object';
 							ast.properties = currentContainer = [];
 							return true;
 						}
@@ -442,10 +440,8 @@ var JsonParser = (function () {
 					},
 					'OPEN_ARRAY': function OPEN_ARRAY(token) {
 						if (token.type === tokenTypes.OPEN_ARRAY) {
-							ast = {
-								type: 'array'
-							};
-							ast.items = currentContainer = [];
+							ast.type = 'array';
+							ast.values = currentContainer = [];
 							return true;
 						}
 						return false;
@@ -456,11 +452,14 @@ var JsonParser = (function () {
 					'OBJECT_KEY': function OBJECT_KEY(token) {
 						if (token.type === tokenTypes.STRING) {
 							var _currentContainer = currentContainer;
-							currentContainer = [];
-							_currentContainer.push({
-								key: token,
-								value: currentContainer
-							});
+							var newObj = Object.create(null);
+
+							newObj.type = 'property';
+							newObj.key = token;
+							newObj.value = currentContainer = Object.create(null);
+
+							// currentContainer = Object.create(null);
+							_currentContainer.push(newObj);
 							return true;
 						}
 						return false;
@@ -475,12 +474,16 @@ var JsonParser = (function () {
 				'OBJECT_COLON': {
 					'OBJECT_VALUE': function OBJECT_VALUE(token) {
 						if (isValue(token)) {
+							currentContainer.type = token;
 							return true;
 						}
 						return false;
 					},
 					'OPEN_OBJECT': function OPEN_OBJECT(token) {
 						if (token.type === tokenTypes.OPEN_OBJECT) {
+							var _currentContainer = currentContainer;
+							_currentContainer.type = 'object';
+							_currentContainer.properties = currentContainer = [];
 							return true;
 						}
 						return false;

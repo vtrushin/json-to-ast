@@ -51,16 +51,14 @@ export default class JsonParser {
 			token.type === tokenTypes.NULL
 		);
 
-		let ast;
+		let ast = Object.create(null);
 		let currentContainer;
 
 		let transitions = {
 			'_START_': {
 				'OPEN_OBJECT': token => {
 					if (token.type === tokenTypes.OPEN_OBJECT) {
-						ast = {
-							type: 'object'
-						};
+						ast.type = 'object';
 						ast.properties = currentContainer = [];
 						return true;
 					}
@@ -68,10 +66,8 @@ export default class JsonParser {
 				},
 				'OPEN_ARRAY': token => {
 					if (token.type === tokenTypes.OPEN_ARRAY) {
-						ast = {
-							type: 'array'
-						};
-						ast.items = currentContainer = [];
+						ast.type = 'array';
+						ast.values = currentContainer = [];
 						return true;
 					}
 					return false;
@@ -82,11 +78,14 @@ export default class JsonParser {
 				'OBJECT_KEY': token => {
 					if (token.type === tokenTypes.STRING) {
 						let _currentContainer = currentContainer;
-						currentContainer = [];
-						_currentContainer.push({
-							key: token,
-							value: currentContainer
-						});
+						let newObj = Object.create(null);
+
+						newObj.type = 'property';
+						newObj.key = token;
+						newObj.value = currentContainer = Object.create(null);
+
+						// currentContainer = Object.create(null);
+						_currentContainer.push(newObj);
 						return true;
 					}
 					return false;
@@ -101,12 +100,16 @@ export default class JsonParser {
 			'OBJECT_COLON': {
 				'OBJECT_VALUE': token => {
 					if (isValue(token)) {
+						currentContainer.type = token;
 						return true;
 					}
 					return false
 				},
 				'OPEN_OBJECT': token => {
 					if (token.type === tokenTypes.OPEN_OBJECT) {
+						let _currentContainer = currentContainer;
+						_currentContainer.type = 'object';
+						_currentContainer.properties = currentContainer = [];
 						return true;
 					}
 					return false;

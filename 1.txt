@@ -1,49 +1,41 @@
 {
 	type: 'object',
 	properties: [
-
-
 		{
-
+			type: 'property",
 			key: {
 				name: 'a'
 			},
-
 			value: {
-
-
-
-			}
-
-		}
-
-
-
-
-
-		{
-			key: 'a',
-			position: ...,
-			value: {
-
-				type: 'object',
-
-
+				type: 'string|number|true|false|null'
 			}
 		},
 		{
+			type: 'property',
+			key: 'a',
+			position: { from: { line: 0, column: 1 }, to: { line: 1, column: 2 } },
+			value: {
+				type: 'object',
+				properties: [
+
+				]
+			}
+		},
+		{
+			type: 'property',
 			key: 'b',
 			position: ...,
 			value: {
-
 				type: 'array',
 				values: [
-
 					{
 						type: 'number',
 						value: '1'
+					},
+					{
+						type: 'object',
+						properties: []
 					}
-
 				]
 
 			}
