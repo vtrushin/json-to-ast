@@ -4,14 +4,123 @@
 	<meta charset="UTF-8">
 	<title></title>
 	<script src="dist/Parser.js"></script>
+	<script src="//d3js.org/d3.v3.min.js" charset="utf-8"></script>
+	<style>
+		.layout {
+			display: flex;
+		}
+
+		textarea {
+			width: 400px;
+			height: 300px;
+			font-family: monospace;
+			font-size: 15px;
+		}
+	</style>
 </head>
 <body>
 
+	<div class="layout">
+
+		<div>
+			<textarea id="textarea"></textarea>
+		</div>
+
+		<div id="tree"></div>
+
+	</div>
+
 	<script>
+		var width = 400;
+		var height = 400;
+
+		var tree = d3.layout.tree()
+				.size([height, width]);
+
+		var diagonal = d3.svg.diagonal()
+				.projection(function(d) { return [d.y, d.x]; });
+
+		var svg = d3.select("#tree").append("svg")
+				.attr("width", width)
+				.attr("height", height)
+				.append("g")
+				//.attr("transform", "translate(" + margin.left + "," + margin.top + ")");
+
+
+		function update(source) {
+			var root = source;
+
+			// Compute the new tree layout.
+			var nodes = tree.nodes(root).reverse(),
+					links = tree.links(nodes);
+
+			// Normalize for fixed-depth.
+			nodes.forEach(function(d) { d.y = d.depth * 180; });
+
+			// Declare the nodesâ€¦
+			var node = svg.selectAll("g.node")
+					.data(nodes, function(d) { return d.id || (d.id = ++i); });
+
+			// Enter the nodes.
+			var nodeEnter = node.enter().append("g")
+					.attr("class", "node")
+					.attr("transform", function(d) {
+						return "translate(" + d.y + "," + d.x + ")"; });
+
+			nodeEnter.append("circle")
+					.attr("r", 10)
+					.style("fill", "#fff");
+
+			nodeEnter.append("text")
+					.attr("x", function(d) {
+						return d.children || d._children ? -13 : 13; })
+					.attr("dy", ".35em")
+					.attr("text-anchor", function(d) {
+						return d.children || d._children ? "end" : "start"; })
+					.text(function(d) { return d.name; })
+					.style("fill-opacity", 1);
+
+			// Declare the linksâ€¦
+			var link = svg.selectAll("path.link")
+					.data(links, function(d) { return d.target.id; });
+
+			// Enter the links.
+			link.enter().insert("path", "g")
+					.attr("class", "link")
+					.attr("d", diagonal);
+
+		}
+
+
+
+		var textarea = document.getElementById('textarea');
+
 		fetch('test.json').then(function(response) {
 			return response.text();
 		}).then(function(text) {
+			textarea.textContent = text;
 			console.log(new JsonParser(text));
+		});
+
+		textarea.addEventListener('keydown', function(e) {
+			if (e.keyCode !== 9) return true; // not tab
+
+			var text = '    ';
+			var start = this.selectionStart;
+			var end = this.selectionEnd;
+
+			this.value = this.value.substring(0, start) + text + this.value.substring(end);
+			this.selectionStart = this.selectionEnd = start + text.length;
+
+			/*var event = document.createEvent('TextEvent');
+			 event.initTextEvent('textInput', true, true, null, text, 9, "en-US");
+			 this.dispatchEvent(event);*/
+
+			e.preventDefault();
+		});
+
+		textarea.addEventListener('input', function(e) {
+			console.log(new JsonParser(textarea.value));
 		});
 	</script>
 

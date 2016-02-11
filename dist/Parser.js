@@ -33,6 +33,8 @@ var JsonParser = (function () {
 				'_START_': '_START_'
 			};
 
+			this.events = {};
+
 			this.debug = debug;
 
 			this.finiteStates = {};
@@ -70,15 +72,27 @@ var JsonParser = (function () {
 					return typeof condition === 'function' ? condition(token) : _this2.customEqualFn || StateManager.equalFunction(token, condition);
 				});
 
+				/*if (this.debug) {
+    	debugger;
+    }*/
+
 				if (matchedState) {
 					if (this.debug) {
 						console.log(this.state, token, '->', matchedState);
 					}
 					this.state = matchedState;
+					if (this.events[this.state]) {
+						this.events[this.state]();
+					}
 					return true;
 				} else {
 					return false;
 				}
+			}
+		}, {
+			key: 'on',
+			value: function on(transition, callback) {
+				this.events[transition] = callback;
 			}
 		}, {
 			key: 'isFiniteState',
@@ -328,7 +342,7 @@ var JsonParser = (function () {
    	return result;*/
 
 			if (stringStateManager.isFiniteState()) {
-				list.push(new Token(tokenTypes.STRING, buffer, line, column, line, column + buffer.length));
+				list.push(new Token(tokenTypes.STRING, buffer.substring(1, buffer.length - 1), line, column, line, column + buffer.length));
 				i += buffer.length;
 				column += buffer.length;
 				stringStateManager.reset();
@@ -390,16 +404,44 @@ var JsonParser = (function () {
 		return list;
 	}
 
-	/*class Token {
- 	constructor(type, value, startLine, startCol, endLine, endCol) {
- 		this.type = type;
- 		this.value = value;
- 		this.pos = `${startLine}:${startCol} - ${endLine}:${endCol}`;
- 		this.desc = (() => {
- 			return Object.keys(tokenTypes).find(type => tokenTypes[type] === this.type)
- 		})();
- 	}
- }*/
+	var ArrayAst = (function () {
+		function ArrayAst() {
+			_classCallCheck(this, ArrayAst);
+
+			this.type = 'array';
+			this.items = [];
+		}
+
+		_createClass(ArrayAst, [{
+			key: 'add',
+			value: function add(value) {
+				this.items.push(value);
+			}
+		}]);
+
+		return ArrayAst;
+	})();
+
+	var ObjectAst = (function () {
+		function ObjectAst() {
+			_classCallCheck(this, ObjectAst);
+
+			this.type = 'object';
+			this.properties = [];
+		}
+
+		_createClass(ObjectAst, [{
+			key: 'add',
+			value: function add(key, value) {
+				this.properties.push({
+					key: key,
+					value: value
+				});
+			}
+		}]);
+
+		return ObjectAst;
+	})();
 
 	var JsonParser = (function () {
 		function JsonParser(source) {
@@ -411,151 +453,218 @@ var JsonParser = (function () {
 				this.tokenList = tokenList;
 			}
 
-			/*let i = 0;
-   let _tokenTypes = {
-   	OPEN_OBJECT:    i++,
-   	CLOSE_OBJECT:   i++,
-   	OPEN_ARRAY:     i++,
-   	CLOSE_ARRAY:    i++
-   };*/
-
-			var states = ['OPEN_OBJECT', 'OBJECT_KEY', 'OBJECT_COLON', 'OBJECT_VALUE', 'OBJECT_COMMA', '!CLOSE_OBJECT', 'OPEN_ARRAY', 'ARRAY_VALUE', 'ARRAY_COMMA', '!CLOSE_ARRAY'];
-
-			var isValue = function isValue(token) {
-				return token.type === tokenTypes.STRING || token.type === tokenTypes.NUMBER || token.type === tokenTypes.TRUE || token.type === tokenTypes.FALSE || token.type === tokenTypes.NULL;
-			};
-
-			var ast = Object.create(null);
-			var currentContainer = undefined;
-
-			var transitions = {
-				'_START_': {
-					'OPEN_OBJECT': function OPEN_OBJECT(token) {
-						if (token.type === tokenTypes.OPEN_OBJECT) {
-							ast.type = 'object';
-							ast.properties = currentContainer = [];
-							return true;
-						}
-						return false;
-					},
-					'OPEN_ARRAY': function OPEN_ARRAY(token) {
-						if (token.type === tokenTypes.OPEN_ARRAY) {
-							ast.type = 'array';
-							ast.values = currentContainer = [];
-							return true;
-						}
-						return false;
-					}
-				},
-
-				'OPEN_OBJECT': {
-					'OBJECT_KEY': function OBJECT_KEY(token) {
-						if (token.type === tokenTypes.STRING) {
-							var _currentContainer = currentContainer;
-							var newObj = Object.create(null);
-
-							newObj.type = 'property';
-							newObj.key = token;
-							newObj.value = currentContainer = Object.create(null);
-
-							// currentContainer = Object.create(null);
-							_currentContainer.push(newObj);
-							return true;
-						}
-						return false;
-					},
-					'CLOSE_OBJECT': tokenTypes.CLOSE_OBJECT
-				},
-
-				'OBJECT_KEY': {
-					'OBJECT_COLON': tokenTypes.COLON
-				},
-
-				'OBJECT_COLON': {
-					'OBJECT_VALUE': function OBJECT_VALUE(token) {
-						if (isValue(token)) {
-							currentContainer.type = token;
-							return true;
-						}
-						return false;
-					},
-					'OPEN_OBJECT': function OPEN_OBJECT(token) {
-						if (token.type === tokenTypes.OPEN_OBJECT) {
-							var _currentContainer = currentContainer;
-							_currentContainer.type = 'object';
-							_currentContainer.properties = currentContainer = [];
-							return true;
-						}
-						return false;
-					},
-					'OPEN_ARRAY': function OPEN_ARRAY(token) {
-						if (token.type === tokenTypes.OPEN_ARRAY) {
-							var _currentContainer = currentContainer;
-							currentContainer = [];
-							_currentContainer.push({
-								type: 'array',
-								items: currentContainer
-							});
-							return true;
-						}
-						return false;
-					}
-				},
-
-				'OBJECT_VALUE': {
-					'OBJECT_COMMA': tokenTypes.COMMA,
-					'CLOSE_OBJECT': tokenTypes.CLOSE_OBJECT
-				},
-
-				'OBJECT_COMMA': {
-					'OBJECT_KEY': tokenTypes.STRING
-				},
-
-				'OPEN_ARRAY': {
-					'ARRAY_VALUE': function ARRAY_VALUE(token) {
-						if (isValue(token)) {
-							currentContainer.push({
-								value: token
-							});
-							return true;
-						}
-						return false;
-					},
-					'OPEN_OBJECT': tokenTypes.OPEN_OBJECT,
-					'OPEN_ARRAY': tokenTypes.OPEN_ARRAY,
-					'CLOSE_ARRAY': tokenTypes.CLOSE_ARRAY
-				},
-
-				'ARRAY_VALUE': {
-					'ARRAY_COMMA': tokenTypes.COMMA,
-					'CLOSE_ARRAY': tokenTypes.CLOSE_ARRAY
-				},
-
-				'ARRAY_COMMA': {
-					'ARRAY_VALUE': function ARRAY_VALUE(token) {
-						if (isValue(token)) {
-							currentContainer.push({
-								value: token
-							});
-							return true;
-						}
-						return false;
-					},
-					'OPEN_OBJECT': tokenTypes.OPEN_OBJECT,
-					'OPEN_ARRAY': tokenTypes.OPEN_ARRAY
-				}
-			};
-
-			this.stateManager = new StateManager(states, transitions, true);
-			this.stateManager.setEqualFunction(function (token, condition) {
-				return token.type === condition;
-			});
-
-			console.log(this.stateManager.process(this.tokenList));
-			console.log(ast);
+			this.count = 0;
+			this.parseJson();
 		}
 
 		_createClass(JsonParser, [{
+			key: 'parseObject',
+			value: function parseObject() {
+				var _this5 = this;
+
+				var key = undefined;
+
+				var ast = new ObjectAst();
+
+				// object: OPEN_OBJECT (STRING COLON value (COMMA STRING COLON value)*)? CLOSE_OBJECT
+				var objectStateManager = new StateManager(['OPEN_OBJECT', 'KEY', 'COLON', 'VALUE', 'COMMA', '!CLOSE_OBJECT'], {
+					'_START_': {
+						'OPEN_OBJECT': function OPEN_OBJECT(token) {
+							if (token.type === tokenTypes.OPEN_OBJECT) {
+								_this5.count++;
+								return true;
+							}
+							return false;
+						}
+					},
+					'OPEN_OBJECT': {
+						'KEY': function KEY(token) {
+							if (token.type === tokenTypes.STRING) {
+								key = token;
+								_this5.count++;
+								return true;
+							}
+							return false;
+						},
+						'CLOSE_OBJECT': function CLOSE_OBJECT(token) {
+							if (token.type === tokenTypes.CLOSE_OBJECT) {
+								_this5.count++;
+								return true;
+							}
+							return false;
+						}
+					},
+					'KEY': {
+						'COLON': function COLON(token) {
+							if (token.type === tokenTypes.COLON) {
+								_this5.count++;
+								return true;
+							}
+							return false;
+						}
+					},
+					'COLON': {
+						'VALUE': function VALUE(token) {
+							var value = _this5.parseValue();
+							if (value !== null) {
+								ast.add(key, value);
+								return true;
+							}
+							return false;
+						}
+					},
+					'VALUE': {
+						'CLOSE_OBJECT': function CLOSE_OBJECT(token) {
+							if (token.type === tokenTypes.CLOSE_OBJECT) {
+								_this5.count++;
+								return true;
+							}
+							return false;
+						},
+						'COMMA': function COMMA(token) {
+							if (token.type === tokenTypes.COMMA) {
+								_this5.count++;
+								return true;
+							}
+							return false;
+						}
+					},
+					'COMMA': {
+						'KEY': function KEY(token) {
+							if (token.type === tokenTypes.STRING) {
+								key = token;
+								_this5.count++;
+								return true;
+							}
+							return false;
+						}
+					}
+				}, true);
+
+				//objectStateManager.setEqualFunction((token, condition) => token.type === condition);
+
+				while (this.tokenList[this.count]) {
+					var passed = objectStateManager.input(this.tokenList[this.count]);
+					if (!passed) {
+						return false;
+					}
+
+					if (objectStateManager.isFiniteState()) {
+						return ast;
+					}
+				}
+			}
+		}, {
+			key: 'parseArray',
+			value: function parseArray() {
+				var _this6 = this;
+
+				var ast = new ArrayAst();
+
+				// array: OPEN_ARRAY (value (COMMA value)*)? CLOSE_ARRAY
+				var arrayStateManager = new StateManager(['OPEN_ARRAY', 'VALUE', 'COMMA', '!CLOSE_ARRAY'], {
+					'_START_': {
+						'OPEN_ARRAY': function OPEN_ARRAY(token) {
+							if (token.type === tokenTypes.OPEN_ARRAY) {
+								_this6.count++;
+								return true;
+							}
+							return false;
+						}
+					},
+					'OPEN_ARRAY': {
+						'VALUE': function VALUE(token) {
+							var value = _this6.parseValue();
+							if (value !== null) {
+								ast.add(value);
+								return true;
+							}
+						},
+						'CLOSE_ARRAY': function CLOSE_ARRAY(token) {
+							if (token.type === tokenTypes.CLOSE_ARRAY) {
+								_this6.count++;
+								return true;
+							}
+							return false;
+						}
+					},
+					'VALUE': {
+						'CLOSE_ARRAY': function CLOSE_ARRAY(token) {
+							if (token.type === tokenTypes.CLOSE_ARRAY) {
+								_this6.count++;
+								return true;
+							}
+							return false;
+						},
+						'COMMA': function COMMA(token) {
+							if (token.type === tokenTypes.COMMA) {
+								_this6.count++;
+								return true;
+							}
+							return false;
+						}
+					},
+					'COMMA': {
+						'VALUE': function VALUE(token) {
+							var value = _this6.parseValue();
+							if (value !== null) {
+								ast.add(value);
+								return true;
+							}
+						}
+					}
+				});
+
+				while (this.tokenList[this.count]) {
+					var passed = arrayStateManager.input(this.tokenList[this.count]);
+					if (!passed) {
+						return false;
+					}
+
+					if (arrayStateManager.isFiniteState()) {
+						return ast;
+					}
+				}
+			}
+		}, {
+			key: 'parseValue',
+			value: function parseValue() {
+				// value: object | array | STRING | NUMBER | TRUE | FALSE | NULL
+				switch (this.tokenList[this.count].type) {
+					case tokenTypes.OPEN_OBJECT:
+						return this.parseObject();
+					case tokenTypes.OPEN_ARRAY:
+						return this.parseArray();
+					case tokenTypes.STRING:
+					case tokenTypes.NUMBER:
+					case tokenTypes.TRUE:
+					case tokenTypes.FALSE:
+					case tokenTypes.NULL:
+						return this.tokenList[this.count++];
+				}
+
+				return null;
+			}
+		}, {
+			key: 'parsePair',
+			value: function parsePair() {}
+		}, {
+			key: 'parseJson',
+			value: function parseJson() {
+				var json = undefined;
+
+				// json: object | array
+				switch (this.tokenList[this.count].type) {
+					case tokenTypes.OPEN_OBJECT:
+						json = this.parseObject();
+						break;
+					case tokenTypes.OPEN_ARRAY:
+						json = this.parseArray();
+						break;
+				}
+				console.log(json);
+			}
+		}, {
 			key: 'walk',
 			value: function walk() {}
 		}]);

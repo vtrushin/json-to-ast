@@ -221,7 +221,7 @@ export default function tokenize(source) {
 		return result;*/
 
 		if (stringStateManager.isFiniteState()) {
-			list.push(new Token(tokenTypes.STRING, buffer, line, column, line, column + buffer.length));
+			list.push(new Token(tokenTypes.STRING, buffer.substring(1, buffer.length - 1), line, column, line, column + buffer.length));
 			i += buffer.length;
 			column += buffer.length;
 			stringStateManager.reset();

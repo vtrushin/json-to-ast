@@ -2,44 +2,65 @@
 	type: 'object',
 	properties: [
 		{
-			type: 'property",
 			key: {
-				name: 'a'
+				text: 'a',
+				position: Pos
 			},
-			value: {
-				type: 'string|number|true|false|null'
-			}
-		},
-		{
-			type: 'property',
-			key: 'a',
-			position: { from: { line: 0, column: 1 }, to: { line: 1, column: 2 } },
 			value: {
 				type: 'object',
 				properties: [
-
-				]
+					...
+				],
+				position: Pos
 			}
 		},
 		{
-			type: 'property',
-			key: 'b',
-			position: ...,
+			key: {
+				text: 'b',
+				position: Pos
+			},
+			value: {
+				type: 'number',
+				text: '1',
+				position: Pos
+			},
+			position: Pos
+		},
+		{
+			key: {
+				text: 'c',
+				position: Pos,
+			}
 			value: {
 				type: 'array',
-				values: [
+				items: [
 					{
 						type: 'number',
-						value: '1'
+						text: '1',
+						position: Pos
+					},
+					{
+						type: 'string',
+						text: '2',
+						position: Pos
+					},
+					{
+						type: 'null',
+						position: Pos
 					},
 					{
 						type: 'object',
-						properties: []
+						properties: [
+							...
+						],
+						position: Pos
 					}
-				]
+				],
+				position: Pos
 
 			}
 		}
-	]
+	],
+	position: Pos
 
 }

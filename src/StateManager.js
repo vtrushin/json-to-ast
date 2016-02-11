@@ -4,6 +4,8 @@ export default class StateManager {
 			'_START_': '_START_'
 		};
 
+		this.events = {};
+
 		this.debug = debug;
 
 		this.finiteStates = {};
@@ -40,15 +42,26 @@ export default class StateManager {
 			return typeof condition === 'function' ? condition(token) : this.customEqualFn || StateManager.equalFunction(token, condition);
 		});
 
+		/*if (this.debug) {
+			debugger;
+		}*/
+
 		if (matchedState) {
 			if (this.debug) {
 				console.log(this.state, token, '->', matchedState);
 			}
 			this.state = matchedState;
+			if (this.events[this.state]) {
+				this.events[this.state]();
+			}
 			return true;
 		} else {
 			return false;
 		}
+	}
+
+	on(transition, callback) {
+		this.events[transition] = callback;
 	}
 
 	isFiniteState() {

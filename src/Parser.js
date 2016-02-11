@@ -2,16 +2,28 @@ import tokenize from './tokenize';
 import tokenTypes from './tokenTypes';
 import StateManager from './StateManager.js';
 
-/*class Token {
-	constructor(type, value, startLine, startCol, endLine, endCol) {
-		this.type = type;
-		this.value = value;
-		this.pos = `${startLine}:${startCol} - ${endLine}:${endCol}`;
-		this.desc = (() => {
-			return Object.keys(tokenTypes).find(type => tokenTypes[type] === this.type)
-		})();
+class ArrayAst {
+	constructor() {
+		this.type = 'array';
+		this.items = [];
 	}
-}*/
+	add(value) {
+		this.items.push(value);
+	}
+}
+
+class ObjectAst {
+	constructor() {
+		this.type = 'object';
+		this.properties = [];
+	}
+	add(key, value) {
+		this.properties.push({
+			key: key,
+			value: value
+		})
+	}
+}
 
 export default class JsonParser {
 	constructor(source) {
@@ -21,164 +33,221 @@ export default class JsonParser {
 			this.tokenList = tokenList;
 		}
 
-		/*let i = 0;
-		let _tokenTypes = {
-			OPEN_OBJECT:    i++,
-			CLOSE_OBJECT:   i++,
-			OPEN_ARRAY:     i++,
-			CLOSE_ARRAY:    i++
-		};*/
+		this.count = 0;
+		this.parseJson();
+	}
 
-		let states = [
+	parseObject() {
+		let key;
+
+		let ast = new ObjectAst();
+
+		// object: OPEN_OBJECT (STRING COLON value (COMMA STRING COLON value)*)? CLOSE_OBJECT
+		let objectStateManager = new StateManager([
 			'OPEN_OBJECT',
-			'OBJECT_KEY',
-			'OBJECT_COLON',
-			'OBJECT_VALUE',
-			'OBJECT_COMMA',
-			'!CLOSE_OBJECT',
-
-			'OPEN_ARRAY',
-			'ARRAY_VALUE',
-			'ARRAY_COMMA',
-			'!CLOSE_ARRAY'
-		];
-
-		let isValue = (token) => (
-			token.type === tokenTypes.STRING ||
-			token.type === tokenTypes.NUMBER ||
-			token.type === tokenTypes.TRUE ||
-			token.type === tokenTypes.FALSE ||
-			token.type === tokenTypes.NULL
-		);
-
-		let ast = Object.create(null);
-		let currentContainer;
-
-		let transitions = {
+			'KEY',
+			'COLON',
+			'VALUE',
+			'COMMA',
+			'!CLOSE_OBJECT'
+		], {
 			'_START_': {
 				'OPEN_OBJECT': token => {
 					if (token.type === tokenTypes.OPEN_OBJECT) {
-						ast.type = 'object';
-						ast.properties = currentContainer = [];
-						return true;
-					}
-					return false;
-				},
-				'OPEN_ARRAY': token => {
-					if (token.type === tokenTypes.OPEN_ARRAY) {
-						ast.type = 'array';
-						ast.values = currentContainer = [];
+						this.count ++;
 						return true;
 					}
 					return false;
 				}
 			},
-
 			'OPEN_OBJECT': {
-				'OBJECT_KEY': token => {
+				'KEY': token => {
 					if (token.type === tokenTypes.STRING) {
-						let _currentContainer = currentContainer;
-						let newObj = Object.create(null);
-
-						newObj.type = 'property';
-						newObj.key = token;
-						newObj.value = currentContainer = Object.create(null);
-
-						// currentContainer = Object.create(null);
-						_currentContainer.push(newObj);
+						key = token;
+						this.count ++;
 						return true;
 					}
 					return false;
 				},
-				'CLOSE_OBJECT': tokenTypes.CLOSE_OBJECT
-			},
-
-			'OBJECT_KEY': {
-				'OBJECT_COLON': tokenTypes.COLON
-			},
-
-			'OBJECT_COLON': {
-				'OBJECT_VALUE': token => {
-					if (isValue(token)) {
-						currentContainer.type = token;
-						return true;
-					}
-					return false
-				},
-				'OPEN_OBJECT': token => {
-					if (token.type === tokenTypes.OPEN_OBJECT) {
-						let _currentContainer = currentContainer;
-						_currentContainer.type = 'object';
-						_currentContainer.properties = currentContainer = [];
-						return true;
-					}
-					return false;
-				},
-				'OPEN_ARRAY': token => {
-					if (token.type === tokenTypes.OPEN_ARRAY) {
-						let _currentContainer = currentContainer;
-						currentContainer = [];
-						_currentContainer.push({
-							type: 'array',
-							items: currentContainer
-						});
+				'CLOSE_OBJECT': token => {
+					if (token.type === tokenTypes.CLOSE_OBJECT) {
+						this.count ++;
 						return true;
 					}
 					return false;
 				}
 			},
-
-			'OBJECT_VALUE': {
-				'OBJECT_COMMA': tokenTypes.COMMA,
-				'CLOSE_OBJECT': tokenTypes.CLOSE_OBJECT
+			'KEY': {
+				'COLON': token => {
+					if (token.type === tokenTypes.COLON) {
+						this.count ++;
+						return true;
+					}
+					return false;
+				}
 			},
-
-			'OBJECT_COMMA': {
-				'OBJECT_KEY': tokenTypes.STRING
+			'COLON': {
+				'VALUE': token => {
+					let value = this.parseValue();
+					if (value !== null) {
+						ast.add(key, value);
+						return true;
+					}
+					return false;
+				}
 			},
-
-			'OPEN_ARRAY': {
-				'ARRAY_VALUE': token => {
-					if (isValue(token)) {
-						currentContainer.push({
-							value: token
-						});
+			'VALUE': {
+				'CLOSE_OBJECT': token => {
+					if (token.type === tokenTypes.CLOSE_OBJECT) {
+						this.count ++;
 						return true;
 					}
 					return false;
 				},
-				'OPEN_OBJECT': tokenTypes.OPEN_OBJECT,
-				'OPEN_ARRAY': tokenTypes.OPEN_ARRAY,
-				'CLOSE_ARRAY': tokenTypes.CLOSE_ARRAY
-			},
-
-			'ARRAY_VALUE': {
-				'ARRAY_COMMA': tokenTypes.COMMA,
-				'CLOSE_ARRAY': tokenTypes.CLOSE_ARRAY
-			},
-
-			'ARRAY_COMMA': {
-				'ARRAY_VALUE': token => {
-					if (isValue(token)) {
-						currentContainer.push({
-							value: token
-						});
+				'COMMA': token => {
+					if (token.type === tokenTypes.COMMA) {
+						this.count ++;
 						return true;
 					}
 					return false;
-				},
-				'OPEN_OBJECT': tokenTypes.OPEN_OBJECT,
-				'OPEN_ARRAY': tokenTypes.OPEN_ARRAY
+				}
+			},
+			'COMMA': {
+				'KEY': token => {
+					if (token.type === tokenTypes.STRING) {
+						key = token;
+						this.count ++;
+						return true;
+					}
+					return false;
+				}
 			}
-		};
+		}, true);
 
-		this.stateManager = new StateManager(states, transitions, true);
-		this.stateManager.setEqualFunction((token, condition) => token.type === condition);
+		//objectStateManager.setEqualFunction((token, condition) => token.type === condition);
 
-		console.log(this.stateManager.process(this.tokenList));
-		console.log(ast);
+		while (this.tokenList[this.count]) {
+			var passed = objectStateManager.input(this.tokenList[this.count]);
+			if (!passed) {
+				return false;
+			}
+
+			if (objectStateManager.isFiniteState()) {
+				return ast;
+			}
+		}
 	}
 
+	parseArray() {
+		let ast = new ArrayAst();
+
+		// array: OPEN_ARRAY (value (COMMA value)*)? CLOSE_ARRAY
+		let arrayStateManager = new StateManager([
+			'OPEN_ARRAY',
+			'VALUE',
+			'COMMA',
+			'!CLOSE_ARRAY'
+		], {
+			'_START_': {
+				'OPEN_ARRAY': token => {
+					if (token.type === tokenTypes.OPEN_ARRAY) {
+						this.count ++;
+						return true;
+					}
+					return false;
+				}
+			},
+			'OPEN_ARRAY': {
+				'VALUE': token => {
+					let value = this.parseValue();
+					if (value !== null) {
+						ast.add(value);
+						return true;
+					}
+				},
+				'CLOSE_ARRAY': token => {
+					if (token.type === tokenTypes.CLOSE_ARRAY) {
+						this.count ++;
+						return true;
+					}
+					return false;
+				}
+			},
+			'VALUE': {
+				'CLOSE_ARRAY': token => {
+					if (token.type === tokenTypes.CLOSE_ARRAY) {
+						this.count ++;
+						return true;
+					}
+					return false;
+				},
+				'COMMA': token => {
+					if (token.type === tokenTypes.COMMA) {
+						this.count ++;
+						return true;
+					}
+					return false;
+				}
+			},
+			'COMMA': {
+				'VALUE': token => {
+					let value = this.parseValue();
+					if (value !== null) {
+						ast.add(value);
+						return true;
+					}
+				}
+			}
+		});
+
+		while (this.tokenList[this.count]) {
+			var passed = arrayStateManager.input(this.tokenList[this.count]);
+			if (!passed) {
+				return false;
+			}
+
+			if (arrayStateManager.isFiniteState()) {
+				return ast;
+			}
+		}
+	}
+
+	parseValue() {
+		// value: object | array | STRING | NUMBER | TRUE | FALSE | NULL
+		switch (this.tokenList[this.count].type) {
+			case tokenTypes.OPEN_OBJECT:
+				return this.parseObject();
+			case tokenTypes.OPEN_ARRAY:
+				return this.parseArray();
+			case tokenTypes.STRING:
+			case tokenTypes.NUMBER:
+			case tokenTypes.TRUE:
+			case tokenTypes.FALSE:
+			case tokenTypes.NULL:
+				return this.tokenList[this.count++];
+		}
+
+		return null;
+	}
+
+	parsePair() {
+
+	}
+
+	parseJson() {
+		let json;
+
+		// json: object | array
+		switch (this.tokenList[this.count].type) {
+			case tokenTypes.OPEN_OBJECT:
+				json = this.parseObject();
+				break;
+			case tokenTypes.OPEN_ARRAY:
+				json = this.parseArray();
+				break;
+		}
+		console.log(json);
+	}
 
 	walk() {
 
