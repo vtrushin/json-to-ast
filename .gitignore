@@ -1,2 +1,4 @@
 .idea/
 node_modules/
+src/_tokenize.js
+src/_parser.js

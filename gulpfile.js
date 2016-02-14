@@ -7,7 +7,10 @@ let babel = require('gulp-babel');
 
 const src = './src';
 const dist = './dist';
-const es6Path = [src + '/Parser.js'];
+const es6Path = [
+	src + '/Parser.js',
+	src + '/Tokenizer.js'
+];
 const distJsPath = dist;
 
 gulp.task('default', [

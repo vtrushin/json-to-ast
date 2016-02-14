@@ -42,10 +42,6 @@ export default class StateManager {
 			return typeof condition === 'function' ? condition(token) : this.customEqualFn || StateManager.equalFunction(token, condition);
 		});
 
-		/*if (this.debug) {
-			debugger;
-		}*/
-
 		if (matchedState) {
 			if (this.debug) {
 				console.log(this.state, token, '->', matchedState);
