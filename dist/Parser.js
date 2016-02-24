@@ -407,7 +407,7 @@ var JsonParser = (function () {
 			var json = this._parseObject() || this._parseArray();
 
 			if (json) {
-				console.log(json);
+				return json;
 			} else {
 				throw new SyntaxError(exceptionsDict.emptyString);
 			}
@@ -432,7 +432,6 @@ var JsonParser = (function () {
 							if (token.type === Tokenizer.LEFT_BRACE) {
 								startToken = token;
 								state = objectStates.OPEN_OBJECT;
-								console.log(token.type, this.index);
 								this.index++;
 							} else {
 								return null;
@@ -450,7 +449,6 @@ var JsonParser = (function () {
 									value: token.value
 								};
 								state = objectStates.KEY;
-								console.log(token.type, this.index);
 								this.index++;
 							} else if (token.type === Tokenizer.RIGHT_BRACE) {
 								object.position = position(startToken.position.start.line, startToken.position.start.column, startToken.position.start.char, token.position.end.line, token.position.end.column, token.position.end.char);
@@ -464,7 +462,6 @@ var JsonParser = (function () {
 						case objectStates.KEY:
 							if (token.type == Tokenizer.COLON) {
 								state = objectStates.COLON;
-								console.log(token.type, this.index);
 								this.index++;
 							} else {
 								return null;
@@ -498,7 +495,9 @@ var JsonParser = (function () {
 
 						case objectStates.COMMA:
 							if (token.type === Tokenizer.STRING) {
-								property = {};
+								property = {
+									type: 'property'
+								};
 								property.key = {
 									type: 'key',
 									position: token.position,
@@ -554,7 +553,6 @@ var JsonParser = (function () {
 
 						case arrayStates.VALUE:
 							if (token.type === Tokenizer.RIGHT_BRACKET) {
-								console.log(array);
 								array.position = position(startToken.position.start.line, startToken.position.start.column, startToken.position.start.char, token.position.end.line, token.position.end.column, token.position.end.char);
 								this.index++;
 								return array;
@@ -602,8 +600,6 @@ var JsonParser = (function () {
 						tokenType = 'null';
 				}
 
-				console.log(token.type, this.index);
-
 				var objectOrArray = this._parseObject() || this._parseArray();
 
 				if (tokenType !== undefined) {
@@ -619,9 +615,6 @@ var JsonParser = (function () {
 					throw new Error('!!!!!');
 				}
 			}
-		}, {
-			key: 'walk',
-			value: function walk() {}
 		}]);
 
 		return JsonParser;

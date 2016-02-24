@@ -1,0 +1,78 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+	<meta charset="UTF-8">
+	<title>Title</title>
+	<script src="dist/Parser.js"></script>
+</head>
+<body>
+
+	<script>
+		fetch('test.json').then(function(response) {
+			return response.text();
+		}).then(function(text) {
+			var ast = new JsonParser(text);
+
+			console.log(ast);
+
+			var locations = {};
+
+			function flat(node) {
+				var obj = {};
+
+				function process(node, path) {
+					if (!path) {
+						path = [];
+					}
+
+					if (node.type === 'object') {
+						node.properties.forEach(function(property) {
+							process(property, path);
+						});
+
+					} else if (node.type === 'array') {
+						node.items.forEach(function(item) {
+							process(item, path);
+						});
+
+					} else if (node.type === 'property') {
+						if (node.value.type === 'array' || node.value.type === 'object') {
+							path.push(node.key.value);
+							flat(node.value, path);
+
+						} else {
+							// val = node;
+
+							console.log(path, node.key.value);
+
+							obj[node.key.value] = node.value.position.start.line + ':' + node.value.position.start.column;
+						}
+
+					} else {
+						console.log('value', path);
+
+					}
+				}
+
+				process(node);
+
+				return obj;
+
+			}
+
+
+			ast.properties
+				.filter(function(property) {
+					return property.key.value !== '_meta';
+				})
+				.forEach(function(property) {
+					locations[property.key.value] = flat(property.value);
+				});
+
+			console.log(locations);
+
+		});
+	</script>
+
+</body>
+</html>

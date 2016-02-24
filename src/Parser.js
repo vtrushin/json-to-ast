@@ -32,7 +32,7 @@ export default class JsonParser {
 		);
 
 		if (json) {
-			console.log(json);
+			return json;
 		} else {
 			throw new SyntaxError(exceptionsDict.emptyString);
 		}
@@ -55,7 +55,6 @@ export default class JsonParser {
 					if (token.type === Tokenizer.LEFT_BRACE) {
 						startToken = token;
 						state = objectStates.OPEN_OBJECT;
-						console.log(token.type, this.index);
 						this.index ++;
 					} else {
 						return null;
@@ -73,7 +72,6 @@ export default class JsonParser {
 							value: token.value
 						};
 						state = objectStates.KEY;
-						console.log(token.type, this.index);
 						this.index ++;
 					} else if (token.type === Tokenizer.RIGHT_BRACE) {
 						object.position = position(
@@ -94,7 +92,6 @@ export default class JsonParser {
 				case objectStates.KEY:
 					if (token.type == Tokenizer.COLON) {
 						state = objectStates.COLON;
-						console.log(token.type, this.index);
 						this.index ++;
 					} else {
 						return null;
@@ -135,7 +132,9 @@ export default class JsonParser {
 
 				case objectStates.COMMA:
 					if (token.type === Tokenizer.STRING) {
-						property = {};
+						property = {
+							type: 'property'
+						};
 						property.key = {
 							type: 'key',
 							position: token.position,
@@ -199,7 +198,6 @@ export default class JsonParser {
 
 				case arrayStates.VALUE:
 					if (token.type === Tokenizer.RIGHT_BRACKET) {
-						console.log(array);
 						array.position = position(
 							startToken.position.start.line,
 							startToken.position.start.column,
@@ -253,8 +251,6 @@ export default class JsonParser {
 				tokenType = 'null';
 		}
 
-		console.log(token.type, this.index);
-
 		let objectOrArray = (
 			this._parseObject() ||
 			this._parseArray()
@@ -274,11 +270,6 @@ export default class JsonParser {
 		} else {
 			throw new Error('!!!!!');
 		}
-	}
-
-
-	walk() {
-
 	}
 
 }
