@@ -59,7 +59,20 @@ var JsonParser = (function () {
 
 	var stringStates = {
 		_START_: 0,
-		START_QUOTE_OR_CHAR: 1
+		START_QUOTE_OR_CHAR: 1,
+		ESCAPE: 2
+	};
+
+	var escapes = {
+		'"': 0, // Quotation mask
+		'\\': 1, // Reverse solidus
+		'/': 2, // Solidus
+		'b': 3, // Backspace
+		'f': 4, // Form feed
+		'n': 5, // New line
+		'r': 6, // Carriage return
+		't': 7, // Horizontal tab
+		'u': 8 // 4 hexadecimal digits
 	};
 
 	var numberStates = {
@@ -196,7 +209,11 @@ var JsonParser = (function () {
 							break;
 
 						case stringStates.START_QUOTE_OR_CHAR:
-							if (char === '"') {
+							if (char === '\\') {
+								state = stringStates.ESCAPE;
+								buffer += char;
+								this.index++;
+							} else if (char === '"') {
 								this.index++;
 								this.column += this.index - index;
 								this.currentToken = tokenTypes.STRING;
@@ -205,6 +222,27 @@ var JsonParser = (function () {
 							} else {
 								buffer += char;
 								this.index++;
+							}
+							break;
+
+						case stringStates.ESCAPE:
+							if (char in escapes) {
+								buffer += char;
+								this.index++;
+								if (char === 'u') {
+									for (var i = 0; i < 4; i++) {
+										var curChar = this.source.charAt(this.index);
+										if (curChar && isDigit(curChar)) {
+											buffer += curChar;
+											this.index++;
+										} else {
+											return false;
+										}
+									}
+								}
+								state = stringStates.START_QUOTE_OR_CHAR;
+							} else {
+								return false;
 							}
 							break;
 					}

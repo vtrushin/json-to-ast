@@ -7,16 +7,21 @@
     }
   },
   "ru-RU": {
-    "aa": "2",
+    "aa": "\u1233",
     "bb": [1, 2, 3],
     "cc": {
-      "d": "e"
+      "d": "e",
+      "e": {
+        "f": {
+          "g": ["as", 2, {"b": 332}, 4]
+        }
+      }
     },
     "title": "Примените платные услуги на «Avito»",
     "checkout": "К оплате {check} ₽",
-    "legal": "<b:style src=\'./template/link.css\'/>"
+    "legal": "<b:style src=\"./template/link.css\"/>"
   },
   "en-EN": {
-
+    "test": "zozozozoozozoz"
   }
 }
