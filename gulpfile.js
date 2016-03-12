@@ -25,9 +25,16 @@ gulp.task('clean', function(){
 });
 
 gulp.task('es6', function(){
+	gulp.src(src + '/Parser.js')
+		.pipe(rollup({
+			format: 'cjs'
+		}))
+		.pipe(babel())
+		.pipe(gulp.dest(distJsPath + '/cjs'));
+
 	gulp.src(es6Path)
 		.pipe(rollup({
-		    format: 'iife',
+			format: 'iife',
 			moduleName: 'JsonParser'
 		 }))
 		.pipe(babel())

@@ -7,6 +7,38 @@ function _classCallCheck(instance, Constructor) { if (!(instance instanceof Cons
 var JsonParser = (function () {
 	'use strict';
 
+	if (!Object.assign) {
+		Object.defineProperty(Object, 'assign', {
+			enumerable: false,
+			configurable: true,
+			writable: true,
+			value: function value(target, firstSource) {
+				'use strict';
+				if (target === undefined || target === null) {
+					throw new TypeError('Cannot convert first argument to object');
+				}
+
+				var to = Object(target);
+				for (var i = 1; i < arguments.length; i++) {
+					var nextSource = arguments[i];
+					if (nextSource === undefined || nextSource === null) {
+						continue;
+					}
+
+					var keysArray = Object.keys(Object(nextSource));
+					for (var nextIndex = 0, len = keysArray.length; nextIndex < len; nextIndex++) {
+						var nextKey = keysArray[nextIndex];
+						var desc = Object.getOwnPropertyDescriptor(nextSource, nextKey);
+						if (desc !== undefined && desc.enumerable) {
+							to[nextKey] = nextSource[nextKey];
+						}
+					}
+				}
+				return to;
+			}
+		});
+	}
+
 	var exceptionsDict = {
 		tokenizeSymbolError: 'Cannot tokenize symbol <{char}> at {line}:{column}',
 		emptyString: 'JSON is empty'
@@ -434,15 +466,19 @@ var JsonParser = (function () {
 		CLOSE_ARRAY: 4
 	};
 
+	var defaultSettings = {
+		verbose: true
+	};
+
 	var JsonParser = (function () {
-		function JsonParser(source) {
+		function JsonParser(source, settings) {
 			_classCallCheck(this, JsonParser);
 
+			this.settings = Object.assign(defaultSettings, settings);
 			this.tokenList = new Tokenizer(source);
 			this.index = 0;
 
-			// json: object | array
-			var json = this._parseObject() || this._parseArray();
+			var json = this._parseValue();
 
 			if (json) {
 				return json;
@@ -481,15 +517,24 @@ var JsonParser = (function () {
 								property = {
 									type: 'property'
 								};
-								property.key = {
-									type: 'key',
-									position: token.position,
-									value: token.value
-								};
+								if (this.settings.verbose) {
+									property.key = {
+										type: 'key',
+										position: token.position,
+										value: token.value
+									};
+								} else {
+									property.key = {
+										type: 'key',
+										value: token.value
+									};
+								}
 								state = objectStates.KEY;
 								this.index++;
 							} else if (token.type === Tokenizer.RIGHT_BRACE) {
-								object.position = position(startToken.position.start.line, startToken.position.start.column, startToken.position.start.char, token.position.end.line, token.position.end.column, token.position.end.char);
+								if (this.settings.verbose) {
+									object.position = position(startToken.position.start.line, startToken.position.start.column, startToken.position.start.char, token.position.end.line, token.position.end.column, token.position.end.char);
+								}
 								this.index++;
 								return object;
 							} else {
@@ -520,7 +565,9 @@ var JsonParser = (function () {
 
 						case objectStates.VALUE:
 							if (token.type === Tokenizer.RIGHT_BRACE) {
-								object.position = position(startToken.position.start.line, startToken.position.start.column, startToken.position.start.char, token.position.end.line, token.position.end.column, token.position.end.char);
+								if (this.settings.verbose) {
+									object.position = position(startToken.position.start.line, startToken.position.start.column, startToken.position.start.char, token.position.end.line, token.position.end.column, token.position.end.char);
+								}
 								this.index++;
 								return object;
 							} else if (token.type === Tokenizer.COMMA) {
@@ -536,11 +583,18 @@ var JsonParser = (function () {
 								property = {
 									type: 'property'
 								};
-								property.key = {
-									type: 'key',
-									position: token.position,
-									value: token.value
-								};
+								if (this.settings.verbose) {
+									property.key = {
+										type: 'key',
+										position: token.position,
+										value: token.value
+									};
+								} else {
+									property.key = {
+										type: 'key',
+										value: token.value
+									};
+								}
 								state = objectStates.KEY;
 								this.index++;
 							} else {
@@ -581,7 +635,9 @@ var JsonParser = (function () {
 								array.items.push(value);
 								state = arrayStates.VALUE;
 							} else if (token.type === Tokenizer.RIGHT_BRACKET) {
-								array.position = position(startToken.position.start.line, startToken.position.start.column, startToken.position.start.char, token.position.end.line, token.position.end.column, token.position.end.char);
+								if (this.settings.verbose) {
+									array.position = position(startToken.position.start.line, startToken.position.start.column, startToken.position.start.char, token.position.end.line, token.position.end.column, token.position.end.char);
+								}
 								this.index++;
 								return array;
 							} else {
@@ -591,7 +647,9 @@ var JsonParser = (function () {
 
 						case arrayStates.VALUE:
 							if (token.type === Tokenizer.RIGHT_BRACKET) {
-								array.position = position(startToken.position.start.line, startToken.position.start.column, startToken.position.start.char, token.position.end.line, token.position.end.column, token.position.end.char);
+								if (this.settings.verbose) {
+									array.position = position(startToken.position.start.line, startToken.position.start.column, startToken.position.start.char, token.position.end.line, token.position.end.column, token.position.end.char);
+								}
 								this.index++;
 								return array;
 							} else if (token.type === Tokenizer.COMMA) {
@@ -642,11 +700,19 @@ var JsonParser = (function () {
 
 				if (tokenType !== undefined) {
 					this.index++;
-					return {
-						type: tokenType,
-						value: token.value,
-						position: token.position
-					};
+
+					if (this.settings.verbose) {
+						return {
+							type: tokenType,
+							value: token.value,
+							position: token.position
+						};
+					} else {
+						return {
+							type: tokenType,
+							value: token.value
+						};
+					}
 				} else if (objectOrArray !== null) {
 					return objectOrArray;
 				} else {

@@ -1,3 +1,4 @@
+import './polyfills/object-assign';
 import Tokenizer from './Tokenizer';
 import exceptionsDict from './exceptionsDict';
 import position from './position';
@@ -20,16 +21,17 @@ const arrayStates = {
 	CLOSE_ARRAY: 4
 };
 
+let defaultSettings = {
+	verbose: true
+};
+
 export default class JsonParser {
-	constructor(source) {
+	constructor(source, settings) {
+		this.settings = Object.assign(defaultSettings, settings);
 		this.tokenList = new Tokenizer(source);
 		this.index = 0;
 
-		// json: object | array
-		let json = (
-			this._parseObject() ||
-			this._parseArray()
-		);
+		let json = this._parseValue();
 
 		if (json) {
 			return json;
@@ -66,22 +68,31 @@ export default class JsonParser {
 						property = {
 							type: 'property'
 						};
-						property.key = {
-							type: 'key',
-							position: token.position,
-							value: token.value
-						};
+						if (this.settings.verbose) {
+							property.key = {
+								type: 'key',
+								position: token.position,
+								value: token.value
+							};
+						} else {
+							property.key = {
+								type: 'key',
+								value: token.value
+							};
+						}
 						state = objectStates.KEY;
 						this.index ++;
 					} else if (token.type === Tokenizer.RIGHT_BRACE) {
-						object.position = position(
-							startToken.position.start.line,
-							startToken.position.start.column,
-							startToken.position.start.char,
-							token.position.end.line,
-							token.position.end.column,
-							token.position.end.char
-						);
+						if (this.settings.verbose) {
+							object.position = position(
+								startToken.position.start.line,
+								startToken.position.start.column,
+								startToken.position.start.char,
+								token.position.end.line,
+								token.position.end.column,
+								token.position.end.char
+							);
+						}
 						this.index ++;
 						return object;
 					} else {
@@ -112,14 +123,16 @@ export default class JsonParser {
 
 				case objectStates.VALUE:
 					if (token.type === Tokenizer.RIGHT_BRACE) {
-						object.position = position(
-							startToken.position.start.line,
-							startToken.position.start.column,
-							startToken.position.start.char,
-							token.position.end.line,
-							token.position.end.column,
-							token.position.end.char
-						);
+						if (this.settings.verbose) {
+							object.position = position(
+								startToken.position.start.line,
+								startToken.position.start.column,
+								startToken.position.start.char,
+								token.position.end.line,
+								token.position.end.column,
+								token.position.end.char
+							);
+						}
 						this.index ++;
 						return object;
 					} else if (token.type === Tokenizer.COMMA) {
@@ -135,11 +148,18 @@ export default class JsonParser {
 						property = {
 							type: 'property'
 						};
-						property.key = {
-							type: 'key',
-							position: token.position,
-							value: token.value
-						};
+						if (this.settings.verbose) {
+							property.key = {
+								type: 'key',
+								position: token.position,
+								value: token.value
+							};
+						} else {
+							property.key = {
+								type: 'key',
+								value: token.value
+							};
+						}
 						state = objectStates.KEY;
 						this.index ++;
 					} else {
@@ -181,14 +201,16 @@ export default class JsonParser {
 						array.items.push(value);
 						state = arrayStates.VALUE;
 					} else if (token.type === Tokenizer.RIGHT_BRACKET) {
-						array.position = position(
-							startToken.position.start.line,
-							startToken.position.start.column,
-							startToken.position.start.char,
-							token.position.end.line,
-							token.position.end.column,
-							token.position.end.char
-						);
+						if (this.settings.verbose) {
+							array.position = position(
+								startToken.position.start.line,
+								startToken.position.start.column,
+								startToken.position.start.char,
+								token.position.end.line,
+								token.position.end.column,
+								token.position.end.char
+							);
+						}
 						this.index ++;
 						return array;
 					} else {
@@ -198,14 +220,16 @@ export default class JsonParser {
 
 				case arrayStates.VALUE:
 					if (token.type === Tokenizer.RIGHT_BRACKET) {
-						array.position = position(
-							startToken.position.start.line,
-							startToken.position.start.column,
-							startToken.position.start.char,
-							token.position.end.line,
-							token.position.end.column,
-							token.position.end.char
-						);
+						if (this.settings.verbose) {
+							array.position = position(
+								startToken.position.start.line,
+								startToken.position.start.column,
+								startToken.position.start.char,
+								token.position.end.line,
+								token.position.end.column,
+								token.position.end.char
+							);
+						}
 						this.index ++;
 						return array;
 					} else if (token.type === Tokenizer.COMMA) {
@@ -258,11 +282,19 @@ export default class JsonParser {
 
 		if (tokenType !== undefined) {
 			this.index ++;
-			return {
-				type: tokenType,
-				value: token.value,
-				position: token.position
-			};
+
+			if (this.settings.verbose) {
+				return {
+					type: tokenType,
+					value: token.value,
+					position: token.position
+				};
+			} else {
+				return {
+					type: tokenType,
+					value: token.value
+				};
+			}
 
 		} else if (objectOrArray !== null) {
 			return objectOrArray;

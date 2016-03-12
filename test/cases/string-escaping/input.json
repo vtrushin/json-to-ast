@@ -1,0 +1,10 @@
+{
+  "quota\"tion": "reverse\\solidus",
+  "soli\/dus": "back\bspace",
+  "form\ffeed": "new\nline",
+  "re\rturn": "tab\tsymbol",
+  "hex\u0001digit": "",
+  "\"\"\"\"": "\\\\\\",
+  "\/": "\b",
+  "\"\/": "\"\\\/\b\f\n\r\t\u0001"
+}

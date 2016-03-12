@@ -117,7 +117,13 @@ export default class Tokenizer {
 	_testWhitespace() {
 		let char = this.source.charAt(this.index);
 
-		if (char === '\r' || char === '\n') {
+		// CRLF (Windows)
+		if (this.source.charAt(this.index) === '\n' && this.source.charAt(this.index + 1) === '\r') {
+			this.index += 2;
+			this.line ++;
+			this.column = 1;
+		// CR (Unix) or LF (MacOS)
+		} else if (char === '\n' || char === '\r') {
 			this.index ++;
 			this.line ++;
 			this.column = 1;
