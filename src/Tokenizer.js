@@ -85,12 +85,11 @@ export default class Tokenizer {
 				continue;
 			}
 
-			let matched = (
+			let matched =
 				this._testChar() ||
 				this._testKeyword() ||
 				this._testString() ||
-				this._testNumber()
-			);
+				this._testNumber();
 
 			if (matched) {
 				tokens.push({
@@ -123,7 +122,7 @@ export default class Tokenizer {
 			this.line ++;
 			this.column = 1;
 			return true;
-		// CR (Unix) or LF (MacOS)
+			// CR (Unix) or LF (MacOS)
 		} else if (char === '\r' || char === '\n') {
 			this.index ++;
 			this.line ++;
@@ -152,9 +151,9 @@ export default class Tokenizer {
 	}
 
 	_testKeyword() {
-		let matched = Object.keys(keywordsTokens).find(name => (
+		let matched = Object.keys(keywordsTokens).find(name =>
 			name === this.source.substr(this.index, name.length)
-		));
+		);
 
 		if (matched) {
 			let length = matched.length;
