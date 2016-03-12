@@ -143,18 +143,25 @@ var JsonParser = (function () {
 			value: function _testWhitespace() {
 				var char = this.source.charAt(this.index);
 
-				if (char === '\r' || char === '\n') {
-					this.index++;
+				// CRLF (Windows)
+				if (this.source.charAt(this.index) === '\r' && this.source.charAt(this.index + 1) === '\n') {
+					this.index += 2;
 					this.line++;
 					this.column = 1;
 					return true;
-				} else if (char === '\t' || char === ' ') {
-					this.index++;
-					this.column++;
-					return true;
-				} else {
-					return false;
-				}
+					// CR (Unix) or LF (MacOS)
+				} else if (char === '\r' || char === '\n') {
+						this.index++;
+						this.line++;
+						this.column = 1;
+						return true;
+					} else if (char === '\t' || char === ' ') {
+						this.index++;
+						this.column++;
+						return true;
+					} else {
+						return false;
+					}
 			}
 		}, {
 			key: '_testChar',

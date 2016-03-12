@@ -118,12 +118,13 @@ export default class Tokenizer {
 		let char = this.source.charAt(this.index);
 
 		// CRLF (Windows)
-		if (this.source.charAt(this.index) === '\n' && this.source.charAt(this.index + 1) === '\r') {
+		if (this.source.charAt(this.index) === '\r' && this.source.charAt(this.index + 1) === '\n') {
 			this.index += 2;
 			this.line ++;
 			this.column = 1;
+			return true;
 		// CR (Unix) or LF (MacOS)
-		} else if (char === '\n' || char === '\r') {
+		} else if (char === '\r' || char === '\n') {
 			this.index ++;
 			this.line ++;
 			this.column = 1;
