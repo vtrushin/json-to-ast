@@ -64,7 +64,9 @@ const numberStates = {
 
 let isDigit1to9 = (char) =>  char >= '1' && char <= '9';
 let isDigit = (char) => char >= '0' && char <= '9';
+let isHex = (char) => isDigit(char) || (char >= 'a' && char <= 'f') || (char >= 'A' && char <= 'F');
 let isExp = (char) => char === 'e' || char === 'E';
+let isUnicode = (char) => char === 'u' || char === 'U';
 
 export default class Tokenizer {
 	constructor(source) {
@@ -202,10 +204,10 @@ export default class Tokenizer {
 					if (char in escapes) {
 						buffer += char;
 						this.index ++;
-						if (char === 'u') {
+						if (isUnicode(char)) {
 							for (let i = 0; i < 4; i ++) {
 								let curChar = this.source.charAt(this.index);
-								if (curChar && isDigit(curChar)) {
+								if (curChar && isHex(curChar)) {
 									buffer += curChar;
 									this.index ++;
 								} else {
