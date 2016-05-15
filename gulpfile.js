@@ -1,15 +1,16 @@
 'use strict';
 
-let del = require('del');
-let gulp = require('gulp');
-let rollup = require('gulp-rollup');
-let babel = require('gulp-babel');
+const del = require('del');
+const gulp = require('gulp');
+const rollup = require('gulp-rollup');
+const babel = require('gulp-babel');
+const handleErrors = require('./utils/handleErrors');
 
 const src = './src';
 const dist = './dist';
 const es6Path = [
-	src + '/Parser.js',
-	src + '/Tokenizer.js'
+	src + '/parse.js',
+	src + '/tokenize.js'
 ];
 const distJsPath = dist;
 
@@ -25,19 +26,16 @@ gulp.task('clean', function(){
 });
 
 gulp.task('es6', function(){
-	gulp.src(src + '/Parser.js')
-		.pipe(rollup({
-			format: 'cjs'
-		}))
-		.pipe(babel())
-		.pipe(gulp.dest(distJsPath + '/cjs'));
-
 	gulp.src(es6Path)
-		.pipe(rollup({
-			format: 'iife',
-			moduleName: 'JsonParser'
-		 }))
-		.pipe(babel())
+		.pipe(
+			rollup({
+				format: 'cjs'
+		    })
+		    .on('error', handleErrors)
+		)
+		.pipe(
+			babel().on('error', handleErrors)
+		)
 		.pipe(gulp.dest(distJsPath))
 });
 

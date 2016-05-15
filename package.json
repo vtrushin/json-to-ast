@@ -9,12 +9,13 @@
   "author": "Vlad Trushin",
   "license": "ISC",
   "dependencies": {
-    "babel-polyfill": "^6.3.14",
     "del": "^2.0.2",
     "gulp": "^3.9.0",
-    "gulp-babel": "^5.3.0",
-    "gulp-jade": "^1.1.0",
-    "gulp-rollup": "^1.7.0"
+    "gulp-notify": "^2.2.0",
+    "gulp-rollup": "^1.7.0",
+    "gulp-babel": "^6.0.0",
+    "babel-plugin-transform-es2015-modules-umd": "^6.6.5",
+    "babel-polyfill": "^6.3.14"
   },
   "devDependencies": {
     "mocha": "^2.4.5"

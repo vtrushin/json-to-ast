@@ -1,15 +1,7 @@
 import exceptionsDict from './exceptionsDict';
 import position from './position';
 
-let _source;
-let line;
-let column;
-let index;
-let currentToken;
-let currentValue;
-let tokens;
-
-const tokenTypes = {
+export const tokenTypes = {
 	LEFT_BRACE: 'LEFT_BRACE',       // {
 	RIGHT_BRACE: 'RIGHT_BRACE',     // }
 	LEFT_BRACKET: 'LEFT_BRACKET',   // [
@@ -72,38 +64,34 @@ const numberStates = {
 
 let isDigit1to9 = (char) =>  char >= '1' && char <= '9';
 let isDigit = (char) => char >= '0' && char <= '9';
+let isHex = (char) => isDigit(char) || (char >= 'a' && char <= 'f') || (char >= 'A' && char <= 'F');
 let isExp = (char) => char === 'e' || char === 'E';
+let isUnicode = (char) => char === 'u' || char === 'U';
 
-export default function(source) {
-	_source = source;
-	line = 1;
-	column = 1;
-	index = 0;
-	currentToken = null;
-	currentValue = null;
-	tokens = [];
+export default function (source) {
+	let line = 1;
+	let column = 1;
+	let index = 0;
+	let currentToken = null;
+	let currentValue = null;
+	let tokens = [];
 
-	while (index < _source.length) {
-		let startLine = this.line;
-		let startColumn = this.column;
-		let startIndex = this.index;
+	while (index < source.length) {
+		let _line = line;
+		let _column = column;
+		let _index = index;
 
 		if (testWhitespace()) {
 			continue;
 		}
 
-		let matched = (
-			testChar() ||
-			testKeyword() ||
-			testString() ||
-			testNumber()
-		);
+		let matched = testChar() || testKeyword() || testString() || testNumber();
 
 		if (matched) {
 			tokens.push({
 				type: currentToken,
 				value: currentValue,
-				position: position(startLine, startColumn, startIndex, line, column, index)
+				position: position(_line, _column, _index, line, column, index)
 			});
 
 			currentValue = null;
@@ -118,343 +106,264 @@ export default function(source) {
 		}
 	}
 
-	return tokens;
-}
-
-function testWhitespace() {
-	let char = source.charAt(index);
-
-	if (char === '\r' || char === '\n') {
-		index ++;
-		line ++;
-		column = 1;
-		return true;
-	} else if (char === '\t' || char === ' ') {
-		index ++;
-		column ++;
-		return true;
-	} else {
-		return false;
-	}
-}
-
-function testChar() {
-	let char = source.charAt(index);
-
-	if (char in charTokens) {
-		index ++;
-		column ++;
-		currentToken = charTokens[char];
-		return true;
-	} else {
-		return false;
-	}
-}
-
-function testKeyword() {
-	let matched = Object.keys(keywordsTokens).find(name => (
-		name === source.substr(index, name.length)
-	));
-
-	if (matched) {
-		let length = matched.length;
-		index += length;
-		column += length;
-		currentToken = keywordsTokens[matched];
-		return true;
-	} else {
-		return false;
-	}
-}
-
-
-function testString() {
-	let startIndex = index;
-	let buffer = '';
-	let state = stringStates._START_;
-
-	while (true) {
+	function testWhitespace() {
 		let char = source.charAt(index);
-		switch (state) {
-			case stringStates._START_:
-				if (char === '"') {
-					state = stringStates.START_QUOTE_OR_CHAR;
-					index ++;
-				} else {
-					return false;
-				}
-				break;
 
-			case stringStates.START_QUOTE_OR_CHAR:
-				if (char === '\\') {
-					state = stringStates.ESCAPE;
-					buffer += char;
-					index ++;
-				} else if (char === '"') {
-					index ++;
-					column += index - startIndex;
-					currentToken = tokenTypes.STRING;
-					currentValue = buffer;
-					return true;
-				} else {
-					buffer += char;
-					index ++;
-				}
-				break;
+		if (source.charAt(index) === '\r' && source.charAt(index + 1) === '\n') { // CRLF (Windows)
+			index += 2;
+			line ++;
+			column = 1;
+			return true;
+		} else if (char === '\r' || char === '\n') { // CR (Unix) or LF (MacOS)
+			index ++;
+			line ++;
+			column = 1;
+			return true;
+		} else if (char === '\t' || char === ' ') {
+			index ++;
+			column ++;
+			return true;
+		} else {
+			return false;
+		}
+	}
 
-			case stringStates.ESCAPE:
-				if (char in escapes) {
-					buffer += char;
-					index ++;
-					if (char === 'u') {
-						for (let i = 0; i < 4; i ++) {
-							let curChar = source.charAt(index);
-							if (curChar && isDigit(curChar)) {
-								buffer += curChar;
-								index ++;
-							} else {
-								return false;
+	function testChar() {
+		let char = source.charAt(index);
+
+		if (char in charTokens) {
+			index ++;
+			column ++;
+			currentToken = charTokens[char];
+			return true;
+		} else {
+			return false;
+		}
+	}
+
+	function testKeyword() {
+		let matched = Object.keys(keywordsTokens).find(name =>
+			name === source.substr(index, name.length)
+		);
+
+		if (matched) {
+			let length = matched.length;
+			index += length;
+			column += length;
+			currentToken = keywordsTokens[matched];
+			return true;
+		} else {
+			return false;
+		}
+	}
+
+	function testString() {
+		let buffer = '';
+		let state = stringStates._START_;
+
+		while (true) {
+			let char = source.charAt(index);
+			switch (state) {
+				case stringStates._START_:
+					if (char === '"') {
+						state = stringStates.START_QUOTE_OR_CHAR;
+						index ++;
+					} else {
+						return false;
+					}
+					break;
+
+				case stringStates.START_QUOTE_OR_CHAR:
+					if (char === '\\') {
+						state = stringStates.ESCAPE;
+						buffer += char;
+						index ++;
+					} else if (char === '"') {
+						index ++;
+						column += index - index;
+						currentToken = tokenTypes.STRING;
+						currentValue = buffer;
+						return true;
+					} else {
+						buffer += char;
+						index ++;
+					}
+					break;
+
+				case stringStates.ESCAPE:
+					if (char in escapes) {
+						buffer += char;
+						index ++;
+						if (isUnicode(char)) {
+							for (let i = 0; i < 4; i ++) {
+								let curChar = source.charAt(index);
+								if (curChar && isHex(curChar)) {
+									buffer += curChar;
+									index ++;
+								} else {
+									return false;
+								}
 							}
 						}
+						state = stringStates.START_QUOTE_OR_CHAR;
+					} else {
+						return false;
 					}
-					state = stringStates.START_QUOTE_OR_CHAR;
-				} else {
-					return false;
-				}
-				break;
-		}
-	}
-}
-
-
-
-
-function testNumber() {
-	let index = this.index;
-	let buffer = '';
-	let passedValue;
-	let state = numberStates._START_;
-
-	iterator: while (true) {
-		let char = this.source.charAt(index);
-
-		switch (state) {
-			case numberStates._START_:
-				if (char === '-') {
-					state = numberStates.MINUS;
-					buffer += char;
-					index ++;
-				} else if (char === '0') {
-					state = numberStates.ZERO;
-					buffer += char;
-					index ++;
-					passedValue = buffer;
-				} else if (isDigit1to9(char)) {
-					state = numberStates.DIGIT_1TO9;
-					buffer += char;
-					index ++;
-					passedValue = buffer;
-				} else {
-					break iterator;
-				}
-				break;
-
-			case numberStates.MINUS:
-				if (char === '0') {
-					state = numberStates.ZERO;
-					buffer += char;
-					index ++;
-					passedValue = buffer;
-				} else if (isDigit1to9(char)) {
-					state = numberStates.DIGIT_1TO9;
-					buffer += char;
-					index ++;
-					passedValue = buffer;
-				} else {
-					break iterator;
-				}
-				break;
-
-			case numberStates.ZERO:
-				if (char === '.') {
-					state = numberStates.POINT;
-					buffer += char;
-					index ++;
-				} else if (isExp(char)) {
-					state = numberStates.EXP;
-					buffer += char;
-					index ++;
-				} else {
-					break iterator;
-				}
-				break;
-
-			case numberStates.DIGIT_1TO9:
-			case numberStates.DIGIT_CEIL:
-				if (isDigit(char)) {
-					state = numberStates.DIGIT_CEIL;
-					buffer += char;
-					index ++;
-					passedValue = buffer;
-				} else if (char === '.') {
-					state = numberStates.POINT;
-					buffer += char;
-					index ++;
-				} else if (isExp(char)) {
-					state = numberStates.EXP;
-					buffer += char;
-					index ++;
-				} else {
-					break iterator;
-				}
-				break;
-
-			case numberStates.POINT:
-				if (isDigit(char)) {
-					state = numberStates.DIGIT_FRACTION;
-					buffer += char;
-					index ++;
-					passedValue = buffer;
-				} else {
-					break iterator;
-				}
-				break;
-
-			case numberStates.DIGIT_FRACTION:
-				if (isDigit(char)) {
-					buffer += char;
-					index ++;
-					passedValue = buffer;
-				} else if (isExp(char)) {
-					state = numberStates.EXP;
-					buffer += char;
-					index ++;
-				} else {
-					break iterator;
-				}
-				break;
-
-			case numberStates.EXP:
-				if (char === '+') {
-					state = numberStates.EXP_PLUS;
-					buffer += char;
-					index ++;
-				} else if (char === '-') {
-					state = numberStates.EXP_MINUS;
-					buffer += char;
-					index ++;
-				} else if (isDigit(char)) {
-					state = numberStates.EXP_DIGIT;
-					buffer += char;
-					index ++;
-					passedValue = buffer;
-				} else {
-					break iterator;
-				}
-				break;
-
-			case numberStates.EXP_PLUS:
-			case numberStates.EXP_MINUS:
-			case numberStates.EXP_DIGIT:
-				if (isDigit(char)) {
-					state = numberStates.EXP_DIGIT;
-					buffer += char;
-					index ++;
-					passedValue = buffer;
-				} else {
-					break iterator;
-				}
-				break;
-		}
-
-	}
-
-	if (passedValue) {
-		this.index += passedValue.length;
-		this.column += passedValue.length;
-		this.currentToken = tokenTypes.NUMBER;
-		this.currentValue = passedValue;
-		return true;
-	} else {
-		return false;
-	}
-
-}
-
-
-
-
-
-
-
-
-
-
-export default class Tokenizer {
-	constructor(source) {
-		this.source = source;
-		this.line = 1;
-		this.column = 1;
-		this.index = 0;
-		this.currentToken = null;
-		this.currentValue = null;
-		let tokens = [];
-
-		while (this.index < this.source.length) {
-			let line = this.line;
-			let column = this.column;
-			let index = this.index;
-
-			if (this._testWhitespace()) {
-				continue;
-			}
-
-			let matched = (
-			this._testChar() ||
-			this._testKeyword() ||
-			this._testString() ||
-			this._testNumber()
-			);
-
-			if (matched) {
-				tokens.push({
-					type: this.currentToken,
-					value: this.currentValue,
-					position: position(line, column, index, this.line, this.column, this.index)
-				});
-
-				this.currentValue = null;
-
-			} else {
-				throw new SyntaxError(
-					exceptionsDict.tokenizeSymbolError
-						.replace('{char}', this.source.charAt(this.index))
-						.replace('{line}', this.line.toString())
-						.replace('{column}', this.column.toString())
-				);
+					break;
 			}
 		}
-
-		return tokens;
 	}
 
+	function testNumber() {
+		let buffer = '';
+		let passedValue;
+		let state = numberStates._START_;
 
+		iterator: while (true) {
+			let char = source.charAt(index);
 
+			switch (state) {
+				case numberStates._START_:
+					if (char === '-') {
+						state = numberStates.MINUS;
+						buffer += char;
+						index ++;
+					} else if (char === '0') {
+						state = numberStates.ZERO;
+						buffer += char;
+						index ++;
+						passedValue = buffer;
+					} else if (isDigit1to9(char)) {
+						state = numberStates.DIGIT_1TO9;
+						buffer += char;
+						index ++;
+						passedValue = buffer;
+					} else {
+						break iterator;
+					}
+					break;
 
+				case numberStates.MINUS:
+					if (char === '0') {
+						state = numberStates.ZERO;
+						buffer += char;
+						index ++;
+						passedValue = buffer;
+					} else if (isDigit1to9(char)) {
+						state = numberStates.DIGIT_1TO9;
+						buffer += char;
+						index ++;
+						passedValue = buffer;
+					} else {
+						break iterator;
+					}
+					break;
 
+				case numberStates.ZERO:
+					if (char === '.') {
+						state = numberStates.POINT;
+						buffer += char;
+						index ++;
+					} else if (isExp(char)) {
+						state = numberStates.EXP;
+						buffer += char;
+						index ++;
+					} else {
+						break iterator;
+					}
+					break;
 
+				case numberStates.DIGIT_1TO9:
+				case numberStates.DIGIT_CEIL:
+					if (isDigit(char)) {
+						state = numberStates.DIGIT_CEIL;
+						buffer += char;
+						index ++;
+						passedValue = buffer;
+					} else if (char === '.') {
+						state = numberStates.POINT;
+						buffer += char;
+						index ++;
+					} else if (isExp(char)) {
+						state = numberStates.EXP;
+						buffer += char;
+						index ++;
+					} else {
+						break iterator;
+					}
+					break;
 
+				case numberStates.POINT:
+					if (isDigit(char)) {
+						state = numberStates.DIGIT_FRACTION;
+						buffer += char;
+						index ++;
+						passedValue = buffer;
+					} else {
+						break iterator;
+					}
+					break;
 
+				case numberStates.DIGIT_FRACTION:
+					if (isDigit(char)) {
+						buffer += char;
+						index ++;
+						passedValue = buffer;
+					} else if (isExp(char)) {
+						state = numberStates.EXP;
+						buffer += char;
+						index ++;
+					} else {
+						break iterator;
+					}
+					break;
+
+				case numberStates.EXP:
+					if (char === '+') {
+						state = numberStates.EXP_PLUS;
+						buffer += char;
+						index ++;
+					} else if (char === '-') {
+						state = numberStates.EXP_MINUS;
+						buffer += char;
+						index ++;
+					} else if (isDigit(char)) {
+						state = numberStates.EXP_DIGIT;
+						buffer += char;
+						index ++;
+						passedValue = buffer;
+					} else {
+						break iterator;
+					}
+					break;
+
+				case numberStates.EXP_PLUS:
+				case numberStates.EXP_MINUS:
+				case numberStates.EXP_DIGIT:
+					if (isDigit(char)) {
+						state = numberStates.EXP_DIGIT;
+						buffer += char;
+						index ++;
+						passedValue = buffer;
+					} else {
+						break iterator;
+					}
+					break;
+			}
+
+		}
+
+		if (passedValue) {
+			index += passedValue.length;
+			column += passedValue.length;
+			currentToken = tokenTypes.NUMBER;
+			currentValue = passedValue;
+			return true;
+		} else {
+			return false;
+		}
+
+	}
+
+	return tokens;
 }
-
-Tokenizer.LEFT_BRACE = tokenTypes.LEFT_BRACE;
-Tokenizer.RIGHT_BRACE = tokenTypes.RIGHT_BRACE;
-Tokenizer.LEFT_BRACKET = tokenTypes.LEFT_BRACKET;
-Tokenizer.RIGHT_BRACKET = tokenTypes.RIGHT_BRACKET;
-Tokenizer.COLON = tokenTypes.COLON;
-Tokenizer.COMMA = tokenTypes.COMMA;
-Tokenizer.STRING = tokenTypes.STRING;
-Tokenizer.NUMBER = tokenTypes.NUMBER;
-Tokenizer.TRUE = tokenTypes.TRUE;
-Tokenizer.FALSE = tokenTypes.FALSE;
-Tokenizer.NULL = tokenTypes.NULL;

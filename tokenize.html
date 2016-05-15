@@ -3,7 +3,7 @@
 <head lang="en">
 	<meta charset="UTF-8">
 	<title></title>
-	<script src="dist/Tokenizer.js"></script>
+	<script src="dist/tokenize.js"></script>
 </head>
 <body>
 
@@ -11,7 +11,7 @@
 		fetch('test.json').then(function(response) {
 			return response.text();
 		}).then(function(text) {
-			console.log(new JsonParser(text));
+			console.log(tokenize.default(text));
 		});
 	</script>
 

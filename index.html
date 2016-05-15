@@ -3,7 +3,7 @@
 <head lang="en">
 	<meta charset="UTF-8">
 	<title></title>
-	<script src="dist/Parser.js"></script>
+	<script src="dist/parse.js"></script>
 	<script src="//d3js.org/d3.v3.min.js" charset="utf-8"></script>
 	<style>
 		.layout {
@@ -40,7 +40,7 @@
 			return response.text();
 		}).then(function(text) {
 			textarea.textContent = text;
-			console.log(new JsonParser(text));
+			console.log(parse(text));
 		});
 
 		textarea.addEventListener('keydown', function(e) {
