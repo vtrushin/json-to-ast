@@ -8,10 +8,34 @@
 			exports: {}
 		};
 		factory(mod);
-		global.parse = mod.exports;
+		global.Parser = mod.exports;
 	}
 })(this, function (module) {
 	'use strict';
+
+	function _classCallCheck(instance, Constructor) {
+		if (!(instance instanceof Constructor)) {
+			throw new TypeError("Cannot call a class as a function");
+		}
+	}
+
+	var _createClass = function () {
+		function defineProperties(target, props) {
+			for (var i = 0; i < props.length; i++) {
+				var descriptor = props[i];
+				descriptor.enumerable = descriptor.enumerable || false;
+				descriptor.configurable = true;
+				if ("value" in descriptor) descriptor.writable = true;
+				Object.defineProperty(target, descriptor.key, descriptor);
+			}
+		}
+
+		return function (Constructor, protoProps, staticProps) {
+			if (protoProps) defineProperties(Constructor.prototype, protoProps);
+			if (staticProps) defineProperties(Constructor, staticProps);
+			return Constructor;
+		};
+	}();
 
 	if (!Object.assign) {
 		Object.defineProperty(Object, 'assign', {
@@ -477,247 +501,260 @@
 		verbose: true
 	};
 
-	function parse(source, settings) {
-		settings = Object.assign(defaultSettings, settings);
-		var tokenList = tokenize(source);
-		var index = 0;
-		var json = parseValue();
+	var Parser = function () {
+		function Parser(source, settings) {
+			_classCallCheck(this, Parser);
 
-		function parseObject() {
-			var startToken = void 0;
-			var property = void 0;
-			var object = {
-				type: 'object',
-				properties: []
-			};
-			var state = objectStates._START_;
+			this.settings = Object.assign(defaultSettings, settings);
+			this.tokenList = tokenize(source);
+			this.index = 0;
 
-			while (true) {
-				var token = tokenList[index];
+			var json = this._parseValue();
 
-				switch (state) {
-					case objectStates._START_:
-						if (token.type === tokenTypes.LEFT_BRACE) {
-							startToken = token;
-							state = objectStates.OPEN_OBJECT;
-							index++;
-						} else {
-							return null;
-						}
-						break;
-
-					case objectStates.OPEN_OBJECT:
-						if (token.type === tokenTypes.STRING) {
-							property = {
-								type: 'property'
-							};
-							if (settings.verbose) {
-								property.key = {
-									type: 'key',
-									position: token.position,
-									value: token.value
-								};
-							} else {
-								property.key = {
-									type: 'key',
-									value: token.value
-								};
-							}
-							state = objectStates.KEY;
-							index++;
-						} else if (token.type === tokenTypes.RIGHT_BRACE) {
-							if (settings.verbose) {
-								object.position = position(startToken.position.start.line, startToken.position.start.column, startToken.position.start.char, token.position.end.line, token.position.end.column, token.position.end.char);
-							}
-							index++;
-							return object;
-						} else {
-							return null;
-						}
-						break;
-
-					case objectStates.KEY:
-						if (token.type == tokenTypes.COLON) {
-							state = objectStates.COLON;
-							index++;
-						} else {
-							return null;
-						}
-						break;
-
-					case objectStates.COLON:
-						var value = parseValue();
-
-						if (value !== null) {
-							property.value = value;
-							object.properties.push(property);
-							state = objectStates.VALUE;
-						} else {
-							return null;
-						}
-						break;
-
-					case objectStates.VALUE:
-						if (token.type === tokenTypes.RIGHT_BRACE) {
-							if (settings.verbose) {
-								object.position = position(startToken.position.start.line, startToken.position.start.column, startToken.position.start.char, token.position.end.line, token.position.end.column, token.position.end.char);
-							}
-							index++;
-							return object;
-						} else if (token.type === tokenTypes.COMMA) {
-							state = objectStates.COMMA;
-							index++;
-						} else {
-							return null;
-						}
-						break;
-
-					case objectStates.COMMA:
-						if (token.type === tokenTypes.STRING) {
-							property = {
-								type: 'property'
-							};
-							if (settings.verbose) {
-								property.key = {
-									type: 'key',
-									position: token.position,
-									value: token.value
-								};
-							} else {
-								property.key = {
-									type: 'key',
-									value: token.value
-								};
-							}
-							state = objectStates.KEY;
-							index++;
-						} else {
-							return null;
-						}
-
-				}
-			}
-		}
-
-		function parseArray() {
-			var startToken = void 0;
-			var value = void 0;
-			var array = {
-				type: 'array',
-				items: []
-			};
-			var state = arrayStates._START_;
-
-			while (true) {
-				var token = tokenList[index];
-
-				switch (state) {
-					case arrayStates._START_:
-						if (token.type === tokenTypes.LEFT_BRACKET) {
-							startToken = token;
-							state = arrayStates.OPEN_ARRAY;
-							index++;
-						} else {
-							return null;
-						}
-						break;
-
-					case arrayStates.OPEN_ARRAY:
-						value = parseValue();
-						if (value !== null) {
-							array.items.push(value);
-							state = arrayStates.VALUE;
-						} else if (token.type === tokenTypes.RIGHT_BRACKET) {
-							if (settings.verbose) {
-								array.position = position(startToken.position.start.line, startToken.position.start.column, startToken.position.start.char, token.position.end.line, token.position.end.column, token.position.end.char);
-							}
-							index++;
-							return array;
-						} else {
-							return null;
-						}
-						break;
-
-					case arrayStates.VALUE:
-						if (token.type === tokenTypes.RIGHT_BRACKET) {
-							if (settings.verbose) {
-								array.position = position(startToken.position.start.line, startToken.position.start.column, startToken.position.start.char, token.position.end.line, token.position.end.column, token.position.end.char);
-							}
-							index++;
-							return array;
-						} else if (token.type === tokenTypes.COMMA) {
-							state = arrayStates.COMMA;
-							index++;
-						} else {
-							return null;
-						}
-						break;
-
-					case arrayStates.COMMA:
-						value = parseValue();
-						if (value !== null) {
-							array.items.push(value);
-							state = arrayStates.VALUE;
-						} else {
-							return null;
-						}
-						break;
-				}
-			}
-		}
-
-		function parseValue() {
-			// value: object | array | STRING | NUMBER | TRUE | FALSE | NULL
-			var token = tokenList[index];
-			var tokenType = void 0;
-
-			switch (token.type) {
-				case tokenTypes.STRING:
-					tokenType = 'string';
-					break;
-				case tokenTypes.NUMBER:
-					tokenType = 'number';
-					break;
-				case tokenTypes.TRUE:
-					tokenType = 'true';
-					break;
-				case tokenTypes.FALSE:
-					tokenType = 'false';
-					break;
-				case tokenTypes.NULL:
-					tokenType = 'null';
-			}
-
-			var objectOrArray = parseObject() || parseArray();
-
-			if (tokenType !== undefined) {
-				index++;
-
-				if (settings.verbose) {
-					return {
-						type: tokenType,
-						value: token.value,
-						position: token.position
-					};
-				} else {
-					return {
-						type: tokenType,
-						value: token.value
-					};
-				}
-			} else if (objectOrArray !== null) {
-				return objectOrArray;
+			if (json) {
+				return json;
 			} else {
-				throw new Error('!!!!!');
+				throw new SyntaxError(exceptionsDict.emptyString);
 			}
 		}
 
-		if (json) {
-			return json;
-		} else {
-			throw new SyntaxError(exceptionsDict.emptyString);
-		}
-	}
+		_createClass(Parser, [{
+			key: '_parseObject',
+			value: function _parseObject() {
+				var startToken = void 0;
+				var property = void 0;
+				var object = {
+					type: 'object',
+					properties: []
+				};
+				var state = objectStates._START_;
 
-	module.exports = parse;
+				while (true) {
+					var token = this.tokenList[this.index];
+
+					switch (state) {
+						case objectStates._START_:
+							if (token.type === tokenTypes.LEFT_BRACE) {
+								startToken = token;
+								state = objectStates.OPEN_OBJECT;
+								this.index++;
+							} else {
+								return null;
+							}
+							break;
+
+						case objectStates.OPEN_OBJECT:
+							if (token.type === tokenTypes.STRING) {
+								property = {
+									type: 'property'
+								};
+								if (this.settings.verbose) {
+									property.key = {
+										type: 'key',
+										position: token.position,
+										value: token.value
+									};
+								} else {
+									property.key = {
+										type: 'key',
+										value: token.value
+									};
+								}
+								state = objectStates.KEY;
+								this.index++;
+							} else if (token.type === tokenTypes.RIGHT_BRACE) {
+								if (this.settings.verbose) {
+									object.position = position(startToken.position.start.line, startToken.position.start.column, startToken.position.start.char, token.position.end.line, token.position.end.column, token.position.end.char);
+								}
+								this.index++;
+								return object;
+							} else {
+								return null;
+							}
+							break;
+
+						case objectStates.KEY:
+							if (token.type == tokenTypes.COLON) {
+								state = objectStates.COLON;
+								this.index++;
+							} else {
+								return null;
+							}
+							break;
+
+						case objectStates.COLON:
+							var value = this._parseValue();
+
+							if (value !== null) {
+								property.value = value;
+								object.properties.push(property);
+								state = objectStates.VALUE;
+							} else {
+								return null;
+							}
+							break;
+
+						case objectStates.VALUE:
+							if (token.type === tokenTypes.RIGHT_BRACE) {
+								if (this.settings.verbose) {
+									object.position = position(startToken.position.start.line, startToken.position.start.column, startToken.position.start.char, token.position.end.line, token.position.end.column, token.position.end.char);
+								}
+								this.index++;
+								return object;
+							} else if (token.type === tokenTypes.COMMA) {
+								state = objectStates.COMMA;
+								this.index++;
+							} else {
+								return null;
+							}
+							break;
+
+						case objectStates.COMMA:
+							if (token.type === tokenTypes.STRING) {
+								property = {
+									type: 'property'
+								};
+								if (this.settings.verbose) {
+									property.key = {
+										type: 'key',
+										position: token.position,
+										value: token.value
+									};
+								} else {
+									property.key = {
+										type: 'key',
+										value: token.value
+									};
+								}
+								state = objectStates.KEY;
+								this.index++;
+							} else {
+								return null;
+							}
+
+					}
+				}
+			}
+		}, {
+			key: '_parseArray',
+			value: function _parseArray() {
+				var startToken = void 0;
+				var value = void 0;
+				var array = {
+					type: 'array',
+					items: []
+				};
+				var state = arrayStates._START_;
+
+				while (true) {
+					var token = this.tokenList[this.index];
+
+					switch (state) {
+						case arrayStates._START_:
+							if (token.type === tokenTypes.LEFT_BRACKET) {
+								startToken = token;
+								state = arrayStates.OPEN_ARRAY;
+								this.index++;
+							} else {
+								return null;
+							}
+							break;
+
+						case arrayStates.OPEN_ARRAY:
+							value = this._parseValue();
+
+							if (value !== null) {
+								array.items.push(value);
+								state = arrayStates.VALUE;
+							} else if (token.type === tokenTypes.RIGHT_BRACKET) {
+								if (this.settings.verbose) {
+									array.position = position(startToken.position.start.line, startToken.position.start.column, startToken.position.start.char, token.position.end.line, token.position.end.column, token.position.end.char);
+								}
+								this.index++;
+								return array;
+							} else {
+								return null;
+							}
+							break;
+
+						case arrayStates.VALUE:
+							if (token.type === tokenTypes.RIGHT_BRACKET) {
+								if (this.settings.verbose) {
+									array.position = position(startToken.position.start.line, startToken.position.start.column, startToken.position.start.char, token.position.end.line, token.position.end.column, token.position.end.char);
+								}
+								this.index++;
+								return array;
+							} else if (token.type === tokenTypes.COMMA) {
+								state = arrayStates.COMMA;
+								this.index++;
+							} else {
+								return null;
+							}
+							break;
+
+						case arrayStates.COMMA:
+							value = this._parseValue();
+							if (value !== null) {
+								array.items.push(value);
+								state = arrayStates.VALUE;
+							} else {
+								return null;
+							}
+							break;
+					}
+				}
+			}
+		}, {
+			key: '_parseValue',
+			value: function _parseValue() {
+				// value: object | array | STRING | NUMBER | TRUE | FALSE | NULL
+				var token = this.tokenList[this.index];
+				var tokenType = void 0;
+
+				switch (token.type) {
+					case tokenTypes.STRING:
+						tokenType = 'string';
+						break;
+					case tokenTypes.NUMBER:
+						tokenType = 'number';
+						break;
+					case tokenTypes.TRUE:
+						tokenType = 'true';
+						break;
+					case tokenTypes.FALSE:
+						tokenType = 'false';
+						break;
+					case tokenTypes.NULL:
+						tokenType = 'null';
+				}
+
+				var objectOrArray = this._parseObject() || this._parseArray();
+
+				if (tokenType !== undefined) {
+					this.index++;
+
+					if (this.settings.verbose) {
+						return {
+							type: tokenType,
+							value: token.value,
+							position: token.position
+						};
+					} else {
+						return {
+							type: tokenType,
+							value: token.value
+						};
+					}
+				} else if (objectOrArray !== null) {
+					return objectOrArray;
+				} else {
+					throw new Error('!!!!!');
+				}
+			}
+		}]);
+
+		return Parser;
+	}();
+
+	module.exports = Parser;
 });

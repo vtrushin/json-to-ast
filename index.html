@@ -3,7 +3,7 @@
 <head lang="en">
 	<meta charset="UTF-8">
 	<title></title>
-	<script src="dist/parse.js"></script>
+	<script src="dist/Parser.js"></script>
 	<script src="//d3js.org/d3.v3.min.js" charset="utf-8"></script>
 	<style>
 		.layout {
@@ -36,14 +36,14 @@
 
 		var textarea = document.getElementById('textarea');
 
-		fetch('test.json').then(function(response) {
+		fetch('test2.json').then(function(response) {
 			return response.text();
 		}).then(function(text) {
 			textarea.textContent = text;
-			console.log(parse(text));
+			console.log(new Parser(text));
 		});
 
-		textarea.addEventListener('keydown', function(e) {
+		/*textarea.addEventListener('keydown', function(e) {
 			if (e.keyCode !== 9) return true; // not tab
 
 			var text = '    ';
@@ -53,16 +53,16 @@
 			this.value = this.value.substring(0, start) + text + this.value.substring(end);
 			this.selectionStart = this.selectionEnd = start + text.length;
 
-			/*var event = document.createEvent('TextEvent');
+			/!*var event = document.createEvent('TextEvent');
 			 event.initTextEvent('textInput', true, true, null, text, 9, "en-US");
-			 this.dispatchEvent(event);*/
+			 this.dispatchEvent(event);*!/
 
 			e.preventDefault();
 		});
 
 		textarea.addEventListener('input', function(e) {
-			console.log(new JsonParser(textarea.value));
-		});
+			console.log(new Parser(textarea.value));
+		});*/
 	</script>
 
 </body>

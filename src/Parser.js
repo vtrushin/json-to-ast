@@ -1,5 +1,5 @@
 import './polyfills/object-assign';
-import Tokenizer from './Tokenizer';
+import tokenize, {tokenTypes} from './tokenize';
 import exceptionsDict from './exceptionsDict';
 import position from './position';
 
@@ -21,14 +21,14 @@ const arrayStates = {
 	CLOSE_ARRAY: 4
 };
 
-let defaultSettings = {
+const defaultSettings = {
 	verbose: true
 };
 
-export default class JsonParser {
+export default class {
 	constructor(source, settings) {
 		this.settings = Object.assign(defaultSettings, settings);
-		this.tokenList = new Tokenizer(source);
+		this.tokenList = tokenize(source);
 		this.index = 0;
 
 		let json = this._parseValue();
@@ -54,7 +54,7 @@ export default class JsonParser {
 
 			switch (state) {
 				case objectStates._START_:
-					if (token.type === Tokenizer.LEFT_BRACE) {
+					if (token.type === tokenTypes.LEFT_BRACE) {
 						startToken = token;
 						state = objectStates.OPEN_OBJECT;
 						this.index ++;
@@ -64,7 +64,7 @@ export default class JsonParser {
 					break;
 
 				case objectStates.OPEN_OBJECT:
-					if (token.type === Tokenizer.STRING) {
+					if (token.type === tokenTypes.STRING) {
 						property = {
 							type: 'property'
 						};
@@ -82,7 +82,7 @@ export default class JsonParser {
 						}
 						state = objectStates.KEY;
 						this.index ++;
-					} else if (token.type === Tokenizer.RIGHT_BRACE) {
+					} else if (token.type === tokenTypes.RIGHT_BRACE) {
 						if (this.settings.verbose) {
 							object.position = position(
 								startToken.position.start.line,
@@ -101,7 +101,7 @@ export default class JsonParser {
 					break;
 
 				case objectStates.KEY:
-					if (token.type == Tokenizer.COLON) {
+					if (token.type == tokenTypes.COLON) {
 						state = objectStates.COLON;
 						this.index ++;
 					} else {
@@ -122,7 +122,7 @@ export default class JsonParser {
 					break;
 
 				case objectStates.VALUE:
-					if (token.type === Tokenizer.RIGHT_BRACE) {
+					if (token.type === tokenTypes.RIGHT_BRACE) {
 						if (this.settings.verbose) {
 							object.position = position(
 								startToken.position.start.line,
@@ -135,7 +135,7 @@ export default class JsonParser {
 						}
 						this.index ++;
 						return object;
-					} else if (token.type === Tokenizer.COMMA) {
+					} else if (token.type === tokenTypes.COMMA) {
 						state = objectStates.COMMA;
 						this.index ++;
 					} else {
@@ -144,7 +144,7 @@ export default class JsonParser {
 					break;
 
 				case objectStates.COMMA:
-					if (token.type === Tokenizer.STRING) {
+					if (token.type === tokenTypes.STRING) {
 						property = {
 							type: 'property'
 						};
@@ -186,7 +186,7 @@ export default class JsonParser {
 
 			switch (state) {
 				case arrayStates._START_:
-					if (token.type === Tokenizer.LEFT_BRACKET) {
+					if (token.type === tokenTypes.LEFT_BRACKET) {
 						startToken = token;
 						state = arrayStates.OPEN_ARRAY;
 						this.index ++;
@@ -197,10 +197,11 @@ export default class JsonParser {
 
 				case arrayStates.OPEN_ARRAY:
 					value = this._parseValue();
+
 					if (value !== null) {
 						array.items.push(value);
 						state = arrayStates.VALUE;
-					} else if (token.type === Tokenizer.RIGHT_BRACKET) {
+					} else if (token.type === tokenTypes.RIGHT_BRACKET) {
 						if (this.settings.verbose) {
 							array.position = position(
 								startToken.position.start.line,
@@ -219,7 +220,7 @@ export default class JsonParser {
 					break;
 
 				case arrayStates.VALUE:
-					if (token.type === Tokenizer.RIGHT_BRACKET) {
+					if (token.type === tokenTypes.RIGHT_BRACKET) {
 						if (this.settings.verbose) {
 							array.position = position(
 								startToken.position.start.line,
@@ -232,7 +233,7 @@ export default class JsonParser {
 						}
 						this.index ++;
 						return array;
-					} else if (token.type === Tokenizer.COMMA) {
+					} else if (token.type === tokenTypes.COMMA) {
 						state = arrayStates.COMMA;
 						this.index ++;
 					} else {
@@ -259,19 +260,19 @@ export default class JsonParser {
 		let tokenType;
 
 		switch (token.type) {
-			case Tokenizer.STRING:
+			case tokenTypes.STRING:
 				tokenType = 'string';
 				break;
-			case Tokenizer.NUMBER:
+			case tokenTypes.NUMBER:
 				tokenType = 'number';
 				break;
-			case Tokenizer.TRUE:
+			case tokenTypes.TRUE:
 				tokenType = 'true';
 				break;
-			case Tokenizer.FALSE:
+			case tokenTypes.FALSE:
 				tokenType = 'false';
 				break;
-			case Tokenizer.NULL:
+			case tokenTypes.NULL:
 				tokenType = 'null';
 		}
 
