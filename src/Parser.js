@@ -1,5 +1,4 @@
-import './polyfills/object-assign';
-import tokenize, {tokenTypes} from './tokenize';
+import {tokenize, tokenTypes} from './tokenize';
 import exceptionsDict from './exceptionsDict';
 import position from './position';
 

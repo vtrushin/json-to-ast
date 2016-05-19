@@ -342,7 +342,7 @@ function parseNumber(source, index, line, column) {
 	}
 }
 
-export default function (source) {
+export function tokenize (source) {
 	let line = 1;
 	let column = 1;
 	let index = 0;

@@ -423,5 +423,5 @@
 	}
 
 	exports.tokenTypes = tokenTypes;
-	exports['default'] = tokenize;
+	exports.tokenize = tokenize;
 });
