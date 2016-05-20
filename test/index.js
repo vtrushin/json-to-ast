@@ -1,11 +1,17 @@
 var fs = require('fs');
 var path = require('path');
 var assert = require('assert');
-var JsonParser = require('../dist/Parser.js');
+var Parser = require('../dist/Parser.js');
 
-console.log(JsonParser);
-
-var cases = fs.readdirSync(path.join(__dirname, 'cases'));
+var folderPath = path.join(__dirname, 'cases');
+var folder = fs.readdirSync(folderPath);
+var cases = folder
+	.filter(function(_case) {
+		return path.extname(_case) === '.json';
+	})
+	.map(function(fileName) {
+		return path.basename(fileName, '.json');
+	});
 
 function readFile(file) {
 	var src = fs.readFileSync(file, 'utf8');
@@ -17,31 +23,16 @@ function readFile(file) {
 	return src;
 }
 
-cases.forEach(function(caseName) {
-	describe('cases "' + caseName + '"', function() {
-		var dir = path.join(__dirname, 'cases', caseName);
-		var inputFile = path.join(dir, 'input.json');
-		// var astFile = path.join(dir, 'ast.json');
-		console.log(33, path.join(dir, 'index.js'));
-		var expectedAst = require('./cases/' + caseName + '/index.js');
+describe('test cases', function() {
+	cases.forEach(function(_case) {
+		var inputFile = readFile(path.join(folderPath, _case + '.json'));
+		var expectedAst = require(path.join(folderPath, _case + '.js'));
 
-		it('should match ast.json', function() {
-			var parsedAst = new JsonParser(readFile(inputFile), {
+		it(_case, function() {
+			var parsedAst = new Parser(inputFile, {
 				verbose: false
 			});
-
-			/*console.log(1, ast.properties[0]);
-			console.log(2, JSON.parse(readFile(astFile)).properties[0]);*/
-
 			assert.deepEqual(parsedAst, expectedAst, 'asts are not equal');
 		});
 	});
 });
-
-/*describe('smthng', function() {
-
-	it('Test', function() {
-		assert.equal(1, 1);
-	});
-
-});*/
