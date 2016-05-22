@@ -9,11 +9,31 @@ AST format for object
 		{
 			key: {
 				text: 'keyName',
-				position: ...
+				position: Position
 			},
 			value: ...
 		}
-	]
+	],
+	position: Position
+}
+```
+
+for array
+```js
+{
+	type: 'array',
+	items: [
+		...
+	],
+	position: Position
+}
+```
+
+for simple types
+```js
+{
+	type: 'string|number|true|false|null',
+	value: ...
 }
 ```
 
