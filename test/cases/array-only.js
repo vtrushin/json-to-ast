@@ -1,4 +1,11 @@
+var ast = {
+	type: 'array',
+	items: []
+};
+
 module.exports = {
-	items: [],
-	type: 'array'
+	ast: ast,
+	options: {
+		verbose: false
+	}
 };

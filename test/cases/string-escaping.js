@@ -1,4 +1,4 @@
-module.exports = {
+var ast = {
 	type: 'object',
 	properties: [
 		{
@@ -90,4 +90,11 @@ module.exports = {
 			}
 		}
 	]
+};
+
+module.exports = {
+	ast: ast,
+	options: {
+		verbose: false
+	}
 };

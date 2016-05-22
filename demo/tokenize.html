@@ -8,11 +8,14 @@
 <body>
 
 	<script>
-		fetch('test.json').then(function(response) {
-			return response.text();
-		}).then(function(text) {
-			console.log(tokenize.default(text));
-		});
+		// fetch('test.json')
+		fetch('../test/cases/array-in-arrays.json')
+			.then(function(response) {
+				return response.text();
+			})
+			.then(function(text) {
+				console.log(tokenize.tokenize(text));
+			});
 	</script>
 
 </body>

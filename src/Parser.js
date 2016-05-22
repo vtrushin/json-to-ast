@@ -27,7 +27,9 @@ const defaultSettings = {
 export default class {
 	constructor(source, settings) {
 		this.settings = Object.assign(defaultSettings, settings);
+
 		this.tokenList = tokenize(source);
+		// console.log(this.tokenList);
 		this.index = 0;
 
 		let json = this._parseValue();
@@ -195,9 +197,35 @@ export default class {
 					break;
 
 				case arrayStates.OPEN_ARRAY:
-					value = this._parseValue();
+					// console.log(token);
 
-					if (value !== null) {
+					if (token.type === tokenTypes.RIGHT_BRACKET) {
+						if (this.settings.verbose) {
+							array.position = position(
+								startToken.position.start.line,
+								startToken.position.start.column,
+								startToken.position.start.char,
+								token.position.end.line,
+								token.position.end.column,
+								token.position.end.char
+							);
+						}
+						this.index ++;
+						return array;
+
+					} else {
+
+						value = this._parseValue();
+						if (value !== null) {
+							array.items.push(value);
+							state = arrayStates.VALUE;
+						} else {
+							return null;
+						}
+
+					}
+
+					/*if (value !== null) {
 						array.items.push(value);
 						state = arrayStates.VALUE;
 					} else if (token.type === tokenTypes.RIGHT_BRACKET) {
@@ -215,7 +243,7 @@ export default class {
 						return array;
 					} else {
 						return null;
-					}
+					}*/
 					break;
 
 				case arrayStates.VALUE:
@@ -256,6 +284,11 @@ export default class {
 	_parseValue() {
 		// value: object | array | STRING | NUMBER | TRUE | FALSE | NULL
 		let token = this.tokenList[this.index];
+
+		if (token.type === 'RIGHT_BRACKET') {
+			debugger;
+		}
+
 		let tokenType;
 
 		switch (token.type) {

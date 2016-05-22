@@ -36,14 +36,19 @@
 
 		var textarea = document.getElementById('textarea');
 
-		fetch('test2.json').then(function(response) {
-			return response.text();
-		}).then(function(text) {
-			textarea.textContent = text;
-			console.log(new Parser(text));
-		});
+		// fetch('test2.json')
+		fetch('../test/cases/array-only.json')
+			.then(function(response) {
+				return response.text();
+			})
+			.then(function(text) {
+				textarea.textContent = text;
+				console.log(new Parser(text, {
+					verbose: false
+				}));
+			});
 
-		/*textarea.addEventListener('keydown', function(e) {
+		textarea.addEventListener('keydown', function(e) {
 			if (e.keyCode !== 9) return true; // not tab
 
 			var text = '    ';
@@ -53,16 +58,16 @@
 			this.value = this.value.substring(0, start) + text + this.value.substring(end);
 			this.selectionStart = this.selectionEnd = start + text.length;
 
-			/!*var event = document.createEvent('TextEvent');
+			/*var event = document.createEvent('TextEvent');
 			 event.initTextEvent('textInput', true, true, null, text, 9, "en-US");
-			 this.dispatchEvent(event);*!/
+			 this.dispatchEvent(event);*/
 
 			e.preventDefault();
 		});
 
 		textarea.addEventListener('input', function(e) {
 			console.log(new Parser(textarea.value));
-		});*/
+		});
 	</script>
 
 </body>

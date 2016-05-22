@@ -1,4 +1,15 @@
+function string(value) {
+	return {
+		type: 'string',
+		value: value
+	}
+}
+
 function object(key, value) {
+	if (typeof value === 'string') {
+		value = string(value);
+	}
+
 	return {
 		type: 'object',
 		properties: [
@@ -8,10 +19,7 @@ function object(key, value) {
 					type: 'key',
 					value: key
 				},
-				value: {
-					type: 'string',
-					value: value
-				}
+				value: value
 			}
 		]
 	}
@@ -21,225 +29,48 @@ function array() {
 	return {
 		type: 'array',
 		items: Array.prototype.slice.call(arguments).map(function(item) {
-			return {
-				type: 'string',
-				value: item
+			if (typeof item === 'string') {
+				item = string(item);
 			}
+
+			return item;
 		})
 	}
 }
 
-var a =
-	object('a');
+var ast =
+	object('a',
+		object('b',
+			object('c',
+				object('d',
+					object('e',
+						object('f',
+							object('g',
+								array('h',
+									array('i',
+										array('j',
+											array('k',
+												array('l',
+													array('m',
+														array('n')
+													)
+												)
+											)
+										)
+									)
+								)
+							)
+						)
+					)
+				)
+			)
+		)
+	);
 
-a;
+module.exports = {
+	ast: ast,
+	options: {
+		verbose: false
+	}
+};
 
-module.exports = a;
-
-
-
-
-/*
-
-{
-	  properties: [
-	    {
-	      key: {
-	        type: 'key'
-			  value": "a"
-	      }
-	-      "type": "property"
--      "value": {
-	-        "properties": [
-		-          {
-		-            "key": {
-		-              "type": "key"
-		-              "value": "b"
-		-            }
-	-            "type": "property"
-	-            "value": {
-		-              "properties": [
-			-                {
-			-                  "key": {
-			-                    "type": "key"
-			-                    "value": "c"
-			-                  }
-		-                  "type": "property"
-		-                  "value": {
-			-                    "properties": [
-				-                      {
-				-                        "key": {
-				-                          "type": "key"
-				-                          "value": "d"
-				-                        }
-			-                        "type": "property"
-			-                        "value": {
-				-                          "properties": [
-					-                            {
-					-                              "key": {
-					-                                "type": "key"
-					-                                "value": "e"
-					-                              }
-				-                              "type": "property"
-				-                              "value": {
-					-                                "properties": [
-						-                                  {
-						-                                    "key": {
-						-                                      "type": "key"
-						-                                      "value": "f"
-						-                                    }
-					-                                    "type": "property"
-					-                                    "value": {
-						-                                      "properties": [
-							-                                        {
-							-                                          "key": {
-							-                                            "type": "key"
-							-                                            "value": "g"
-							-                                          }
-						-                                          "type": "property"
-						-                                          "value": {
-							-                                            "properties": [
-								-                                              {
-								-                                                "key": {
-								-                                                  "type": "key"
-								-                                                  "value": "h"
-								-                                                }
-							-                                                "type": "property"
-							-                                                "value": {
-								-                                                  "properties": [
-									-                                                    {
-									-                                                      "key": {
-									-                                                        "type": "key"
-									-                                                        "value": "i"
-									-                                                      }
-								-                                                      "type": "property"
-								-                                                      "value": {
-									-                                                        "properties": [
-										-                                                          {
-										-                                                            "key": {
-										-                                                              "type": "key"
-										-                                                              "value": "j"
-										-                                                            }
-									-                                                            "type": "property"
-									-                                                            "value": {
-										-                                                              "items": [
-											-                                                                {
-											-                                                                  "type": "string"
-										-                                                                  "value": "k"
-										-                                                                }
-										-                                                                {
-										-                                                                  "items": [
-											-                                                                    {
-											-                                                                      "type": "string"
-										-                                                                      "value": "l"
-										-                                                                    }
-										-                                                                    {
-										-                                                                      "items": [
-											-                                                                        {
-											-                                                                          "type": "string"
-										-                                                                          "value": "m"
-										-                                                                        }
-										-                                                                        {
-										-                                                                          "items": [
-											-                                                                            {
-											-                                                                              "type": "string"
-										-                                                                              "value": "n"
-										-                                                                            }
-										-                                                                            {
-										-                                                                              "items": [
-											-                                                                                {
-											-                                                                                  "type": "string"
-										-                                                                                  "value": "o"
-										-                                                                                }
-										-                                                                                {
-										-                                                                                  "items": [
-											-                                                                                    {
-											-                                                                                      "type": "string"
-										-                                                                                      "value": "p"
-										-                                                                                    }
-										-                                                                                    {
-										-                                                                                      "items": [
-											-                                                                                        {
-											-                                                                                          "type": "string"
-										-                                                                                          "value": "q"
-										-                                                                                        }
-										-                                                                                        {
-										-                                                                                          "items": [
-											-                                                                                            {
-											-                                                                                              "type": "string"
-										-                                                                                              "value": "r"
-										-                                                                                            }
-										-                                                                                            {
-										-                                                                                              "items": [
-											-                                                                                                {
-											-                                                                                                  "type": "string"
-										-                                                                                                  "value": "s"
-										-                                                                                                }
-										-                                                                                              ]
-										-                                                                                              "type": "array"
-										-                                                                                            }
-										-                                                                                          ]
-										-                                                                                          "type": "array"
-										-                                                                                        }
-										-                                                                                      ]
-										-                                                                                      "type": "array"
-										-                                                                                    }
-										-                                                                                  ]
-										-                                                                                  "type": "array"
-										-                                                                                }
-										-                                                                              ]
-										-                                                                              "type": "array"
-										-                                                                            }
-										-                                                                          ]
-										-                                                                          "type": "array"
-										-                                                                        }
-										-                                                                      ]
-										-                                                                      "type": "array"
-										-                                                                    }
-										-                                                                  ]
-										-                                                                  "type": "array"
-										-                                                                }
-										-                                                              ]
-										-                                                              "type": "array"
-										-                                                            }
-									-                                                          }
-									-                                                        ]
-									-                                                        "type": "object"
-									-                                                      }
-								-                                                    }
-								-                                                  ]
-								-                                                  "type": "object"
-								-                                                }
-							-                                              }
-							-                                            ]
-							-                                            "type": "object"
-							-                                          }
-						-                                        }
-						-                                      ]
-						-                                      "type": "object"
-						-                                    }
-					-                                  }
-					-                                ]
-					-                                "type": "object"
-					-                              }
-				-                            }
-				-                          ]
-				-                          "type": "object"
-				-                        }
-			-                      }
-			-                    ]
-			-                    "type": "object"
-			-                  }
-		-                }
-		-              ]
-		-              "type": "object"
-		-            }
-	-          }
-	-        ]
-	-        "type": "object"
-	-      }
-	-    }
-	-  ]
-	-  "type": "object"
--}
-*/

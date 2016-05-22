@@ -688,7 +688,7 @@
 	}
 
 	function parse(source, settings) {
-		settings = _extends(defaultSettings, settings);
+		settings = _extends(settings, defaultSettings);
 		var tokenList = tokenize(source);
 		var index = 0;
 		var json = parseValue(tokenList, index, settings);

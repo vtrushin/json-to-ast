@@ -34,7 +34,7 @@ function parseObject(tokenList, index, settings) {
 	let state = objectStates._START_;
 
 	while (true) {
-		let token = tokenList[index];
+		const token = tokenList[index];
 
 		switch (state) {
 			case objectStates._START_:
@@ -166,7 +166,7 @@ function parseArray(tokenList, index, settings) {
 	let state = arrayStates._START_;
 
 	while (true) {
-		let token = tokenList[index];
+		const token = tokenList[index];
 
 		switch (state) {
 			case arrayStates._START_:
@@ -286,7 +286,7 @@ function parseValue(tokenList, index, settings) {
 }
 
 export default function(source, settings) {
-	settings = Object.assign(defaultSettings, settings);
+	settings = Object.assign(settings, defaultSettings);
 	const tokenList = tokenize(source);
 	let index = 0;
 	let json = parseValue(tokenList, index, settings);

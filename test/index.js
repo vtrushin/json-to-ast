@@ -29,10 +29,8 @@ describe('test cases', function() {
 		var expectedAst = require(path.join(folderPath, _case + '.js'));
 
 		it(_case, function() {
-			var parsedAst = new Parser(inputFile, {
-				verbose: false
-			});
-			assert.deepEqual(parsedAst, expectedAst, 'asts are not equal');
+			var parsedAst = new Parser(inputFile, expectedAst.options);
+			assert.deepEqual(parsedAst, expectedAst.ast, 'asts are not equal');
 		});
 	});
 });

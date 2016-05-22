@@ -1,12 +1,23 @@
 {
   "name": "json-to-ast",
-  "version": "1.0.0",
+  "version": "1.0.23",
   "description": "JSON parser with AST output",
-  "main": "index.js",
+  "main": "dist/Parser.js",
   "scripts": {
     "test": "mocha"
   },
+  "homepage": "https://github.com/vtrushin/json-to-ast",
   "author": "Vlad Trushin",
+  "maintainers": [
+    {
+      "name": "Vlad Trushin <monospectr@mail.ru> (https://github.com/vtrushin)",
+      "email": "monospectr@mail.ru",
+      "github-username": "vtrushin"
+    }
+  ],
+  "repository": {
+    "url": "https://github.com/vtrushin/json-to-ast.git"
+  },
   "license": "ISC",
   "dependencies": {
     "babel-plugin-transform-es2015-modules-umd": "^6.6.5",
