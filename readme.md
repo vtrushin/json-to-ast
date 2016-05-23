@@ -29,7 +29,7 @@ for array
 }
 ```
 
-for simple types
+for primitive type
 ```js
 {
   type: 'string|number|true|false|null',
