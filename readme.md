@@ -37,4 +37,4 @@ for simple types
 }
 ```
 
-[Try out in online](https://rawgit.com/vtrushin/json-parser/master/index.html)
+[Try out in online (Look at console)](https://rawgit.com/vtrushin/json-to-ast/master/demo/index.html)
