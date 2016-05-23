@@ -74,16 +74,16 @@ AST format for object
         type: 'key',
         value: 'keyName',
         position: {
-        	start: {
-        		line: ...,
-        		column: ...,
-        		char: ...
-        	},
-        	end: {
-        		line: ...,
-        		column: ...,
-        		char: ...
-        	}
+          start: {
+            line: ...,
+            column: ...,
+            char: ...
+          },
+          end: {
+            line: ...,
+            column: ...,
+            char: ...
+          }
         }
       },
       value: ...
