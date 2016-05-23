@@ -54,8 +54,8 @@
       },
       end: {
         line: 1,
-        column: 15,
-        char: 14
+        column: 13,
+        char: 12
       }
     }
   }
