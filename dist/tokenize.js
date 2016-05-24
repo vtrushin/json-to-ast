@@ -376,7 +376,7 @@
 
 		if (passedValue) {
 			return {
-				token: tokenTypes.NUMBER,
+				type: tokenTypes.NUMBER,
 				value: passedValue,
 				line: line,
 				index: index + passedValue.length,
