@@ -108,7 +108,7 @@
 		return char === 'e' || char === 'E';
 	};
 	var isUnicode = function isUnicode(char) {
-		return char === 'u' || char === 'U';
+		return char === 'u';
 	};
 
 	function parseWhitespace(source, index, line, column) {

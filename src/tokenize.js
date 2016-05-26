@@ -66,7 +66,7 @@ const isDigit1to9 = (char) =>  char >= '1' && char <= '9';
 const isDigit = (char) => char >= '0' && char <= '9';
 const isHex = (char) => isDigit(char) || (char >= 'a' && char <= 'f') || (char >= 'A' && char <= 'F');
 const isExp = (char) => char === 'e' || char === 'E';
-const isUnicode = (char) => char === 'u' || char === 'U';
+const isUnicode = (char) => char === 'u';
 
 function parseWhitespace(source, index, line, column) {
 	const char = source.charAt(index);
