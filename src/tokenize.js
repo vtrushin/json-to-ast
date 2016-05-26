@@ -62,11 +62,31 @@ const numberStates = {
 	EXP_DIGIT: 10
 };
 
-const isDigit1to9 = (char) =>  char >= '1' && char <= '9';
-const isDigit = (char) => char >= '0' && char <= '9';
-const isHex = (char) => isDigit(char) || (char >= 'a' && char <= 'f') || (char >= 'A' && char <= 'F');
-const isExp = (char) => char === 'e' || char === 'E';
-const isUnicode = (char) => char === 'u';
+// HELPERS
+
+function isDigit1to9(char) {
+	return char >= '1' && char <= '9';
+}
+
+function isDigit(char) {
+	return char >= '0' && char <= '9';
+}
+
+function isHex(char) {
+	return isDigit(char)
+		|| (char >= 'a' && char <= 'f')
+		|| (char >= 'A' && char <= 'F');
+}
+
+function isExp(char) {
+	return char === 'e' || char === 'E';
+}
+
+function isUnicode(char) {
+	return char === 'u';
+}
+
+// PARSERS
 
 function parseWhitespace(source, index, line, column) {
 	const char = source.charAt(index);

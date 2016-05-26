@@ -95,21 +95,29 @@
 		EXP_DIGIT: 10
 	};
 
-	var isDigit1to9 = function isDigit1to9(char) {
+	// HELPERS
+
+	function isDigit1to9(char) {
 		return char >= '1' && char <= '9';
-	};
-	var isDigit = function isDigit(char) {
+	}
+
+	function isDigit(char) {
 		return char >= '0' && char <= '9';
-	};
-	var isHex = function isHex(char) {
+	}
+
+	function isHex(char) {
 		return isDigit(char) || char >= 'a' && char <= 'f' || char >= 'A' && char <= 'F';
-	};
-	var isExp = function isExp(char) {
+	}
+
+	function isExp(char) {
 		return char === 'e' || char === 'E';
-	};
-	var isUnicode = function isUnicode(char) {
+	}
+
+	function isUnicode(char) {
 		return char === 'u';
-	};
+	}
+
+	// PARSERS
 
 	function parseWhitespace(source, index, line, column) {
 		var char = source.charAt(index);
