@@ -129,12 +129,12 @@ function parseKeyword(source, index, line, column) {
 }
 
 function parseString(source, index, line, column) {
-	let startIndex = index;
+	const startIndex = index;
 	let buffer = '';
 	let state = stringStates._START_;
 
-	while (true) {
-		let char = source.charAt(index);
+	while (index < source.length) {
+		const char = source.charAt(index);
 
 		switch (state) {
 			case stringStates._START_:
@@ -191,59 +191,46 @@ function parseString(source, index, line, column) {
 }
 
 function parseNumber(source, index, line, column) {
-	let buffer = '';
-	let passedValue;
+	const startIndex = index;
+	let passedValueIndex = index;
 	let state = numberStates._START_;
 
-	iterator: while (true) {
+	iterator: while (index < source.length) {
 		const char = source.charAt(index);
+		index ++;
 
 		switch (state) {
 			case numberStates._START_:
 				if (char === '-') {
 					state = numberStates.MINUS;
-					buffer += char;
-					index ++;
 				} else if (char === '0') {
 					state = numberStates.ZERO;
-					buffer += char;
-					index ++;
-					passedValue = buffer;
+					passedValueIndex = index;
 				} else if (isDigit1to9(char)) {
 					state = numberStates.DIGIT_1TO9;
-					buffer += char;
-					index ++;
-					passedValue = buffer;
+					passedValueIndex = index;
 				} else {
-					break iterator;
+					return null;
 				}
 				break;
 
 			case numberStates.MINUS:
 				if (char === '0') {
 					state = numberStates.ZERO;
-					buffer += char;
-					index ++;
-					passedValue = buffer;
+					passedValueIndex = index;
 				} else if (isDigit1to9(char)) {
 					state = numberStates.DIGIT_1TO9;
-					buffer += char;
-					index ++;
-					passedValue = buffer;
+					passedValueIndex = index;
 				} else {
-					break iterator;
+					return null;
 				}
 				break;
 
 			case numberStates.ZERO:
 				if (char === '.') {
 					state = numberStates.POINT;
-					buffer += char;
-					index ++;
 				} else if (isExp(char)) {
 					state = numberStates.EXP;
-					buffer += char;
-					index ++;
 				} else {
 					break iterator;
 				}
@@ -253,17 +240,11 @@ function parseNumber(source, index, line, column) {
 			case numberStates.DIGIT_CEIL:
 				if (isDigit(char)) {
 					state = numberStates.DIGIT_CEIL;
-					buffer += char;
-					index ++;
-					passedValue = buffer;
+					passedValueIndex = index;
 				} else if (char === '.') {
 					state = numberStates.POINT;
-					buffer += char;
-					index ++;
 				} else if (isExp(char)) {
 					state = numberStates.EXP;
-					buffer += char;
-					index ++;
 				} else {
 					break iterator;
 				}
@@ -272,9 +253,7 @@ function parseNumber(source, index, line, column) {
 			case numberStates.POINT:
 				if (isDigit(char)) {
 					state = numberStates.DIGIT_FRACTION;
-					buffer += char;
-					index ++;
-					passedValue = buffer;
+					passedValueIndex = index;
 				} else {
 					break iterator;
 				}
@@ -282,13 +261,9 @@ function parseNumber(source, index, line, column) {
 
 			case numberStates.DIGIT_FRACTION:
 				if (isDigit(char)) {
-					buffer += char;
-					index ++;
-					passedValue = buffer;
+					passedValueIndex = index;
 				} else if (isExp(char)) {
 					state = numberStates.EXP;
-					buffer += char;
-					index ++;
 				} else {
 					break iterator;
 				}
@@ -297,17 +272,11 @@ function parseNumber(source, index, line, column) {
 			case numberStates.EXP:
 				if (char === '+') {
 					state = numberStates.EXP_PLUS;
-					buffer += char;
-					index ++;
 				} else if (char === '-') {
 					state = numberStates.EXP_MINUS;
-					buffer += char;
-					index ++;
 				} else if (isDigit(char)) {
 					state = numberStates.EXP_DIGIT;
-					buffer += char;
-					index ++;
-					passedValue = buffer;
+					passedValueIndex = index;
 				} else {
 					break iterator;
 				}
@@ -318,24 +287,21 @@ function parseNumber(source, index, line, column) {
 			case numberStates.EXP_DIGIT:
 				if (isDigit(char)) {
 					state = numberStates.EXP_DIGIT;
-					buffer += char;
-					index ++;
-					passedValue = buffer;
+					passedValueIndex = index;
 				} else {
 					break iterator;
 				}
 				break;
 		}
-
 	}
 
-	if (passedValue) {
+	if (passedValueIndex > startIndex) {
 		return {
 			type: tokenTypes.NUMBER,
-			value: passedValue,
+			value: source.substring(startIndex, passedValueIndex),
 			line: line,
-			index: index + passedValue.length,
-			column: column + passedValue.length
+			index: passedValueIndex,
+			column: column + passedValueIndex - startIndex
 		};
 	} else {
 		return null;

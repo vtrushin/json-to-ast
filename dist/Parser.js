@@ -217,7 +217,7 @@
 		var buffer = '';
 		var state = stringStates._START_;
 
-		while (true) {
+		while (index < source.length) {
 			var char = source.charAt(index);
 
 			switch (state) {
@@ -275,59 +275,46 @@
 	}
 
 	function parseNumber(source, index, line, column) {
-		var buffer = '';
-		var passedValue = void 0;
+		var startIndex = index;
+		var passedValueIndex = index;
 		var state = numberStates._START_;
 
-		iterator: while (true) {
+		iterator: while (index < source.length) {
 			var char = source.charAt(index);
+			index++;
 
 			switch (state) {
 				case numberStates._START_:
 					if (char === '-') {
 						state = numberStates.MINUS;
-						buffer += char;
-						index++;
 					} else if (char === '0') {
 						state = numberStates.ZERO;
-						buffer += char;
-						index++;
-						passedValue = buffer;
+						passedValueIndex = index;
 					} else if (isDigit1to9(char)) {
 						state = numberStates.DIGIT_1TO9;
-						buffer += char;
-						index++;
-						passedValue = buffer;
+						passedValueIndex = index;
 					} else {
-						break iterator;
+						return null;
 					}
 					break;
 
 				case numberStates.MINUS:
 					if (char === '0') {
 						state = numberStates.ZERO;
-						buffer += char;
-						index++;
-						passedValue = buffer;
+						passedValueIndex = index;
 					} else if (isDigit1to9(char)) {
 						state = numberStates.DIGIT_1TO9;
-						buffer += char;
-						index++;
-						passedValue = buffer;
+						passedValueIndex = index;
 					} else {
-						break iterator;
+						return null;
 					}
 					break;
 
 				case numberStates.ZERO:
 					if (char === '.') {
 						state = numberStates.POINT;
-						buffer += char;
-						index++;
 					} else if (isExp(char)) {
 						state = numberStates.EXP;
-						buffer += char;
-						index++;
 					} else {
 						break iterator;
 					}
@@ -337,17 +324,11 @@
 				case numberStates.DIGIT_CEIL:
 					if (isDigit(char)) {
 						state = numberStates.DIGIT_CEIL;
-						buffer += char;
-						index++;
-						passedValue = buffer;
+						passedValueIndex = index;
 					} else if (char === '.') {
 						state = numberStates.POINT;
-						buffer += char;
-						index++;
 					} else if (isExp(char)) {
 						state = numberStates.EXP;
-						buffer += char;
-						index++;
 					} else {
 						break iterator;
 					}
@@ -356,9 +337,7 @@
 				case numberStates.POINT:
 					if (isDigit(char)) {
 						state = numberStates.DIGIT_FRACTION;
-						buffer += char;
-						index++;
-						passedValue = buffer;
+						passedValueIndex = index;
 					} else {
 						break iterator;
 					}
@@ -366,13 +345,9 @@
 
 				case numberStates.DIGIT_FRACTION:
 					if (isDigit(char)) {
-						buffer += char;
-						index++;
-						passedValue = buffer;
+						passedValueIndex = index;
 					} else if (isExp(char)) {
 						state = numberStates.EXP;
-						buffer += char;
-						index++;
 					} else {
 						break iterator;
 					}
@@ -381,17 +356,11 @@
 				case numberStates.EXP:
 					if (char === '+') {
 						state = numberStates.EXP_PLUS;
-						buffer += char;
-						index++;
 					} else if (char === '-') {
 						state = numberStates.EXP_MINUS;
-						buffer += char;
-						index++;
 					} else if (isDigit(char)) {
 						state = numberStates.EXP_DIGIT;
-						buffer += char;
-						index++;
-						passedValue = buffer;
+						passedValueIndex = index;
 					} else {
 						break iterator;
 					}
@@ -402,9 +371,7 @@
 				case numberStates.EXP_DIGIT:
 					if (isDigit(char)) {
 						state = numberStates.EXP_DIGIT;
-						buffer += char;
-						index++;
-						passedValue = buffer;
+						passedValueIndex = index;
 					} else {
 						break iterator;
 					}
@@ -412,13 +379,13 @@
 			}
 		}
 
-		if (passedValue) {
+		if (passedValueIndex > startIndex) {
 			return {
 				type: tokenTypes.NUMBER,
-				value: passedValue,
+				value: source.substring(startIndex, passedValueIndex),
 				line: line,
-				index: index + passedValue.length,
-				column: column + passedValue.length
+				index: passedValueIndex,
+				column: column + passedValueIndex - startIndex
 			};
 		} else {
 			return null;
@@ -490,6 +457,11 @@
 
 			this.tokenList = tokenize(source);
 			// console.log(this.tokenList);
+
+			if (this.tokenList.length < 1) {
+				throw new Error(exceptionsDict.emptyString);
+			}
+
 			this.index = 0;
 
 			var json = this._parseValue();
@@ -497,7 +469,7 @@
 			if (json) {
 				return json;
 			} else {
-				throw new SyntaxError(exceptionsDict.emptyString);
+				throw new Error(exceptionsDict.emptyString);
 			}
 		}
 
@@ -716,11 +688,6 @@
 			value: function _parseValue() {
 				// value: object | array | STRING | NUMBER | TRUE | FALSE | NULL
 				var token = this.tokenList[this.index];
-
-				if (token.type === 'RIGHT_BRACKET') {
-					debugger;
-				}
-
 				var tokenType = void 0;
 
 				switch (token.type) {
@@ -760,7 +727,8 @@
 				} else if (objectOrArray !== null) {
 					return objectOrArray;
 				} else {
-					throw new Error('!!!!!');
+					// throw new Error('!!!!!');
+					return null;
 				}
 			}
 		}]);

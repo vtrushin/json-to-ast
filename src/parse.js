@@ -24,6 +24,14 @@ const defaultSettings = {
 	verbose: true
 };
 
+const primitiveTokenTypes = {
+	'string': tokenTypes.STRING,
+	'number': tokenTypes.NUMBER,
+	'true': tokenTypes.TRUE,
+	'false': tokenTypes.FALSE,
+	'null': tokenTypes.NULL
+};
+
 function parseObject(tokenList, index, settings) {
 	let startToken;
 	let property;

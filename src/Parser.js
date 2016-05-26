@@ -30,6 +30,11 @@ export default class {
 
 		this.tokenList = tokenize(source);
 		// console.log(this.tokenList);
+
+		if (this.tokenList.length < 1) {
+			throw new Error(exceptionsDict.emptyString);
+		}
+
 		this.index = 0;
 
 		let json = this._parseValue();
@@ -37,7 +42,7 @@ export default class {
 		if (json) {
 			return json;
 		} else {
-			throw new SyntaxError(exceptionsDict.emptyString);
+			throw new Error(exceptionsDict.emptyString);
 		}
 	}
 
@@ -284,11 +289,6 @@ export default class {
 	_parseValue() {
 		// value: object | array | STRING | NUMBER | TRUE | FALSE | NULL
 		let token = this.tokenList[this.index];
-
-		if (token.type === 'RIGHT_BRACKET') {
-			debugger;
-		}
-
 		let tokenType;
 
 		switch (token.type) {
@@ -333,7 +333,8 @@ export default class {
 			return objectOrArray;
 
 		} else {
-			throw new Error('!!!!!');
+			// throw new Error('!!!!!');
+			return null;
 		}
 	}
 
