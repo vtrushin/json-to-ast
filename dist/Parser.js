@@ -51,11 +51,6 @@
 		};
 	}();
 
-	var exceptionsDict = {
-		tokenizeSymbolError: 'Cannot tokenize symbol <{char}> at {line}:{column}',
-		emptyString: 'JSON is empty'
-	};
-
 	function position(startLine, startColumn, startChar, endLine, endColumn, endChar) {
 		return {
 			start: {
@@ -131,6 +126,12 @@
 		EXP_PLUS: 8,
 		EXP_MINUS: 9,
 		EXP_DIGIT: 10
+	};
+
+	var errors = {
+		tokenizeSymbol: function tokenizeSymbol(char, line, column) {
+			return new Error('Cannot tokenize symbol <' + char + '> at ' + line + ':' + column);
+		}
 	};
 
 	// HELPERS
@@ -428,12 +429,17 @@
 				line = matched.line;
 				column = matched.column;
 			} else {
-				throw new SyntaxError(exceptionsDict.tokenizeSymbolError.replace('{char}', source.charAt(index)).replace('{line}', line.toString()).replace('{column}', column.toString()));
+				errors.tokenizeSymbol(source.charAt(index), line.toString(), column.toString());
 			}
 		}
 
 		return tokens;
 	}
+
+	var exceptionsDict = {
+		tokenizeSymbolError: 'Cannot tokenize symbol <{char}> at {line}:{column}',
+		emptyString: 'JSON is empty'
+	};
 
 	var objectStates = {
 		_START_: 0,

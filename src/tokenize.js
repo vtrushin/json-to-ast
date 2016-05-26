@@ -1,4 +1,3 @@
-import exceptionsDict from './exceptionsDict';
 import position from './position';
 
 export const tokenTypes = {
@@ -60,6 +59,12 @@ const numberStates = {
 	EXP_PLUS: 8,
 	EXP_MINUS: 9,
 	EXP_DIGIT: 10
+};
+
+const errors = {
+	tokenizeSymbol(char, line, column) {
+		return new Error(`Cannot tokenize symbol <${char}> at ${line}:${column}`)
+	}
 };
 
 // HELPERS
@@ -361,12 +366,8 @@ export function tokenize (source) {
 			column = matched.column;
 
 		} else {
-			throw new SyntaxError(
-				exceptionsDict.tokenizeSymbolError
-					.replace('{char}', source.charAt(index))
-					.replace('{line}', line.toString())
-					.replace('{column}', column.toString())
-			);
+			errors.tokenizeSymbol(source.charAt(index), line.toString(), column.toString());
+
 		}
 	}
 
