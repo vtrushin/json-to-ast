@@ -1,6 +1,6 @@
 {
   "name": "json-to-ast",
-  "version": "1.0.247",
+  "version": "1.0.250",
   "description": "JSON parser with AST output",
   "main": "dist/Parser.js",
   "scripts": {
