@@ -1,6 +1,6 @@
 # JSON AST parser
 
-## Usage
+## About usage
 ```js
   var Parser = require('json-to-ast');
 
