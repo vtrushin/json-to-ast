@@ -1,4 +1,3 @@
-import exceptionsDict from './exceptionsDict';
 import position from './position';
 
 export const tokenTypes = {
@@ -62,11 +61,37 @@ const numberStates = {
 	EXP_DIGIT: 10
 };
 
-const isDigit1to9 = (char) =>  char >= '1' && char <= '9';
-const isDigit = (char) => char >= '0' && char <= '9';
-const isHex = (char) => isDigit(char) || (char >= 'a' && char <= 'f') || (char >= 'A' && char <= 'F');
-const isExp = (char) => char === 'e' || char === 'E';
-const isUnicode = (char) => char === 'u' || char === 'U';
+const errors = {
+	tokenizeSymbol(char, line, column) {
+		return new Error(`Cannot tokenize symbol <${char}> at ${line}:${column}`)
+	}
+};
+
+// HELPERS
+
+function isDigit1to9(char) {
+	return char >= '1' && char <= '9';
+}
+
+function isDigit(char) {
+	return char >= '0' && char <= '9';
+}
+
+function isHex(char) {
+	return isDigit(char)
+		|| (char >= 'a' && char <= 'f')
+		|| (char >= 'A' && char <= 'F');
+}
+
+function isExp(char) {
+	return char === 'e' || char === 'E';
+}
+
+function isUnicode(char) {
+	return char === 'u';
+}
+
+// PARSERS
 
 function parseWhitespace(source, index, line, column) {
 	const char = source.charAt(index);
@@ -341,12 +366,8 @@ export function tokenize (source) {
 			column = matched.column;
 
 		} else {
-			throw new SyntaxError(
-				exceptionsDict.tokenizeSymbolError
-					.replace('{char}', source.charAt(index))
-					.replace('{line}', line.toString())
-					.replace('{column}', column.toString())
-			);
+			errors.tokenizeSymbol(source.charAt(index), line.toString(), column.toString());
+
 		}
 	}
 

@@ -51,11 +51,6 @@
 		};
 	}();
 
-	var exceptionsDict = {
-		tokenizeSymbolError: 'Cannot tokenize symbol <{char}> at {line}:{column}',
-		emptyString: 'JSON is empty'
-	};
-
 	function position(startLine, startColumn, startChar, endLine, endColumn, endChar) {
 		return {
 			start: {
@@ -133,21 +128,35 @@
 		EXP_DIGIT: 10
 	};
 
-	var isDigit1to9 = function isDigit1to9(char) {
+	var errors = {
+		tokenizeSymbol: function tokenizeSymbol(char, line, column) {
+			return new Error('Cannot tokenize symbol <' + char + '> at ' + line + ':' + column);
+		}
+	};
+
+	// HELPERS
+
+	function isDigit1to9(char) {
 		return char >= '1' && char <= '9';
-	};
-	var isDigit = function isDigit(char) {
+	}
+
+	function isDigit(char) {
 		return char >= '0' && char <= '9';
-	};
-	var isHex = function isHex(char) {
+	}
+
+	function isHex(char) {
 		return isDigit(char) || char >= 'a' && char <= 'f' || char >= 'A' && char <= 'F';
-	};
-	var isExp = function isExp(char) {
+	}
+
+	function isExp(char) {
 		return char === 'e' || char === 'E';
-	};
-	var isUnicode = function isUnicode(char) {
-		return char === 'u' || char === 'U';
-	};
+	}
+
+	function isUnicode(char) {
+		return char === 'u';
+	}
+
+	// PARSERS
 
 	function parseWhitespace(source, index, line, column) {
 		var char = source.charAt(index);
@@ -420,12 +429,17 @@
 				line = matched.line;
 				column = matched.column;
 			} else {
-				throw new SyntaxError(exceptionsDict.tokenizeSymbolError.replace('{char}', source.charAt(index)).replace('{line}', line.toString()).replace('{column}', column.toString()));
+				errors.tokenizeSymbol(source.charAt(index), line.toString(), column.toString());
 			}
 		}
 
 		return tokens;
 	}
+
+	var exceptionsDict = {
+		tokenizeSymbolError: 'Cannot tokenize symbol <{char}> at {line}:{column}',
+		emptyString: 'JSON is empty'
+	};
 
 	var objectStates = {
 		_START_: 0,
