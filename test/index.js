@@ -7,7 +7,7 @@ var folderPath = path.join(__dirname, 'cases');
 var folder = fs.readdirSync(folderPath);
 var cases = folder
 	.filter(function(_case) {
-		return path.extname(_case) === '.json';
+		return path.extname(_case) === '.json' && _case.charAt(0) !== '_';
 	})
 	.map(function(fileName) {
 		return path.basename(fileName, '.json');
