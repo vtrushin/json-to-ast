@@ -169,7 +169,8 @@
 				type: keywordsTokens[matched],
 				line: line,
 				column: column + matched.length,
-				index: index + matched.length
+				index: index + matched.length,
+				value: null
 			};
 		} else {
 			return null;

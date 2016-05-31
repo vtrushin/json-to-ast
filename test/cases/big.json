@@ -1,0 +1,116 @@
+[
+  {
+    "_id": "574d7238062156c6d9e6de99",
+    "index": 0,
+    "guid": "c99bf348-0345-49fd-be52-d0da82bdd47f",
+    "isActive": true,
+    "balance": "$1,087.03",
+    "picture": "http://placehold.it/32x32",
+    "age": 25,
+    "eyeColor": "brown",
+    "name": {
+      "first": "Stacie",
+      "last": "Sargent"
+    },
+    "company": "DAISU",
+    "email": "stacie.sargent@daisu.com",
+    "phone": "+1 (830) 537-3936",
+    "address": "547 Charles Place, Weogufka, Marshall Islands, 6627",
+    "about": "Exercitation nisi incididunt exercitation sit Lorem nostrud commodo incididunt cillum amet. Laboris proident non nostrud dolor esse exercitation enim sit culpa Lorem qui. Laborum aliquip pariatur mollit aute. Et consequat Lorem in cillum sunt dolore aute voluptate anim commodo. Excepteur labore proident consequat nulla occaecat in consequat minim.",
+    "registered": "Sunday, October 4, 2015 3:58 PM",
+    "latitude": "45.437159",
+    "longitude": "-77.052972",
+    "tags": [
+      "veniam",
+      "et",
+      "cillum",
+      "ex",
+      "nisi"
+    ],
+    "range": [
+      0,
+      1,
+      2,
+      3,
+      4,
+      5,
+      6,
+      7,
+      8,
+      9
+    ],
+    "friends": [
+      {
+        "id": 0,
+        "name": "Juliana Valentine"
+      },
+      {
+        "id": 1,
+        "name": "Robert Eaton"
+      },
+      {
+        "id": 2,
+        "name": "Socorro Herrera"
+      }
+    ],
+    "greeting": "Hello, Stacie! You have 6 unread messages.",
+    "favoriteFruit": "banana"
+  },
+  {
+    "_id": "574d7238bd4c01db9e4a4d5b",
+    "index": 1,
+    "guid": "5fd3fc48-e39e-4ee4-bc3a-6eb12bed2653",
+    "isActive": false,
+    "balance": "$1,696.52",
+    "picture": "http://placehold.it/32x32",
+    "age": 32,
+    "eyeColor": "blue",
+    "name": {
+      "first": "Ada",
+      "last": "Stokes"
+    },
+    "company": "FARMAGE",
+    "email": "ada.stokes@farmage.biz",
+    "phone": "+1 (875) 486-3569",
+    "address": "361 Howard Place, Wyano, Michigan, 346",
+    "about": "Culpa esse laboris enim occaecat voluptate non reprehenderit officia amet eu ad laboris officia. Exercitation qui occaecat veniam ea tempor. Reprehenderit laborum magna occaecat sit tempor eiusmod est quis ea. Sunt minim labore et eu ex. Pariatur do proident nisi sunt commodo. Deserunt est ad pariatur laboris officia. Pariatur anim deserunt excepteur voluptate amet.",
+    "registered": "Wednesday, April 16, 2014 7:23 PM",
+    "latitude": "-45.133396",
+    "longitude": "43.593917",
+    "tags": [
+      "qui",
+      "eiusmod",
+      "nisi",
+      "officia",
+      "in"
+    ],
+    "range": [
+      0,
+      1,
+      2,
+      3,
+      4,
+      5,
+      6,
+      7,
+      8,
+      9
+    ],
+    "friends": [
+      {
+        "id": 0,
+        "name": "Campos Pruitt"
+      },
+      {
+        "id": 1,
+        "name": "Barnett Sykes"
+      },
+      {
+        "id": 2,
+        "name": "Trudy Collier"
+      }
+    ],
+    "greeting": "Hello, Ada! You have 8 unread messages.",
+    "favoriteFruit": "banana"
+  }
+]

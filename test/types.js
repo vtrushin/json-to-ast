@@ -1,3 +1,19 @@
+function position(startLine, startColumn, startChar, endLine, endColumn, endChar) {
+	return {
+		start: {
+			line: startLine,
+			column: startColumn,
+			char: startChar
+		},
+		end: {
+			line: endLine,
+			column: endColumn,
+			char: endChar
+		},
+		human: `${startLine}:${startColumn} - ${endLine}:${endColumn} [${startChar}:${endChar}]`
+	}
+}
+
 function createObjectProperty(key, value) {
 	return {
 		type: 'property',
@@ -9,56 +25,99 @@ function createObjectProperty(key, value) {
 	}
 }
 
-function createObject() {
-	return {
+function createObject(properties, position) {
+	var result = {
 		type: 'object',
-		properties: Array.prototype.slice.call(arguments)
+		properties: properties
+	};
+
+	if (position) {
+		result.position = position;
 	}
+
+	return result;
 }
 
-function createArray() {
-	return {
+function createArray(items, position) {
+	var result = {
 		type: 'array',
-		items: Array.prototype.slice.call(arguments)
+		items: items
+	};
+
+	if (position) {
+		result.position = position;
 	}
+
+	return result;
 }
 
-function createString(value) {
-	return {
+function createString(value, position) {
+	var result = {
 		type: 'string',
 		value: value
+	};
+
+	if (position) {
+		result.position = position;
 	}
+
+	return result;
 }
 
-function createNumber(value) {
-	return {
+function createNumber(value, position) {
+	var result = {
 		type: 'number',
 		value: value
+	};
+
+	if (position) {
+		result.position = position;
 	}
+
+	return result;
 }
 
-function createTrue() {
-	return {
+function createTrue(position) {
+	var result = {
 		type: 'true',
 		value: null
+	};
+
+	if (position) {
+		result.position = position;
 	}
+
+	return result;
 }
 
-function createFalse() {
-	return {
+function createFalse(position) {
+	var result = {
 		type: 'false',
 		value: null
+	};
+
+	if (position) {
+		result.position = position;
 	}
+
+	return result;
 }
 
-function createNull() {
-	return {
+function createNull(position) {
+	var result = {
 		type: 'null',
 		value: null
+	};
+
+	if (position) {
+		result.position = position;
 	}
+
+	return result;
 }
 
 module.exports = {
+	position: position,
 	createObjectProperty: createObjectProperty,
 	createObject: createObject,
 	createArray: createArray,
