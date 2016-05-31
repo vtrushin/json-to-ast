@@ -1,71 +1,38 @@
-function string(value) {
-	return {
-		type: 'string',
-		value: value
-	}
-}
+var types = require('../types');
 
-function object(key, value) {
-	if (typeof value === 'string') {
-		value = string(value);
-	}
-
-	return {
-		type: 'object',
-		properties: [
-			{
-				type: 'property',
-				key: {
-					type: 'key',
-					value: key
-				},
-				value: value
-			}
-		]
-	}
-}
-
-function array() {
-	return {
-		type: 'array',
-		items: Array.prototype.slice.call(arguments).map(function(item) {
-			if (typeof item === 'string') {
-				item = string(item);
-			}
-
-			return item;
-		})
-	}
-}
+var object = types.createObject;
+var prop = types.createObjectProperty;
+var array = types.createArray;
+var string = types.createString;
 
 var ast =
-	object('a',
-		object('b',
-			object('c',
-				object('d',
-					object('e',
-						object('f',
-							object('g',
-								array('h',
-									array('i',
-										array('j',
-											array('k',
-												array('l',
-													array('m',
-														array('n')
+	object(prop('a',
+		object(prop('b',
+			object(prop('c',
+				object(prop('d',
+					object(prop('e',
+						object(prop('f',
+							object(prop('g',
+								array(string('h'),
+									array(string('i'),
+										array(string('j'),
+											array(string('k'),
+												array(string('l'),
+													array(string('m'),
+														array(string('n'))
 													)
 												)
 											)
 										)
 									)
 								)
-							)
-						)
-					)
-				)
-			)
-		)
-	);
+							))
+						))
+					))
+				))
+			))
+		))
+	));
 
 module.exports = {
 	ast: ast,

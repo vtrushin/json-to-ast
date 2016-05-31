@@ -1,10 +1,7 @@
-var ast = {
-	type: 'array',
-	items: []
-};
+var array = require('../types').createArray;
 
 module.exports = {
-	ast: ast,
+	ast: array(),
 	options: {
 		verbose: false
 	}

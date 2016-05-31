@@ -1,10 +1,7 @@
-var ast = {
-	properties: [],
-	type: 'object'
-};
+var object = require('../types').createObject;
 
 module.exports = {
-	ast: ast,
+	ast: object(),
 	options: {
 		verbose: false
 	}

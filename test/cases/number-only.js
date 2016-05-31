@@ -1,10 +1,7 @@
-var ast = {
-	type: 'number',
-	value: '12345'
-};
+var number = require('../types').createNumber;
 
 module.exports = {
-	ast: ast,
+	ast: number('12345'),
 	options: {
 		verbose: false
 	}

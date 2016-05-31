@@ -1,15 +1,4 @@
-function array() {
-	return {
-		type: 'array',
-		items: Array.prototype.slice.call(arguments).map(function(item) {
-			if (typeof item === 'string') {
-				item = string(item);
-			}
-
-			return item;
-		})
-	}
-}
+var array = require('../types').createArray;
 
 var ast =
 	array(

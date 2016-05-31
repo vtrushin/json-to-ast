@@ -118,19 +118,16 @@
 		_START_: 0,
 		MINUS: 1,
 		ZERO: 2,
-		DIGIT_1TO9: 3,
-		DIGIT_CEIL: 4,
-		POINT: 5,
-		DIGIT_FRACTION: 6,
-		EXP: 7,
-		EXP_PLUS: 8,
-		EXP_MINUS: 9,
-		EXP_DIGIT: 10
+		DIGIT: 3,
+		POINT: 4,
+		DIGIT_FRACTION: 5,
+		EXP: 6,
+		EXP_DIGIT_OR_SIGN: 7
 	};
 
 	var errors = {
 		tokenizeSymbol: function tokenizeSymbol(char, line, column) {
-			return new Error('Cannot tokenize symbol <' + char + '> at ' + line + ':' + column);
+			throw new Error('Cannot tokenize symbol <' + char + '> at ' + line + ':' + column);
 		}
 	};
 
@@ -150,10 +147,6 @@
 
 	function isExp(char) {
 		return char === 'e' || char === 'E';
-	}
-
-	function isUnicode(char) {
-		return char === 'u';
 	}
 
 	// PARSERS
@@ -241,9 +234,26 @@
 
 				case stringStates.START_QUOTE_OR_CHAR:
 					if (char === '\\') {
-						state = stringStates.ESCAPE;
 						buffer += char;
 						index++;
+						var nextChar = source.charAt(index);
+						if (nextChar in escapes) {
+							buffer += nextChar;
+							index++;
+							if (nextChar === 'u') {
+								for (var i = 0; i < 4; i++) {
+									var curChar = source.charAt(index);
+									if (curChar && isHex(curChar)) {
+										buffer += curChar;
+										index++;
+									} else {
+										return null;
+									}
+								}
+							}
+						} else {
+							return null;
+						}
 					} else if (char === '"') {
 						index++;
 						return {
@@ -258,27 +268,6 @@
 						index++;
 					}
 					break;
-
-				case stringStates.ESCAPE:
-					if (char in escapes) {
-						buffer += char;
-						index++;
-						if (isUnicode(char)) {
-							for (var i = 0; i < 4; i++) {
-								var curChar = source.charAt(index);
-								if (curChar && isHex(curChar)) {
-									buffer += curChar;
-									index++;
-								} else {
-									return null;
-								}
-							}
-						}
-						state = stringStates.START_QUOTE_OR_CHAR;
-					} else {
-						return null;
-					}
-					break;
 			}
 		}
 	}
@@ -290,18 +279,17 @@
 
 		iterator: while (index < source.length) {
 			var char = source.charAt(index);
-			index++;
 
 			switch (state) {
 				case numberStates._START_:
 					if (char === '-') {
 						state = numberStates.MINUS;
 					} else if (char === '0') {
+						passedValueIndex = index + 1;
 						state = numberStates.ZERO;
-						passedValueIndex = index;
 					} else if (isDigit1to9(char)) {
-						state = numberStates.DIGIT_1TO9;
-						passedValueIndex = index;
+						passedValueIndex = index + 1;
+						state = numberStates.DIGIT;
 					} else {
 						return null;
 					}
@@ -309,11 +297,11 @@
 
 				case numberStates.MINUS:
 					if (char === '0') {
+						passedValueIndex = index + 1;
 						state = numberStates.ZERO;
-						passedValueIndex = index;
 					} else if (isDigit1to9(char)) {
-						state = numberStates.DIGIT_1TO9;
-						passedValueIndex = index;
+						passedValueIndex = index + 1;
+						state = numberStates.DIGIT;
 					} else {
 						return null;
 					}
@@ -329,11 +317,9 @@
 					}
 					break;
 
-				case numberStates.DIGIT_1TO9:
-				case numberStates.DIGIT_CEIL:
+				case numberStates.DIGIT:
 					if (isDigit(char)) {
-						state = numberStates.DIGIT_CEIL;
-						passedValueIndex = index;
+						passedValueIndex = index + 1;
 					} else if (char === '.') {
 						state = numberStates.POINT;
 					} else if (isExp(char)) {
@@ -345,8 +331,8 @@
 
 				case numberStates.POINT:
 					if (isDigit(char)) {
+						passedValueIndex = index + 1;
 						state = numberStates.DIGIT_FRACTION;
-						passedValueIndex = index;
 					} else {
 						break iterator;
 					}
@@ -354,7 +340,7 @@
 
 				case numberStates.DIGIT_FRACTION:
 					if (isDigit(char)) {
-						passedValueIndex = index;
+						passedValueIndex = index + 1;
 					} else if (isExp(char)) {
 						state = numberStates.EXP;
 					} else {
@@ -363,32 +349,29 @@
 					break;
 
 				case numberStates.EXP:
-					if (char === '+') {
-						state = numberStates.EXP_PLUS;
-					} else if (char === '-') {
-						state = numberStates.EXP_MINUS;
+					if (char === '+' || char === '-') {
+						state = numberStates.EXP_DIGIT_OR_SIGN;
 					} else if (isDigit(char)) {
-						state = numberStates.EXP_DIGIT;
-						passedValueIndex = index;
+						passedValueIndex = index + 1;
+						state = numberStates.EXP_DIGIT_OR_SIGN;
 					} else {
 						break iterator;
 					}
 					break;
 
-				case numberStates.EXP_PLUS:
-				case numberStates.EXP_MINUS:
-				case numberStates.EXP_DIGIT:
+				case numberStates.EXP_DIGIT_OR_SIGN:
 					if (isDigit(char)) {
-						state = numberStates.EXP_DIGIT;
-						passedValueIndex = index;
+						passedValueIndex = index + 1;
 					} else {
 						break iterator;
 					}
 					break;
 			}
+
+			index++;
 		}
 
-		if (passedValueIndex > startIndex) {
+		if (passedValueIndex > 0) {
 			return {
 				type: tokenTypes.NUMBER,
 				value: source.substring(startIndex, passedValueIndex),

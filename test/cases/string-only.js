@@ -1,10 +1,7 @@
-var ast = {
-	type: 'string',
-	value: 'Some text'
-};
+var string = require('../types').createString;
 
 module.exports = {
-	ast: ast,
+	ast: string('Some text'),
 	options: {
 		verbose: false
 	}
