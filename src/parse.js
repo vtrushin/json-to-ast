@@ -6,10 +6,9 @@ const objectStates = {
 	_START_: 0,
 	OPEN_OBJECT: 1,
 	KEY: 2,
-	COLON: 3,
-	VALUE: 4,
-	COMMA: 5,
-	CLOSE_OBJECT: 6
+	VALUE: 3,
+	COMMA: 4,
+	CLOSE_OBJECT: 5
 };
 
 const arrayStates = {
@@ -41,7 +40,7 @@ function parseObject(tokenList, index, settings) {
 	};
 	let state = objectStates._START_;
 
-	while (true) {
+	while (index < tokenList.length) {
 		const token = tokenList[index];
 
 		switch (state) {
@@ -58,19 +57,14 @@ function parseObject(tokenList, index, settings) {
 			case objectStates.OPEN_OBJECT:
 				if (token.type === tokenTypes.STRING) {
 					property = {
-						type: 'property'
+						type: 'property',
+						key: {
+							type: 'key',
+							value: token.value
+						}
 					};
 					if (settings.verbose) {
-						property.key = {
-							type: 'key',
-							position: token.position,
-							value: token.value
-						};
-					} else {
-						property.key = {
-							type: 'key',
-							value: token.value
-						};
+						property.key.position = token.position;
 					}
 					state = objectStates.KEY;
 					index ++;
@@ -94,8 +88,16 @@ function parseObject(tokenList, index, settings) {
 
 			case objectStates.KEY:
 				if (token.type == tokenTypes.COLON) {
-					state = objectStates.COLON;
 					index ++;
+					let value = parseValue(tokenList, index, settings);
+
+					if (value !== null) {
+						property.value = value;
+						object.properties.push(property);
+						state = objectStates.VALUE;
+					} else {
+						return null;
+					}
 				} else {
 					return null;
 				}
@@ -173,7 +175,7 @@ function parseArray(tokenList, index, settings) {
 	};
 	let state = arrayStates._START_;
 
-	while (true) {
+	while (index < tokenList.length) {
 		const token = tokenList[index];
 
 		switch (state) {

@@ -414,10 +414,9 @@
 		_START_: 0,
 		OPEN_OBJECT: 1,
 		KEY: 2,
-		COLON: 3,
-		VALUE: 4,
-		COMMA: 5,
-		CLOSE_OBJECT: 6
+		VALUE: 3,
+		COMMA: 4,
+		CLOSE_OBJECT: 5
 	};
 
 	var arrayStates = {
@@ -449,7 +448,7 @@
 		};
 		var state = objectStates._START_;
 
-		while (true) {
+		while (index < tokenList.length) {
 			var token = tokenList[index];
 
 			switch (state) {
@@ -466,19 +465,14 @@
 				case objectStates.OPEN_OBJECT:
 					if (token.type === tokenTypes.STRING) {
 						property = {
-							type: 'property'
+							type: 'property',
+							key: {
+								type: 'key',
+								value: token.value
+							}
 						};
 						if (settings.verbose) {
-							property.key = {
-								type: 'key',
-								position: token.position,
-								value: token.value
-							};
-						} else {
-							property.key = {
-								type: 'key',
-								value: token.value
-							};
+							property.key.position = token.position;
 						}
 						state = objectStates.KEY;
 						index++;
@@ -495,8 +489,16 @@
 
 				case objectStates.KEY:
 					if (token.type == tokenTypes.COLON) {
-						state = objectStates.COLON;
 						index++;
+						var _value = parseValue(tokenList, index, settings);
+
+						if (_value !== null) {
+							property.value = _value;
+							object.properties.push(property);
+							state = objectStates.VALUE;
+						} else {
+							return null;
+						}
 					} else {
 						return null;
 					}
@@ -565,7 +567,7 @@
 		};
 		var state = arrayStates._START_;
 
-		while (true) {
+		while (index < tokenList.length) {
 			var token = tokenList[index];
 
 			switch (state) {

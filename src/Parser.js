@@ -6,22 +6,27 @@ const objectStates = {
 	_START_: 0,
 	OPEN_OBJECT: 1,
 	KEY: 2,
-	COLON: 3,
-	VALUE: 4,
-	COMMA: 5,
-	CLOSE_OBJECT: 6
+	VALUE: 3,
+	COMMA: 4
 };
 
 const arrayStates = {
 	_START_: 0,
 	OPEN_ARRAY: 1,
 	VALUE: 2,
-	COMMA: 3,
-	CLOSE_ARRAY: 4
+	COMMA: 3
 };
 
 const defaultSettings = {
 	verbose: true
+};
+
+const primitiveTokenTypes = {
+	'string': tokenTypes.STRING,
+	'number': tokenTypes.NUMBER,
+	'true': tokenTypes.TRUE,
+	'false': tokenTypes.FALSE,
+	'null': tokenTypes.NULL
 };
 
 export default class {
@@ -57,52 +62,45 @@ export default class {
 		};
 		let state = objectStates._START_;
 
-		while (true) {
+		while (this.index < this.tokenList.length) {
 			let token = this.tokenList[this.index];
 
 			switch (state) {
 				case objectStates._START_:
 					if (token.type === tokenTypes.LEFT_BRACE) {
 						startToken = token;
-						state = objectStates.OPEN_OBJECT;
 						this.index ++;
-					} else {
-						return null;
-					}
-					break;
-
-				case objectStates.OPEN_OBJECT:
-					if (token.type === tokenTypes.STRING) {
-						property = {
-							type: 'property'
-						};
-						if (this.settings.verbose) {
-							property.key = {
-								type: 'key',
-								position: token.position,
-								value: token.value
+						let nextToken = this.tokenList[this.index];
+						if (nextToken.type === tokenTypes.STRING) {
+							property = {
+								type: 'property',
+								key: {
+									type: 'key',
+									value: nextToken.value
+								}
 							};
+							if (this.settings.verbose) {
+								property.key.position = nextToken.position;
+							}
+							state = objectStates.KEY;
+							this.index ++;
+						} else if (nextToken.type === tokenTypes.RIGHT_BRACE) {
+							if (this.settings.verbose) {
+								object.position = position(
+									startToken.position.start.line,
+									startToken.position.start.column,
+									startToken.position.start.char,
+									nextToken.position.end.line,
+									nextToken.position.end.column,
+									nextToken.position.end.char
+								);
+							}
+							this.index ++;
+							return object;
 						} else {
-							property.key = {
-								type: 'key',
-								value: token.value
-							};
+							return null;
 						}
-						state = objectStates.KEY;
-						this.index ++;
-					} else if (token.type === tokenTypes.RIGHT_BRACE) {
-						if (this.settings.verbose) {
-							object.position = position(
-								startToken.position.start.line,
-								startToken.position.start.column,
-								startToken.position.start.char,
-								token.position.end.line,
-								token.position.end.column,
-								token.position.end.char
-							);
-						}
-						this.index ++;
-						return object;
+
 					} else {
 						return null;
 					}
@@ -110,20 +108,16 @@ export default class {
 
 				case objectStates.KEY:
 					if (token.type == tokenTypes.COLON) {
-						state = objectStates.COLON;
 						this.index ++;
-					} else {
-						return null;
-					}
-					break;
+						let value = this._parseValue();
 
-				case objectStates.COLON:
-					let value = this._parseValue();
-
-					if (value !== null) {
-						property.value = value;
-						object.properties.push(property);
-						state = objectStates.VALUE;
+						if (value !== null) {
+							property.value = value;
+							object.properties.push(property);
+							state = objectStates.VALUE;
+						} else {
+							return null;
+						}
 					} else {
 						return null;
 					}
@@ -189,7 +183,7 @@ export default class {
 		};
 		let state = arrayStates._START_;
 
-		while (true) {
+		while (this.index < this.tokenList.length) {
 			let token = this.tokenList[this.index];
 
 			switch (state) {
@@ -310,12 +304,8 @@ export default class {
 				tokenType = 'null';
 		}
 
-		let objectOrArray = (
-			this._parseObject() ||
-			this._parseArray()
-		);
 
-		if (tokenType !== undefined) {
+		if (tokenType) {
 			this.index ++;
 
 			if (this.settings.verbose) {
@@ -331,12 +321,18 @@ export default class {
 				};
 			}
 
-		} else if (objectOrArray !== null) {
-			return objectOrArray;
-
 		} else {
-			// throw new Error('!!!!!');
-			return null;
+			let objectOrArray = (
+				this._parseObject() ||
+				this._parseArray()
+			);
+
+			if (objectOrArray !== null) {
+				return objectOrArray;
+			} else {
+				throw new Error('!!!!!');
+			}
+
 		}
 	}
 }
