@@ -74,8 +74,7 @@
 
 	var stringStates = {
 		_START_: 0,
-		START_QUOTE_OR_CHAR: 1,
-		ESCAPE: 2
+		START_QUOTE_OR_CHAR: 1
 	};
 
 	var escapes = {
@@ -361,7 +360,12 @@
 		}
 	}
 
-	function tokenize(source) {
+	var defaultSettings$1 = {
+		verbose: true
+	};
+
+	function tokenize(source, settings) {
+		settings = _extends(defaultSettings$1, settings);
 		var line = 1;
 		var column = 1;
 		var index = 0;
@@ -380,11 +384,16 @@
 			var matched = parseChar(source, index, line, column) || parseKeyword(source, index, line, column) || parseString(source, index, line, column) || parseNumber(source, index, line, column);
 
 			if (matched) {
-				tokens.push({
+				var token = {
 					type: matched.type,
-					value: matched.value,
-					position: position(line, column, index, matched.line, matched.column, matched.index)
-				});
+					value: matched.value
+				};
+
+				if (settings.verbose) {
+					token.position = position(line, column, index, matched.line, matched.column, matched.index);
+				}
+
+				tokens.push(token);
 				index = matched.index;
 				line = matched.line;
 				column = matched.column;

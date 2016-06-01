@@ -1,17 +1,18 @@
 var types = require('../types');
 var object = types.createObject;
+var key = types.createObjectKey;
 var prop = types.createObjectProperty;
 var string = types.createString;
 
 var ast = object([
-	prop('quota\\\"tion', string('reverse\\\\solidus')),
-	prop('soli\\/dus', string('back\\bspace')),
-	prop('form\\ffeed', string('new\\nline')),
-	prop('re\\rturn', string('tab\\tsymbol')),
-	prop('hex\\u0001digit', string('')),
-	prop('\\\"\\\"\\\"\\\"', string('\\\\\\\\\\\\')),
-	prop('\\/', string('\\b')),
-	prop('\\\"\\/', string('\\\"\\\\\\/\\b\\f\\n\\r\\t\\u0001'))
+	prop(key('quota\\\"tion'), string('reverse\\\\solidus')),
+	prop(key('soli\\/dus'), string('back\\bspace')),
+	prop(key('form\\ffeed'), string('new\\nline')),
+	prop(key('re\\rturn'), string('tab\\tsymbol')),
+	prop(key('hex\\u0001digit'), string('')),
+	prop(key('\\\"\\\"\\\"\\\"'), string('\\\\\\\\\\\\')),
+	prop(key('\\/'), string('\\b')),
+	prop(key('\\\"\\/'), string('\\\"\\\\\\/\\b\\f\\n\\r\\t\\u0001'))
 ]);
 
 module.exports = {

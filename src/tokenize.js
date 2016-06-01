@@ -31,8 +31,7 @@ const keywordsTokens = {
 
 const stringStates = {
 	_START_: 0,
-	START_QUOTE_OR_CHAR: 1,
-	ESCAPE: 2
+	START_QUOTE_OR_CHAR: 1
 };
 
 const escapes = {
@@ -317,7 +316,12 @@ function parseNumber(source, index, line, column) {
 	}
 }
 
-export function tokenize (source) {
+const defaultSettings = {
+	verbose: true
+};
+
+export function tokenize (source, settings) {
+	settings = Object.assign(defaultSettings, settings);
 	let line = 1;
 	let column = 1;
 	let index = 0;
@@ -340,11 +344,16 @@ export function tokenize (source) {
 			parseNumber(source, index, line, column);
 
 		if (matched) {
-			tokens.push({
+			let token = {
 				type: matched.type,
-				value: matched.value,
-				position: position(line, column, index, matched.line, matched.column, matched.index)
-			});
+				value: matched.value
+			};
+
+			if (settings.verbose) {
+				token.position = position(line, column, index, matched.line, matched.column, matched.index);
+			}
+
+			tokens.push(token);
 			index = matched.index;
 			line = matched.line;
 			column = matched.column;

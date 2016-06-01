@@ -28,7 +28,9 @@ export default class {
 	constructor(source, settings) {
 		this.settings = Object.assign(defaultSettings, settings);
 
-		this.tokenList = tokenize(source);
+		this.tokenList = tokenize(source, {
+			verbose: settings.verbose
+		});
 		// console.log(this.tokenList);
 
 		if (this.tokenList.length < 1) {

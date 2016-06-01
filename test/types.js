@@ -14,13 +14,23 @@ function position(startLine, startColumn, startChar, endLine, endColumn, endChar
 	}
 }
 
+function createObjectKey(value, position) {
+	var result = {
+		type: 'key',
+		value: value
+	};
+
+	if (position) {
+		result.position = position;
+	}
+
+	return result;
+}
+
 function createObjectProperty(key, value) {
 	return {
 		type: 'property',
-		key: {
-			type: 'key',
-			value: key
-		},
+		key: key,
 		value: value
 	}
 }
@@ -118,6 +128,7 @@ function createNull(position) {
 
 module.exports = {
 	position: position,
+	createObjectKey: createObjectKey,
 	createObjectProperty: createObjectProperty,
 	createObject: createObject,
 	createArray: createArray,
