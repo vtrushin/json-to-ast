@@ -44,17 +44,17 @@
 	}
 
 	var tokenTypes = {
-		LEFT_BRACE: 'LEFT_BRACE', // {
-		RIGHT_BRACE: 'RIGHT_BRACE', // }
-		LEFT_BRACKET: 'LEFT_BRACKET', // [
-		RIGHT_BRACKET: 'RIGHT_BRACKET', // ]
-		COLON: 'COLON', // :
-		COMMA: 'COMMA', // ,
-		STRING: 'STRING', //
-		NUMBER: 'NUMBER', //
-		TRUE: 'TRUE', // true
-		FALSE: 'FALSE', // false
-		NULL: 'NULL' // null
+		LEFT_BRACE: Symbol('LEFT_BRACE'), // {
+		RIGHT_BRACE: Symbol('RIGHT_BRACE'), // }
+		LEFT_BRACKET: Symbol('LEFT_BRACKET'), // [
+		RIGHT_BRACKET: Symbol('RIGHT_BRACKET'), // ]
+		COLON: Symbol('COLON'), // :
+		COMMA: Symbol('COMMA'), // ,
+		STRING: Symbol('STRING'), //
+		NUMBER: Symbol('NUMBER'), //
+		TRUE: Symbol('TRUE'), // true
+		FALSE: Symbol('FALSE'), // false
+		NULL: Symbol('NULL') // null
 	};
 
 	var charTokens = {
@@ -73,31 +73,32 @@
 	};
 
 	var stringStates = {
-		_START_: 0,
-		START_QUOTE_OR_CHAR: 1
+		_START_: Symbol('_START_'),
+		START_QUOTE_OR_CHAR: Symbol('START_QUOTE_OR_CHAR'),
+		ESCAPE: Symbol('ESCAPE')
 	};
 
 	var escapes = {
-		'"': 0, // Quotation mask
-		'\\': 1, // Reverse solidus
-		'/': 2, // Solidus
-		'b': 3, // Backspace
-		'f': 4, // Form feed
-		'n': 5, // New line
-		'r': 6, // Carriage return
-		't': 7, // Horizontal tab
-		'u': 8 // 4 hexadecimal digits
+		'"': Symbol('Quotation mask'),
+		'\\': Symbol('Reverse solidus'),
+		'/': Symbol('Solidus'),
+		'b': Symbol('Backspace'),
+		'f': Symbol('Form feed'),
+		'n': Symbol('New line'),
+		'r': Symbol('Carriage return'),
+		't': Symbol('Horizontal tab'),
+		'u': Symbol('4 hexadecimal digits')
 	};
 
 	var numberStates = {
-		_START_: 0,
-		MINUS: 1,
-		ZERO: 2,
-		DIGIT: 3,
-		POINT: 4,
-		DIGIT_FRACTION: 5,
-		EXP: 6,
-		EXP_DIGIT_OR_SIGN: 7
+		_START_: Symbol('_START_'),
+		MINUS: Symbol('MINUS'),
+		ZERO: Symbol('ZERO'),
+		DIGIT: Symbol('DIGIT'),
+		POINT: Symbol('POINT'),
+		DIGIT_FRACTION: Symbol('DIGIT_FRACTION'),
+		EXP: Symbol('EXP'),
+		EXP_DIGIT_OR_SIGN: Symbol('EXP_DIGIT_OR_SIGN')
 	};
 
 	var errors = {
@@ -210,26 +211,9 @@
 
 				case stringStates.START_QUOTE_OR_CHAR:
 					if (char === '\\') {
+						state = stringStates.ESCAPE;
 						buffer += char;
 						index++;
-						var nextChar = source.charAt(index);
-						if (nextChar in escapes) {
-							buffer += nextChar;
-							index++;
-							if (nextChar === 'u') {
-								for (var i = 0; i < 4; i++) {
-									var curChar = source.charAt(index);
-									if (curChar && isHex(curChar)) {
-										buffer += curChar;
-										index++;
-									} else {
-										return null;
-									}
-								}
-							}
-						} else {
-							return null;
-						}
 					} else if (char === '"') {
 						index++;
 						return {
@@ -242,6 +226,27 @@
 					} else {
 						buffer += char;
 						index++;
+					}
+					break;
+
+				case stringStates.ESCAPE:
+					if (char in escapes) {
+						buffer += char;
+						index++;
+						if (char === 'u') {
+							for (var i = 0; i < 4; i++) {
+								var curChar = source.charAt(index);
+								if (curChar && isHex(curChar)) {
+									buffer += curChar;
+									index++;
+								} else {
+									return null;
+								}
+							}
+						}
+						state = stringStates.START_QUOTE_OR_CHAR;
+					} else {
+						return null;
 					}
 					break;
 			}

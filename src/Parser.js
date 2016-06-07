@@ -6,8 +6,9 @@ const objectStates = {
 	_START_: 0,
 	OPEN_OBJECT: 1,
 	KEY: 2,
-	VALUE: 3,
-	COMMA: 4
+	KEY_AND_VALUE: 3,
+	VALUE: 4,
+	COMMA: 5
 };
 
 const arrayStates = {
@@ -101,6 +102,23 @@ export default class {
 							return null;
 						}
 
+					} else {
+						return null;
+					}
+					break;
+
+				case objectStates.KEY_AND_VALUE:
+					if (token.type == tokenTypes.COLON) {
+						this.index ++;
+						let value = this._parseValue();
+
+						if (value !== null) {
+							property.value = value;
+							object.properties.push(property);
+							state = objectStates.VALUE;
+						} else {
+							return null;
+						}
 					} else {
 						return null;
 					}
