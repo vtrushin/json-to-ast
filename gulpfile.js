@@ -10,6 +10,7 @@ const src = './src';
 const dist = './dist';
 const es6Path = [
 	src + '/Parser.js',
+	src + '/error.js',
 	src + '/parse.js',
 	src + '/tokenize.js'
 ];

@@ -1,4 +1,5 @@
 import position from './position';
+// import error from './error';
 
 export const tokenTypes = {
 	LEFT_BRACE: Symbol('LEFT_BRACE'),       // {
@@ -60,7 +61,7 @@ const numberStates = {
 
 const errors = {
 	tokenizeSymbol(char, line, column) {
-		throw new Error(`Cannot tokenize symbol <${char}> at ${line}:${column}`)
+		error(`Cannot tokenize symbol <${char}> at ${line}:${column}`);
 	}
 };
 

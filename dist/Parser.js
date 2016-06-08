@@ -67,6 +67,8 @@
 		};
 	}
 
+	// import error from './error';
+
 	var tokenTypes = {
 		LEFT_BRACE: Symbol('LEFT_BRACE'), // {
 		RIGHT_BRACE: Symbol('RIGHT_BRACE'), // }
@@ -127,7 +129,7 @@
 
 	var errors = {
 		tokenizeSymbol: function tokenizeSymbol(char, line, column) {
-			throw new Error('Cannot tokenize symbol <' + char + '> at ' + line + ':' + column);
+			error('Cannot tokenize symbol <' + char + '> at ' + line + ':' + column);
 		}
 	};
 
