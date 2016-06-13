@@ -1,16 +1,16 @@
 (function (global, factory) {
 	if (typeof define === "function" && define.amd) {
-		define(['module'], factory);
+		define(['module', 'assert'], factory);
 	} else if (typeof exports !== "undefined") {
-		factory(module);
+		factory(module, require('assert'));
 	} else {
 		var mod = {
 			exports: {}
 		};
-		factory(mod);
+		factory(mod, global.assert);
 		global.Parser = mod.exports;
 	}
-})(this, function (module) {
+})(this, function (module, assert) {
 	'use strict';
 
 	function _classCallCheck(instance, Constructor) {
@@ -67,20 +67,39 @@
 		};
 	}
 
-	// import error from './error';
+	function error(message, char, line, column) {
+		throw new Error(message.replace('{char}', char).replace('{position}', line + ':' + column));
+		/*throw new Error(
+  	global
+  		? nodejsErrorText(message, char, line, column)
+  		: browserErrorText(message, char, line, column)
+  );*/
+	}
+
+	// var a = '{a: 1, b: 2, c: 3, d: { a: 1, b: [2, "ads"] } }';
+
+	// error('Cannot tokenize at {position}', 10, 1, 11);
+
+	// console.log(mocha);
+	/*mocha(
+ describe('test', function(){
+ 	assert.deepEqual({a: 1}, {a: 1}, 'asd');
+ }));*/
+
+	// assert.deepEqual(new Error(1), {message: 1});
 
 	var tokenTypes = {
-		LEFT_BRACE: Symbol('LEFT_BRACE'), // {
-		RIGHT_BRACE: Symbol('RIGHT_BRACE'), // }
-		LEFT_BRACKET: Symbol('LEFT_BRACKET'), // [
-		RIGHT_BRACKET: Symbol('RIGHT_BRACKET'), // ]
-		COLON: Symbol('COLON'), // :
-		COMMA: Symbol('COMMA'), // ,
-		STRING: Symbol('STRING'), //
-		NUMBER: Symbol('NUMBER'), //
-		TRUE: Symbol('TRUE'), // true
-		FALSE: Symbol('FALSE'), // false
-		NULL: Symbol('NULL') // null
+		LEFT_BRACE: 'LEFT_BRACE', // {
+		RIGHT_BRACE: 'RIGHT_BRACE', // }
+		LEFT_BRACKET: 'LEFT_BRACKET', // [
+		RIGHT_BRACKET: 'RIGHT_BRACKET', // ]
+		COLON: 'COLON', // :
+		COMMA: 'COMMA', // ,
+		STRING: 'STRING', //
+		NUMBER: 'NUMBER', //
+		TRUE: 'TRUE', // true
+		FALSE: 'FALSE', // false
+		NULL: 'NULL' // null
 	};
 
 	var charTokens = {
@@ -99,38 +118,36 @@
 	};
 
 	var stringStates = {
-		_START_: Symbol('_START_'),
-		START_QUOTE_OR_CHAR: Symbol('START_QUOTE_OR_CHAR'),
-		ESCAPE: Symbol('ESCAPE')
+		_START_: 0,
+		START_QUOTE_OR_CHAR: 1,
+		ESCAPE: 2
 	};
 
 	var escapes = {
-		'"': Symbol('Quotation mask'),
-		'\\': Symbol('Reverse solidus'),
-		'/': Symbol('Solidus'),
-		'b': Symbol('Backspace'),
-		'f': Symbol('Form feed'),
-		'n': Symbol('New line'),
-		'r': Symbol('Carriage return'),
-		't': Symbol('Horizontal tab'),
-		'u': Symbol('4 hexadecimal digits')
+		'"': 0, // Quotation mask
+		'\\': 1, // Reverse solidus
+		'/': 2, // Solidus
+		'b': 3, // Backspace
+		'f': 4, // Form feed
+		'n': 5, // New line
+		'r': 6, // Carriage return
+		't': 7, // Horizontal tab
+		'u': 8 // 4 hexadecimal digits
 	};
 
 	var numberStates = {
-		_START_: Symbol('_START_'),
-		MINUS: Symbol('MINUS'),
-		ZERO: Symbol('ZERO'),
-		DIGIT: Symbol('DIGIT'),
-		POINT: Symbol('POINT'),
-		DIGIT_FRACTION: Symbol('DIGIT_FRACTION'),
-		EXP: Symbol('EXP'),
-		EXP_DIGIT_OR_SIGN: Symbol('EXP_DIGIT_OR_SIGN')
+		_START_: 0,
+		MINUS: 1,
+		ZERO: 2,
+		DIGIT: 3,
+		POINT: 4,
+		DIGIT_FRACTION: 5,
+		EXP: 6,
+		EXP_DIGIT_OR_SIGN: 7
 	};
 
 	var errors = {
-		tokenizeSymbol: function tokenizeSymbol(char, line, column) {
-			error('Cannot tokenize symbol <' + char + '> at ' + line + ':' + column);
-		}
+		cannotTokenizeSymbol: 'Cannot tokenize symbol {char} at {position}'
 	};
 
 	// HELPERS
@@ -429,7 +446,7 @@
 				line = matched.line;
 				column = matched.column;
 			} else {
-				errors.tokenizeSymbol(source.charAt(index), line.toString(), column.toString());
+				error(errors.cannotTokenizeSymbol, source.charAt(index), line.toString(), column.toString());
 			}
 		}
 
@@ -445,7 +462,7 @@
 		_START_: 0,
 		OPEN_OBJECT: 1,
 		KEY: 2,
-		KEY_AND_VALUE: 3,
+		COLON: 3,
 		VALUE: 4,
 		COMMA: 5
 	};
@@ -473,12 +490,11 @@
 		function Parser(source, settings) {
 			_classCallCheck(this, Parser);
 
-			this.settings = _extends(defaultSettings, settings);
+			this.settings = _extends({}, defaultSettings, settings);
 
 			this.tokenList = tokenize(source, {
 				verbose: settings.verbose
 			});
-			// console.log(this.tokenList);
 
 			if (this.tokenList.length < 1) {
 				throw new Error(exceptionsDict.emptyString);
@@ -491,7 +507,7 @@
 			if (json) {
 				return json;
 			} else {
-				throw new Error(exceptionsDict.emptyString);
+				throw new SyntaxError(exceptionsDict.emptyString);
 			}
 		}
 
@@ -513,64 +529,53 @@
 						case objectStates._START_:
 							if (token.type === tokenTypes.LEFT_BRACE) {
 								startToken = token;
+								state = objectStates.OPEN_OBJECT;
 								this.index++;
-								var nextToken = this.tokenList[this.index];
-								if (nextToken.type === tokenTypes.STRING) {
-									property = {
-										type: 'property',
-										key: {
-											type: 'key',
-											value: nextToken.value
-										}
-									};
-									if (this.settings.verbose) {
-										property.key.position = nextToken.position;
-									}
-									state = objectStates.KEY;
-									this.index++;
-								} else if (nextToken.type === tokenTypes.RIGHT_BRACE) {
-									if (this.settings.verbose) {
-										object.position = position(startToken.position.start.line, startToken.position.start.column, startToken.position.start.char, nextToken.position.end.line, nextToken.position.end.column, nextToken.position.end.char);
-									}
-									this.index++;
-									return object;
-								} else {
-									return null;
-								}
 							} else {
 								return null;
 							}
 							break;
 
-						case objectStates.KEY_AND_VALUE:
-							if (token.type == tokenTypes.COLON) {
-								this.index++;
-								var value = this._parseValue();
-
-								if (value !== null) {
-									property.value = value;
-									object.properties.push(property);
-									state = objectStates.VALUE;
-								} else {
-									return null;
+						case objectStates.OPEN_OBJECT:
+							if (token.type === tokenTypes.STRING) {
+								property = {
+									type: 'property',
+									key: {
+										type: 'key',
+										value: token.value
+									}
+								};
+								if (this.settings.verbose) {
+									property.key.position = token.position;
 								}
+								state = objectStates.KEY;
+								this.index++;
+							} else if (token.type === tokenTypes.RIGHT_BRACE) {
+								if (this.settings.verbose) {
+									object.position = position(startToken.position.start.line, startToken.position.start.column, startToken.position.start.char, token.position.end.line, token.position.end.column, token.position.end.char);
+								}
+								this.index++;
+								return object;
 							} else {
 								return null;
 							}
 							break;
 
 						case objectStates.KEY:
-							if (token.type == tokenTypes.COLON) {
+							if (token.type === tokenTypes.COLON) {
+								state = objectStates.COLON;
 								this.index++;
-								var _value = this._parseValue();
+							} else {
+								return null;
+							}
+							break;
 
-								if (_value !== null) {
-									property.value = _value;
-									object.properties.push(property);
-									state = objectStates.VALUE;
-								} else {
-									return null;
-								}
+						case objectStates.COLON:
+							var value = this._parseValue();
+							if (value !== null) {
+								property.value = value;
+								object.properties.push(property);
+								state = objectStates.VALUE;
 							} else {
 								return null;
 							}
@@ -594,18 +599,15 @@
 						case objectStates.COMMA:
 							if (token.type === tokenTypes.STRING) {
 								property = {
-									type: 'property'
+									type: 'property',
+									key: {
+										type: 'key',
+										value: token.value
+									}
 								};
 								if (this.settings.verbose) {
 									property.key = {
-										type: 'key',
-										position: token.position,
-										value: token.value
-									};
-								} else {
-									property.key = {
-										type: 'key',
-										value: token.value
+										position: token.position
 									};
 								}
 								state = objectStates.KEY;
@@ -643,8 +645,6 @@
 							break;
 
 						case arrayStates.OPEN_ARRAY:
-							// console.log(token);
-
 							if (token.type === tokenTypes.RIGHT_BRACKET) {
 								if (this.settings.verbose) {
 									array.position = position(startToken.position.start.line, startToken.position.start.column, startToken.position.start.char, token.position.end.line, token.position.end.column, token.position.end.char);
@@ -652,7 +652,6 @@
 								this.index++;
 								return array;
 							} else {
-
 								value = this._parseValue();
 								if (value !== null) {
 									array.items.push(value);
@@ -661,26 +660,6 @@
 									return null;
 								}
 							}
-
-							/*if (value !== null) {
-       	array.items.push(value);
-       	state = arrayStates.VALUE;
-       } else if (token.type === tokenTypes.RIGHT_BRACKET) {
-       	if (this.settings.verbose) {
-       		array.position = position(
-       			startToken.position.start.line,
-       			startToken.position.start.column,
-       			startToken.position.start.char,
-       			token.position.end.line,
-       			token.position.end.column,
-       			token.position.end.char
-       		);
-       	}
-       	this.index ++;
-       	return array;
-       } else {
-       	return null;
-       }*/
 							break;
 
 						case arrayStates.VALUE:

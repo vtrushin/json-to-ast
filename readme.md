@@ -7,9 +7,9 @@
 
 ## About usage
 ```js
-  var Parser = require('json-to-ast');
+  var parse = require('json-to-ast');
 
-  console.log(new Parser('{"a": 1}'))
+  console.log(parse('{"a": 1}'))
   /*
   =>
   {
@@ -122,4 +122,4 @@ for primitive type
 
 
 ## License
-ISC
+MIT

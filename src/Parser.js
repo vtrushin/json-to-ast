@@ -6,7 +6,7 @@ const objectStates = {
 	_START_: 0,
 	OPEN_OBJECT: 1,
 	KEY: 2,
-	KEY_AND_VALUE: 3,
+	COLON: 3,
 	VALUE: 4,
 	COMMA: 5
 };
@@ -32,12 +32,11 @@ const primitiveTokenTypes = {
 
 export default class {
 	constructor(source, settings) {
-		this.settings = Object.assign(defaultSettings, settings);
+		this.settings = Object.assign({}, defaultSettings, settings);
 
 		this.tokenList = tokenize(source, {
 			verbose: settings.verbose
 		});
-		// console.log(this.tokenList);
 
 		if (this.tokenList.length < 1) {
 			throw new Error(exceptionsDict.emptyString);
@@ -50,7 +49,7 @@ export default class {
 		if (json) {
 			return json;
 		} else {
-			throw new Error(exceptionsDict.emptyString);
+			throw new SyntaxError(exceptionsDict.emptyString);
 		}
 	}
 
@@ -70,72 +69,60 @@ export default class {
 				case objectStates._START_:
 					if (token.type === tokenTypes.LEFT_BRACE) {
 						startToken = token;
+						state = objectStates.OPEN_OBJECT;
 						this.index ++;
-						let nextToken = this.tokenList[this.index];
-						if (nextToken.type === tokenTypes.STRING) {
-							property = {
-								type: 'property',
-								key: {
-									type: 'key',
-									value: nextToken.value
-								}
-							};
-							if (this.settings.verbose) {
-								property.key.position = nextToken.position;
-							}
-							state = objectStates.KEY;
-							this.index ++;
-						} else if (nextToken.type === tokenTypes.RIGHT_BRACE) {
-							if (this.settings.verbose) {
-								object.position = position(
-									startToken.position.start.line,
-									startToken.position.start.column,
-									startToken.position.start.char,
-									nextToken.position.end.line,
-									nextToken.position.end.column,
-									nextToken.position.end.char
-								);
-							}
-							this.index ++;
-							return object;
-						} else {
-							return null;
-						}
-
 					} else {
 						return null;
 					}
 					break;
 
-				case objectStates.KEY_AND_VALUE:
-					if (token.type == tokenTypes.COLON) {
-						this.index ++;
-						let value = this._parseValue();
-
-						if (value !== null) {
-							property.value = value;
-							object.properties.push(property);
-							state = objectStates.VALUE;
-						} else {
-							return null;
+				case objectStates.OPEN_OBJECT:
+					if (token.type === tokenTypes.STRING) {
+						property = {
+							type: 'property',
+							key: {
+								type: 'key',
+								value: token.value
+							}
+						};
+						if (this.settings.verbose) {
+							property.key.position = token.position;
 						}
+						state = objectStates.KEY;
+						this.index ++;
+					} else if (token.type === tokenTypes.RIGHT_BRACE) {
+						if (this.settings.verbose) {
+							object.position = position(
+								startToken.position.start.line,
+								startToken.position.start.column,
+								startToken.position.start.char,
+								token.position.end.line,
+								token.position.end.column,
+								token.position.end.char
+							);
+						}
+						this.index ++;
+						return object;
 					} else {
 						return null;
 					}
 					break;
 
 				case objectStates.KEY:
-					if (token.type == tokenTypes.COLON) {
+					if (token.type === tokenTypes.COLON) {
+						state = objectStates.COLON;
 						this.index ++;
-						let value = this._parseValue();
+					} else {
+						return null;
+					}
+					break;
 
-						if (value !== null) {
-							property.value = value;
-							object.properties.push(property);
-							state = objectStates.VALUE;
-						} else {
-							return null;
-						}
+				case objectStates.COLON:
+					let value = this._parseValue();
+					if (value !== null) {
+						property.value = value;
+						object.properties.push(property);
+						state = objectStates.VALUE;
 					} else {
 						return null;
 					}
@@ -166,18 +153,15 @@ export default class {
 				case objectStates.COMMA:
 					if (token.type === tokenTypes.STRING) {
 						property = {
-							type: 'property'
+							type: 'property',
+							key: {
+								type: 'key',
+								value: token.value
+							}
 						};
 						if (this.settings.verbose) {
 							property.key = {
-								type: 'key',
-								position: token.position,
-								value: token.value
-							};
-						} else {
-							property.key = {
-								type: 'key',
-								value: token.value
+								position: token.position
 							};
 						}
 						state = objectStates.KEY;
@@ -216,8 +200,6 @@ export default class {
 					break;
 
 				case arrayStates.OPEN_ARRAY:
-					// console.log(token);
-
 					if (token.type === tokenTypes.RIGHT_BRACKET) {
 						if (this.settings.verbose) {
 							array.position = position(
@@ -231,9 +213,7 @@ export default class {
 						}
 						this.index ++;
 						return array;
-
 					} else {
-
 						value = this._parseValue();
 						if (value !== null) {
 							array.items.push(value);
@@ -243,26 +223,6 @@ export default class {
 						}
 
 					}
-
-					/*if (value !== null) {
-						array.items.push(value);
-						state = arrayStates.VALUE;
-					} else if (token.type === tokenTypes.RIGHT_BRACKET) {
-						if (this.settings.verbose) {
-							array.position = position(
-								startToken.position.start.line,
-								startToken.position.start.column,
-								startToken.position.start.char,
-								token.position.end.line,
-								token.position.end.column,
-								token.position.end.char
-							);
-						}
-						this.index ++;
-						return array;
-					} else {
-						return null;
-					}*/
 					break;
 
 				case arrayStates.VALUE:
@@ -321,7 +281,6 @@ export default class {
 			case tokenTypes.NULL:
 				tokenType = 'null';
 		}
-
 
 		if (tokenType) {
 			this.index ++;

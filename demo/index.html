@@ -3,7 +3,8 @@
 <head lang="en">
 	<meta charset="UTF-8">
 	<title></title>
-	<script src="../dist/Parser.js"></script>
+	<!--<script src="../dist/Parser.js"></script>-->
+	<script src="../dist/parse.js"></script>
 	<script src="//d3js.org/d3.v3.min.js" charset="utf-8"></script>
 	<style>
 		.layout {
@@ -38,13 +39,18 @@
 
 		// fetch('test2.json')
 		fetch('../test/cases/deep.json')
+		//fetch('../test/error-cases/trailing-comma-array.json')
+		//fetch('../test/cases/symbols.json')
 			.then(function(response) {
 				return response.text();
 			})
 			.then(function(text) {
 				textarea.textContent = text;
-				console.log(new Parser(text, {
-					verbose: true
+				/*console.log(new Parser(text, {
+					verbose: false
+				}));*/
+				console.log(parse(text, {
+					verbose: false
 				}));
 			});
 
@@ -66,7 +72,8 @@
 		});
 
 		textarea.addEventListener('input', function(e) {
-			console.log(new Parser(textarea.value));
+			// console.log(new Parser(textarea.value));
+			console.log(parse(textarea.value));
 		});
 	</script>
 

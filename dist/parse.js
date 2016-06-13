@@ -1,16 +1,16 @@
 (function (global, factory) {
 	if (typeof define === "function" && define.amd) {
-		define(['module'], factory);
+		define(['module', 'assert'], factory);
 	} else if (typeof exports !== "undefined") {
-		factory(module);
+		factory(module, require('assert'));
 	} else {
 		var mod = {
 			exports: {}
 		};
-		factory(mod);
+		factory(mod, global.assert);
 		global.parse = mod.exports;
 	}
-})(this, function (module) {
+})(this, function (module, assert) {
 	'use strict';
 
 	var _extends = Object.assign || function (target) {
@@ -26,6 +26,27 @@
 
 		return target;
 	};
+
+	function error(message, char, line, column) {
+		throw new Error(message.replace('{char}', char).replace('{position}', line + ':' + column));
+		/*throw new Error(
+  	global
+  		? nodejsErrorText(message, char, line, column)
+  		: browserErrorText(message, char, line, column)
+  );*/
+	}
+
+	// var a = '{a: 1, b: 2, c: 3, d: { a: 1, b: [2, "ads"] } }';
+
+	// error('Cannot tokenize at {position}', 10, 1, 11);
+
+	// console.log(mocha);
+	/*mocha(
+ describe('test', function(){
+ 	assert.deepEqual({a: 1}, {a: 1}, 'asd');
+ }));*/
+
+	// assert.deepEqual(new Error(1), {message: 1});
 
 	function position(startLine, startColumn, startChar, endLine, endColumn, endChar) {
 		return {
@@ -43,20 +64,18 @@
 		};
 	}
 
-	// import error from './error';
-
 	var tokenTypes = {
-		LEFT_BRACE: Symbol('LEFT_BRACE'), // {
-		RIGHT_BRACE: Symbol('RIGHT_BRACE'), // }
-		LEFT_BRACKET: Symbol('LEFT_BRACKET'), // [
-		RIGHT_BRACKET: Symbol('RIGHT_BRACKET'), // ]
-		COLON: Symbol('COLON'), // :
-		COMMA: Symbol('COMMA'), // ,
-		STRING: Symbol('STRING'), //
-		NUMBER: Symbol('NUMBER'), //
-		TRUE: Symbol('TRUE'), // true
-		FALSE: Symbol('FALSE'), // false
-		NULL: Symbol('NULL') // null
+		LEFT_BRACE: 'LEFT_BRACE', // {
+		RIGHT_BRACE: 'RIGHT_BRACE', // }
+		LEFT_BRACKET: 'LEFT_BRACKET', // [
+		RIGHT_BRACKET: 'RIGHT_BRACKET', // ]
+		COLON: 'COLON', // :
+		COMMA: 'COMMA', // ,
+		STRING: 'STRING', //
+		NUMBER: 'NUMBER', //
+		TRUE: 'TRUE', // true
+		FALSE: 'FALSE', // false
+		NULL: 'NULL' // null
 	};
 
 	var charTokens = {
@@ -75,38 +94,36 @@
 	};
 
 	var stringStates = {
-		_START_: Symbol('_START_'),
-		START_QUOTE_OR_CHAR: Symbol('START_QUOTE_OR_CHAR'),
-		ESCAPE: Symbol('ESCAPE')
+		_START_: 0,
+		START_QUOTE_OR_CHAR: 1,
+		ESCAPE: 2
 	};
 
 	var escapes = {
-		'"': Symbol('Quotation mask'),
-		'\\': Symbol('Reverse solidus'),
-		'/': Symbol('Solidus'),
-		'b': Symbol('Backspace'),
-		'f': Symbol('Form feed'),
-		'n': Symbol('New line'),
-		'r': Symbol('Carriage return'),
-		't': Symbol('Horizontal tab'),
-		'u': Symbol('4 hexadecimal digits')
+		'"': 0, // Quotation mask
+		'\\': 1, // Reverse solidus
+		'/': 2, // Solidus
+		'b': 3, // Backspace
+		'f': 4, // Form feed
+		'n': 5, // New line
+		'r': 6, // Carriage return
+		't': 7, // Horizontal tab
+		'u': 8 // 4 hexadecimal digits
 	};
 
 	var numberStates = {
-		_START_: Symbol('_START_'),
-		MINUS: Symbol('MINUS'),
-		ZERO: Symbol('ZERO'),
-		DIGIT: Symbol('DIGIT'),
-		POINT: Symbol('POINT'),
-		DIGIT_FRACTION: Symbol('DIGIT_FRACTION'),
-		EXP: Symbol('EXP'),
-		EXP_DIGIT_OR_SIGN: Symbol('EXP_DIGIT_OR_SIGN')
+		_START_: 0,
+		MINUS: 1,
+		ZERO: 2,
+		DIGIT: 3,
+		POINT: 4,
+		DIGIT_FRACTION: 5,
+		EXP: 6,
+		EXP_DIGIT_OR_SIGN: 7
 	};
 
-	var errors = {
-		tokenizeSymbol: function tokenizeSymbol(char, line, column) {
-			error('Cannot tokenize symbol <' + char + '> at ' + line + ':' + column);
-		}
+	var errors$1 = {
+		cannotTokenizeSymbol: 'Cannot tokenize symbol {char} at {position}'
 	};
 
 	// HELPERS
@@ -405,33 +422,27 @@
 				line = matched.line;
 				column = matched.column;
 			} else {
-				errors.tokenizeSymbol(source.charAt(index), line.toString(), column.toString());
+				error(errors$1.cannotTokenizeSymbol, source.charAt(index), line.toString(), column.toString());
 			}
 		}
 
 		return tokens;
 	}
 
-	var exceptionsDict = {
-		tokenizeSymbolError: 'Cannot tokenize symbol <{char}> at {line}:{column}',
-		emptyString: 'JSON is empty'
-	};
-
 	var objectStates = {
 		_START_: 0,
 		OPEN_OBJECT: 1,
 		KEY: 2,
-		VALUE: 3,
-		COMMA: 4,
-		CLOSE_OBJECT: 5
+		COLON: 3,
+		VALUE: 4,
+		COMMA: 5
 	};
 
 	var arrayStates = {
 		_START_: 0,
 		OPEN_ARRAY: 1,
 		VALUE: 2,
-		COMMA: 3,
-		CLOSE_ARRAY: 4
+		COMMA: 3
 	};
 
 	var defaultSettings = {
@@ -444,6 +455,10 @@
 		'true': tokenTypes.TRUE,
 		'false': tokenTypes.FALSE,
 		'null': tokenTypes.NULL
+	};
+
+	var errors = {
+		emptyString: 'JSON is empty'
 	};
 
 	function parseObject(tokenList, index, settings) {
@@ -488,34 +503,29 @@
 							object.position = position(startToken.position.start.line, startToken.position.start.column, startToken.position.start.char, token.position.end.line, token.position.end.column, token.position.end.char);
 						}
 						index++;
-						return object;
+						return {
+							value: object,
+							index: index
+						};
 					} else {
 						return null;
 					}
 					break;
 
 				case objectStates.KEY:
-					if (token.type == tokenTypes.COLON) {
+					if (token.type === tokenTypes.COLON) {
+						state = objectStates.COLON;
 						index++;
-						var _value = parseValue(tokenList, index, settings);
-
-						if (_value !== null) {
-							property.value = _value;
-							object.properties.push(property);
-							state = objectStates.VALUE;
-						} else {
-							return null;
-						}
 					} else {
 						return null;
 					}
 					break;
 
 				case objectStates.COLON:
-					var value = parseValue();
-
+					var value = parseValue(tokenList, index, settings);
+					index = value.index;
 					if (value !== null) {
-						property.value = value;
+						property.value = value.value;
 						object.properties.push(property);
 						state = objectStates.VALUE;
 					} else {
@@ -529,7 +539,10 @@
 							object.position = position(startToken.position.start.line, startToken.position.start.column, startToken.position.start.char, token.position.end.line, token.position.end.column, token.position.end.char);
 						}
 						index++;
-						return object;
+						return {
+							value: object,
+							index: index
+						};
 					} else if (token.type === tokenTypes.COMMA) {
 						state = objectStates.COMMA;
 						index++;
@@ -541,18 +554,15 @@
 				case objectStates.COMMA:
 					if (token.type === tokenTypes.STRING) {
 						property = {
-							type: 'property'
+							type: 'property',
+							key: {
+								type: 'key',
+								value: token.value
+							}
 						};
 						if (settings.verbose) {
 							property.key = {
-								type: 'key',
-								position: token.position,
-								value: token.value
-							};
-						} else {
-							property.key = {
-								type: 'key',
-								value: token.value
+								position: token.position
 							};
 						}
 						state = objectStates.KEY;
@@ -560,7 +570,7 @@
 					} else {
 						return null;
 					}
-
+					break;
 			}
 		}
 	}
@@ -589,18 +599,24 @@
 					break;
 
 				case arrayStates.OPEN_ARRAY:
-					value = parseValue();
-					if (value !== null) {
-						array.items.push(value);
-						state = arrayStates.VALUE;
-					} else if (token.type === tokenTypes.RIGHT_BRACKET) {
+					if (token.type === tokenTypes.RIGHT_BRACKET) {
 						if (settings.verbose) {
 							array.position = position(startToken.position.start.line, startToken.position.start.column, startToken.position.start.char, token.position.end.line, token.position.end.column, token.position.end.char);
 						}
 						index++;
-						return array;
+						return {
+							value: array,
+							index: index
+						};
 					} else {
-						return null;
+						value = parseValue(tokenList, index, settings);
+						index = value.index;
+						if (value !== null) {
+							array.items.push(value.value);
+							state = arrayStates.VALUE;
+						} else {
+							return null;
+						}
 					}
 					break;
 
@@ -610,7 +626,10 @@
 							array.position = position(startToken.position.start.line, startToken.position.start.column, startToken.position.start.char, token.position.end.line, token.position.end.column, token.position.end.char);
 						}
 						index++;
-						return array;
+						return {
+							value: array,
+							index: index
+						};
 					} else if (token.type === tokenTypes.COMMA) {
 						state = arrayStates.COMMA;
 						index++;
@@ -620,9 +639,10 @@
 					break;
 
 				case arrayStates.COMMA:
-					value = parseValue();
+					value = parseValue(tokenList, index, settings);
+					index = value.index;
 					if (value !== null) {
-						array.items.push(value);
+						array.items.push(value.value);
 						state = arrayStates.VALUE;
 					} else {
 						return null;
@@ -654,40 +674,46 @@
 				tokenType = 'null';
 		}
 
-		var objectOrArray = parseObject() || parseArray();
-
-		if (tokenType !== undefined) {
+		if (tokenType) {
 			index++;
-
+			var value = {
+				type: tokenType,
+				value: token.value
+			};
 			if (settings.verbose) {
-				return {
-					type: tokenType,
-					value: token.value,
-					position: token.position
-				};
-			} else {
-				return {
-					type: tokenType,
-					value: token.value
-				};
+				value.position = token.position;
 			}
-		} else if (objectOrArray !== null) {
-			return objectOrArray;
+			return {
+				value: value,
+				index: index
+			};
 		} else {
-			throw new Error('!!!!!');
+			var objectOrArray = parseObject(tokenList, index, settings) || parseArray(tokenList, index, settings);
+
+			if (objectOrArray !== null) {
+				return objectOrArray;
+			} else {
+				error('!!!!!');
+			}
 		}
 	}
 
 	function parse(source, settings) {
-		settings = _extends(settings, defaultSettings);
-		var tokenList = tokenize(source);
-		var index = 0;
-		var json = parseValue(tokenList, index, settings);
+		settings = _extends({}, defaultSettings, settings);
+		var tokenList = tokenize(source, {
+			verbose: settings.verbose
+		});
+
+		if (!tokenList.length) {
+			error(errors.emptyString);
+		}
+
+		var json = parseValue(tokenList, 0, settings).value;
 
 		if (json) {
 			return json;
 		} else {
-			throw new SyntaxError(exceptionsDict.emptyString);
+			error('Unknown error');
 		}
 	}
 

@@ -1,16 +1,16 @@
 (function (global, factory) {
 	if (typeof define === "function" && define.amd) {
-		define(['exports'], factory);
+		define(['exports', 'assert'], factory);
 	} else if (typeof exports !== "undefined") {
-		factory(exports);
+		factory(exports, require('assert'));
 	} else {
 		var mod = {
 			exports: {}
 		};
-		factory(mod.exports);
+		factory(mod.exports, global.assert);
 		global.tokenize = mod.exports;
 	}
-})(this, function (exports) {
+})(this, function (exports, assert) {
 	'use strict';
 
 	var _extends = Object.assign || function (target) {
@@ -43,20 +43,39 @@
 		};
 	}
 
-	// import error from './error';
+	function error(message, char, line, column) {
+		throw new Error(message.replace('{char}', char).replace('{position}', line + ':' + column));
+		/*throw new Error(
+  	global
+  		? nodejsErrorText(message, char, line, column)
+  		: browserErrorText(message, char, line, column)
+  );*/
+	}
+
+	// var a = '{a: 1, b: 2, c: 3, d: { a: 1, b: [2, "ads"] } }';
+
+	// error('Cannot tokenize at {position}', 10, 1, 11);
+
+	// console.log(mocha);
+	/*mocha(
+ describe('test', function(){
+ 	assert.deepEqual({a: 1}, {a: 1}, 'asd');
+ }));*/
+
+	// assert.deepEqual(new Error(1), {message: 1});
 
 	var tokenTypes = {
-		LEFT_BRACE: Symbol('LEFT_BRACE'), // {
-		RIGHT_BRACE: Symbol('RIGHT_BRACE'), // }
-		LEFT_BRACKET: Symbol('LEFT_BRACKET'), // [
-		RIGHT_BRACKET: Symbol('RIGHT_BRACKET'), // ]
-		COLON: Symbol('COLON'), // :
-		COMMA: Symbol('COMMA'), // ,
-		STRING: Symbol('STRING'), //
-		NUMBER: Symbol('NUMBER'), //
-		TRUE: Symbol('TRUE'), // true
-		FALSE: Symbol('FALSE'), // false
-		NULL: Symbol('NULL') // null
+		LEFT_BRACE: 'LEFT_BRACE', // {
+		RIGHT_BRACE: 'RIGHT_BRACE', // }
+		LEFT_BRACKET: 'LEFT_BRACKET', // [
+		RIGHT_BRACKET: 'RIGHT_BRACKET', // ]
+		COLON: 'COLON', // :
+		COMMA: 'COMMA', // ,
+		STRING: 'STRING', //
+		NUMBER: 'NUMBER', //
+		TRUE: 'TRUE', // true
+		FALSE: 'FALSE', // false
+		NULL: 'NULL' // null
 	};
 
 	var charTokens = {
@@ -75,38 +94,36 @@
 	};
 
 	var stringStates = {
-		_START_: Symbol('_START_'),
-		START_QUOTE_OR_CHAR: Symbol('START_QUOTE_OR_CHAR'),
-		ESCAPE: Symbol('ESCAPE')
+		_START_: 0,
+		START_QUOTE_OR_CHAR: 1,
+		ESCAPE: 2
 	};
 
 	var escapes = {
-		'"': Symbol('Quotation mask'),
-		'\\': Symbol('Reverse solidus'),
-		'/': Symbol('Solidus'),
-		'b': Symbol('Backspace'),
-		'f': Symbol('Form feed'),
-		'n': Symbol('New line'),
-		'r': Symbol('Carriage return'),
-		't': Symbol('Horizontal tab'),
-		'u': Symbol('4 hexadecimal digits')
+		'"': 0, // Quotation mask
+		'\\': 1, // Reverse solidus
+		'/': 2, // Solidus
+		'b': 3, // Backspace
+		'f': 4, // Form feed
+		'n': 5, // New line
+		'r': 6, // Carriage return
+		't': 7, // Horizontal tab
+		'u': 8 // 4 hexadecimal digits
 	};
 
 	var numberStates = {
-		_START_: Symbol('_START_'),
-		MINUS: Symbol('MINUS'),
-		ZERO: Symbol('ZERO'),
-		DIGIT: Symbol('DIGIT'),
-		POINT: Symbol('POINT'),
-		DIGIT_FRACTION: Symbol('DIGIT_FRACTION'),
-		EXP: Symbol('EXP'),
-		EXP_DIGIT_OR_SIGN: Symbol('EXP_DIGIT_OR_SIGN')
+		_START_: 0,
+		MINUS: 1,
+		ZERO: 2,
+		DIGIT: 3,
+		POINT: 4,
+		DIGIT_FRACTION: 5,
+		EXP: 6,
+		EXP_DIGIT_OR_SIGN: 7
 	};
 
 	var errors = {
-		tokenizeSymbol: function tokenizeSymbol(char, line, column) {
-			error('Cannot tokenize symbol <' + char + '> at ' + line + ':' + column);
-		}
+		cannotTokenizeSymbol: 'Cannot tokenize symbol {char} at {position}'
 	};
 
 	// HELPERS
@@ -405,7 +422,7 @@
 				line = matched.line;
 				column = matched.column;
 			} else {
-				errors.tokenizeSymbol(source.charAt(index), line.toString(), column.toString());
+				error(errors.cannotTokenizeSymbol, source.charAt(index), line.toString(), column.toString());
 			}
 		}
 

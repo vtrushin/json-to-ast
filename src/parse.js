@@ -1,3 +1,4 @@
+import {error} from './error';
 import {tokenize, tokenTypes} from './tokenize';
 import exceptionsDict from './exceptionsDict';
 import position from './position';
@@ -6,17 +7,16 @@ const objectStates = {
 	_START_: 0,
 	OPEN_OBJECT: 1,
 	KEY: 2,
-	VALUE: 3,
-	COMMA: 4,
-	CLOSE_OBJECT: 5
+	COLON: 3,
+	VALUE: 4,
+	COMMA: 5
 };
 
 const arrayStates = {
 	_START_: 0,
 	OPEN_ARRAY: 1,
 	VALUE: 2,
-	COMMA: 3,
-	CLOSE_ARRAY: 4
+	COMMA: 3
 };
 
 const defaultSettings = {
@@ -29,6 +29,10 @@ const primitiveTokenTypes = {
 	'true': tokenTypes.TRUE,
 	'false': tokenTypes.FALSE,
 	'null': tokenTypes.NULL
+};
+
+const errors = {
+	emptyString: 'JSON is empty'
 };
 
 function parseObject(tokenList, index, settings) {
@@ -80,34 +84,29 @@ function parseObject(tokenList, index, settings) {
 						);
 					}
 					index ++;
-					return object;
+					return {
+						value: object,
+						index: index
+					};
 				} else {
 					return null;
 				}
 				break;
 
 			case objectStates.KEY:
-				if (token.type == tokenTypes.COLON) {
+				if (token.type === tokenTypes.COLON) {
+					state = objectStates.COLON;
 					index ++;
-					let value = parseValue(tokenList, index, settings);
-
-					if (value !== null) {
-						property.value = value;
-						object.properties.push(property);
-						state = objectStates.VALUE;
-					} else {
-						return null;
-					}
 				} else {
 					return null;
 				}
 				break;
 
 			case objectStates.COLON:
-				let value = parseValue();
-
+				let value = parseValue(tokenList, index, settings);
+				index = value.index;
 				if (value !== null) {
-					property.value = value;
+					property.value = value.value;
 					object.properties.push(property);
 					state = objectStates.VALUE;
 				} else {
@@ -128,7 +127,10 @@ function parseObject(tokenList, index, settings) {
 						);
 					}
 					index ++;
-					return object;
+					return {
+						value: object,
+						index: index
+					};
 				} else if (token.type === tokenTypes.COMMA) {
 					state = objectStates.COMMA;
 					index ++;
@@ -140,18 +142,15 @@ function parseObject(tokenList, index, settings) {
 			case objectStates.COMMA:
 				if (token.type === tokenTypes.STRING) {
 					property = {
-						type: 'property'
+						type: 'property',
+						key: {
+							type: 'key',
+							value: token.value
+						}
 					};
 					if (settings.verbose) {
 						property.key = {
-							type: 'key',
-							position: token.position,
-							value: token.value
-						};
-					} else {
-						property.key = {
-							type: 'key',
-							value: token.value
+							position: token.position
 						};
 					}
 					state = objectStates.KEY;
@@ -159,7 +158,7 @@ function parseObject(tokenList, index, settings) {
 				} else {
 					return null;
 				}
-
+				break;
 		}
 
 	}
@@ -190,11 +189,7 @@ function parseArray(tokenList, index, settings) {
 				break;
 
 			case arrayStates.OPEN_ARRAY:
-				value = parseValue();
-				if (value !== null) {
-					array.items.push(value);
-					state = arrayStates.VALUE;
-				} else if (token.type === tokenTypes.RIGHT_BRACKET) {
+				if (token.type === tokenTypes.RIGHT_BRACKET) {
 					if (settings.verbose) {
 						array.position = position(
 							startToken.position.start.line,
@@ -206,9 +201,20 @@ function parseArray(tokenList, index, settings) {
 						);
 					}
 					index ++;
-					return array;
+					return {
+						value: array,
+						index: index
+					};
 				} else {
-					return null;
+					value = parseValue(tokenList, index, settings);
+					index = value.index;
+					if (value !== null) {
+						array.items.push(value.value);
+						state = arrayStates.VALUE;
+					} else {
+						return null;
+					}
+
 				}
 				break;
 
@@ -225,7 +231,10 @@ function parseArray(tokenList, index, settings) {
 						);
 					}
 					index ++;
-					return array;
+					return {
+						value: array,
+						index: index
+					};
 				} else if (token.type === tokenTypes.COMMA) {
 					state = arrayStates.COMMA;
 					index ++;
@@ -235,9 +244,10 @@ function parseArray(tokenList, index, settings) {
 				break;
 
 			case arrayStates.COMMA:
-				value = parseValue();
+				value = parseValue(tokenList, index, settings);
+				index = value.index;
 				if (value !== null) {
-					array.items.push(value);
+					array.items.push(value.value);
 					state = arrayStates.VALUE;
 				} else {
 					return null;
@@ -269,41 +279,47 @@ function parseValue(tokenList, index, settings) {
 			tokenType = 'null';
 	}
 
-	let objectOrArray = parseObject() || parseArray();
-
-	if (tokenType !== undefined) {
+	if (tokenType) {
 		index ++;
-
+		let value = {
+			type: tokenType,
+			value: token.value
+		};
 		if (settings.verbose) {
-			return {
-				type: tokenType,
-				value: token.value,
-				position: token.position
-			};
-		} else {
-			return {
-				type: tokenType,
-				value: token.value
-			};
+			value.position = token.position;
+		}
+		return {
+			value: value,
+			index: index
 		}
 
-	} else if (objectOrArray !== null) {
-		return objectOrArray;
-
 	} else {
-		throw new Error('!!!!!');
+		let objectOrArray = parseObject(tokenList, index, settings) || parseArray(tokenList, index, settings);
+
+		if (objectOrArray !== null) {
+			return objectOrArray;
+		} else {
+			error('!!!!!');
+		}
+
 	}
 }
 
 export default function(source, settings) {
-	settings = Object.assign(settings, defaultSettings);
-	const tokenList = tokenize(source);
-	let index = 0;
-	let json = parseValue(tokenList, index, settings);
+	settings = Object.assign({}, defaultSettings, settings);
+	const tokenList = tokenize(source, {
+		verbose: settings.verbose
+	});
+
+	if (!tokenList.length) {
+		error(errors.emptyString);
+	}
+
+	let json = parseValue(tokenList, 0, settings).value;
 
 	if (json) {
 		return json;
 	} else {
-		throw new SyntaxError(exceptionsDict.emptyString);
+		error('Unknown error');
 	}
 }
