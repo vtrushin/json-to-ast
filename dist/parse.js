@@ -741,7 +741,7 @@
 		var tokenList = tokenize(source);
 
 		if (tokenList.length === 0) {
-			error(parseErrorTypes.unexpectedEnd(), source, 1, 1);
+			error(parseErrorTypes.unexpectedEnd());
 		}
 
 		var value = parseValue(source, tokenList, 0, settings);
