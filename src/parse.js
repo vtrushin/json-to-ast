@@ -332,10 +332,7 @@ export default function(source, settings) {
 
 	if (tokenList.length === 0) {
 		error(
-			parseErrorTypes.unexpectedEnd(),
-			source,
-			1,
-			1
+			parseErrorTypes.unexpectedEnd()
 		);
 	}
 
