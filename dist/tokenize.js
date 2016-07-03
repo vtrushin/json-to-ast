@@ -1,16 +1,16 @@
 (function (global, factory) {
 	if (typeof define === "function" && define.amd) {
-		define(['exports', 'assert'], factory);
+		define(['exports'], factory);
 	} else if (typeof exports !== "undefined") {
-		factory(exports, require('assert'));
+		factory(exports);
 	} else {
 		var mod = {
 			exports: {}
 		};
-		factory(mod.exports, global.assert);
+		factory(mod.exports);
 		global.tokenize = mod.exports;
 	}
-})(this, function (exports, assert) {
+})(this, function (exports) {
 	'use strict';
 
 	var _extends = Object.assign || function (target) {
@@ -43,26 +43,15 @@
 		};
 	}
 
-	function error(message, char, line, column) {
-		throw new Error(message.replace('{char}', char).replace('{position}', line + ':' + column));
-		/*throw new Error(
-  	global
-  		? nodejsErrorText(message, char, line, column)
-  		: browserErrorText(message, char, line, column)
-  );*/
+	function error(message, symbol, line, column) {
+		throw new SyntaxError(message.replace('{symbol}', symbol).replace('{position}', line + ':' + column));
 	}
 
-	// var a = '{a: 1, b: 2, c: 3, d: { a: 1, b: [2, "ads"] } }';
-
-	// error('Cannot tokenize at {position}', 10, 1, 11);
-
-	// console.log(mocha);
-	/*mocha(
- describe('test', function(){
- 	assert.deepEqual({a: 1}, {a: 1}, 'asd');
- }));*/
-
-	// assert.deepEqual(new Error(1), {message: 1});
+	var tokenizeErrorTypes = {
+		cannotTokenizeSymbol: function cannotTokenizeSymbol(symbol, line, column) {
+			return 'Cannot tokenize symbol <' + symbol + '> at ' + line + ':' + column;
+		}
+	};
 
 	var tokenTypes = {
 		LEFT_BRACE: 'LEFT_BRACE', // {
@@ -120,10 +109,6 @@
 		DIGIT_FRACTION: 5,
 		EXP: 6,
 		EXP_DIGIT_OR_SIGN: 7
-	};
-
-	var errors = {
-		cannotTokenizeSymbol: 'Cannot tokenize symbol {char} at {position}'
 	};
 
 	// HELPERS
@@ -389,7 +374,7 @@
 	};
 
 	function tokenize(source, settings) {
-		settings = _extends(defaultSettings, settings);
+		settings = _extends({}, defaultSettings, settings);
 		var line = 1;
 		var column = 1;
 		var index = 0;
@@ -422,7 +407,7 @@
 				line = matched.line;
 				column = matched.column;
 			} else {
-				error(errors.cannotTokenizeSymbol, source.charAt(index), line.toString(), column.toString());
+				error(tokenizeErrorTypes.cannotTokenizeSymbol(source.charAt(index), line.toString(), column.toString()));
 			}
 		}
 

@@ -1,3 +1,8 @@
-/**
- * Created by sloter on 13.06.16.
- */
+var errorTypes = require('../../dist/parseErrorTypes');
+var tokenTypes = require('../../dist/tokenize').tokenTypes;
+
+module.exports = {
+	error: {
+		message: errorTypes.unexpectedToken(tokenTypes.RIGHT_BRACE, 3, 1)
+	}
+};

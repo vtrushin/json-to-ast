@@ -1,5 +1,6 @@
 import position from './position';
-import {error} from './error';
+import error from './error';
+import tokenizeErrorTypes from './tokenizeErrorTypes';
 
 export const tokenTypes = {
 	LEFT_BRACE: 'LEFT_BRACE',       // {
@@ -57,10 +58,6 @@ const numberStates = {
 	DIGIT_FRACTION: 5,
 	EXP: 6,
 	EXP_DIGIT_OR_SIGN: 7
-};
-
-const errors = {
-	cannotTokenizeSymbol: 'Cannot tokenize symbol {char} at {position}'
 };
 
 // HELPERS
@@ -325,7 +322,7 @@ const defaultSettings = {
 };
 
 export function tokenize(source, settings) {
-	settings = Object.assign(defaultSettings, settings);
+	settings = Object.assign({}, defaultSettings, settings);
 	let line = 1;
 	let column = 1;
 	let index = 0;
@@ -363,7 +360,7 @@ export function tokenize(source, settings) {
 			column = matched.column;
 
 		} else {
-			error(errors.cannotTokenizeSymbol, source.charAt(index), line.toString(), column.toString());
+			error(tokenizeErrorTypes.cannotTokenizeSymbol(source.charAt(index), line.toString(), column.toString()));
 
 		}
 	}

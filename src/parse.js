@@ -1,7 +1,7 @@
-import {error} from './error';
-import {tokenize, tokenTypes} from './tokenize';
-import exceptionsDict from './exceptionsDict';
 import position from './position';
+import error from './error';
+import parseErrorTypes from './parseErrorTypes';
+import {tokenize, tokenTypes} from './tokenize';
 
 const objectStates = {
 	_START_: 0,
@@ -29,10 +29,6 @@ const primitiveTokenTypes = {
 	'true': tokenTypes.TRUE,
 	'false': tokenTypes.FALSE,
 	'null': tokenTypes.NULL
-};
-
-const errors = {
-	emptyString: 'JSON is empty'
 };
 
 function parseObject(tokenList, index, settings) {
@@ -89,7 +85,7 @@ function parseObject(tokenList, index, settings) {
 						index: index
 					};
 				} else {
-					return null;
+					error(parseErrorTypes.unexpectedToken(token.type, token.position.start.line, token.position.start.column));
 				}
 				break;
 
@@ -98,20 +94,16 @@ function parseObject(tokenList, index, settings) {
 					state = objectStates.COLON;
 					index ++;
 				} else {
-					return null;
+					error(parseErrorTypes.unexpectedToken(token.type, token.position.start.line, token.position.start.column));
 				}
 				break;
 
 			case objectStates.COLON:
 				let value = parseValue(tokenList, index, settings);
 				index = value.index;
-				if (value !== null) {
-					property.value = value.value;
-					object.properties.push(property);
-					state = objectStates.VALUE;
-				} else {
-					return null;
-				}
+				property.value = value.value;
+				object.properties.push(property);
+				state = objectStates.VALUE;
 				break;
 
 			case objectStates.VALUE:
@@ -135,7 +127,7 @@ function parseObject(tokenList, index, settings) {
 					state = objectStates.COMMA;
 					index ++;
 				} else {
-					return null;
+					error(parseErrorTypes.unexpectedToken(token.type, token.position.start.line, token.position.start.column));
 				}
 				break;
 
@@ -156,18 +148,19 @@ function parseObject(tokenList, index, settings) {
 					state = objectStates.KEY;
 					index ++;
 				} else {
-					return null;
+					error(parseErrorTypes.unexpectedToken(token.type, token.position.start.line, token.position.start.column));
 				}
 				break;
 		}
 
 	}
 
+	error(parseErrorTypes.unexpectedEnd());
+
 }
 
 function parseArray(tokenList, index, settings) {
 	let startToken;
-	let value;
 	let array = {
 		type: 'array',
 		items: []
@@ -206,15 +199,10 @@ function parseArray(tokenList, index, settings) {
 						index: index
 					};
 				} else {
-					value = parseValue(tokenList, index, settings);
+					let value = parseValue(tokenList, index, settings);
 					index = value.index;
-					if (value !== null) {
-						array.items.push(value.value);
-						state = arrayStates.VALUE;
-					} else {
-						return null;
-					}
-
+					array.items.push(value.value);
+					state = arrayStates.VALUE;
 				}
 				break;
 
@@ -239,22 +227,20 @@ function parseArray(tokenList, index, settings) {
 					state = arrayStates.COMMA;
 					index ++;
 				} else {
-					return null;
+					error(parseErrorTypes.unexpectedToken(token.type, token.position.start.line, token.position.start.column));
 				}
 				break;
 
 			case arrayStates.COMMA:
-				value = parseValue(tokenList, index, settings);
+				let value = parseValue(tokenList, index, settings);
 				index = value.index;
-				if (value !== null) {
-					array.items.push(value.value);
-					state = arrayStates.VALUE;
-				} else {
-					return null;
-				}
+				array.items.push(value.value);
+				state = arrayStates.VALUE;
 				break;
 		}
 	}
+
+	error(parseErrorTypes.unexpectedEnd());
 }
 
 function parseValue(tokenList, index, settings) {
@@ -294,32 +280,30 @@ function parseValue(tokenList, index, settings) {
 		}
 
 	} else {
-		let objectOrArray = parseObject(tokenList, index, settings) || parseArray(tokenList, index, settings);
+		let objectOrValue = parseObject(tokenList, index, settings) || parseArray(tokenList, index, settings);
 
-		if (objectOrArray !== null) {
-			return objectOrArray;
+		if (objectOrValue) {
+			return objectOrValue;
 		} else {
-			error('!!!!!');
+			error(parseErrorTypes.unexpectedToken(token.type, token.position.start.line, token.position.start.column));
 		}
-
 	}
 }
 
 export default function(source, settings) {
 	settings = Object.assign({}, defaultSettings, settings);
-	const tokenList = tokenize(source, {
-		verbose: settings.verbose
-	});
+	const tokenList = tokenize(source);
 
-	if (!tokenList.length) {
-		error(errors.emptyString);
+	if (tokenList.length === 0) {
+		error(parseErrorTypes.unexpectedEnd());
 	}
 
-	let json = parseValue(tokenList, 0, settings).value;
+	let value = parseValue(tokenList, 0, settings);
 
-	if (json) {
-		return json;
+	if (value.index === tokenList.length) {
+		return value.value;
 	} else {
-		error('Unknown error');
+		let token = tokenList[value.index];
+		error(parseErrorTypes.unexpectedToken(token.type, token.position.start.line, token.position.start.column));
 	}
 }

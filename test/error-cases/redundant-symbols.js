@@ -3,6 +3,6 @@ var tokenTypes = require('../../dist/tokenize').tokenTypes;
 
 module.exports = {
 	error: {
-		message: errorTypes.unexpectedToken(tokenTypes.RIGHT_BRACKET, 1, 4)
+		message: errorTypes.unexpectedToken(tokenTypes.RIGHT_BRACE, 1, 9)
 	}
 };

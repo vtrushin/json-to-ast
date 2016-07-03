@@ -12,6 +12,7 @@ const es6Path = [
 	src + '/Parser.js',
 	src + '/error.js',
 	src + '/parse.js',
+	src + '/errorTypes.js',
 	src + '/tokenize.js'
 ];
 const distJsPath = dist;
@@ -28,7 +29,7 @@ gulp.task('clean', function(){
 });
 
 gulp.task('es6', function(){
-	gulp.src(es6Path)
+	gulp.src(src + '/**/*.js')
 		.pipe(
 			rollup({
 				format: 'cjs'

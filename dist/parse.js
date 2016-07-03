@@ -1,16 +1,16 @@
 (function (global, factory) {
 	if (typeof define === "function" && define.amd) {
-		define(['module', 'assert'], factory);
+		define(['module'], factory);
 	} else if (typeof exports !== "undefined") {
-		factory(module, require('assert'));
+		factory(module);
 	} else {
 		var mod = {
 			exports: {}
 		};
-		factory(mod, global.assert);
+		factory(mod);
 		global.parse = mod.exports;
 	}
-})(this, function (module, assert) {
+})(this, function (module) {
 	'use strict';
 
 	var _extends = Object.assign || function (target) {
@@ -27,27 +27,6 @@
 		return target;
 	};
 
-	function error(message, char, line, column) {
-		throw new Error(message.replace('{char}', char).replace('{position}', line + ':' + column));
-		/*throw new Error(
-  	global
-  		? nodejsErrorText(message, char, line, column)
-  		: browserErrorText(message, char, line, column)
-  );*/
-	}
-
-	// var a = '{a: 1, b: 2, c: 3, d: { a: 1, b: [2, "ads"] } }';
-
-	// error('Cannot tokenize at {position}', 10, 1, 11);
-
-	// console.log(mocha);
-	/*mocha(
- describe('test', function(){
- 	assert.deepEqual({a: 1}, {a: 1}, 'asd');
- }));*/
-
-	// assert.deepEqual(new Error(1), {message: 1});
-
 	function position(startLine, startColumn, startChar, endLine, endColumn, endChar) {
 		return {
 			start: {
@@ -63,6 +42,25 @@
 			human: startLine + ':' + startColumn + ' - ' + endLine + ':' + endColumn + ' [' + startChar + ':' + endChar + ']'
 		};
 	}
+
+	function error(message, symbol, line, column) {
+		throw new SyntaxError(message.replace('{symbol}', symbol).replace('{position}', line + ':' + column));
+	}
+
+	var parseErrorTypes = {
+		unexpectedEnd: function unexpectedEnd() {
+			return 'Unexpected end of JSON input';
+		},
+		unexpectedToken: function unexpectedToken(token, line, column) {
+			return 'Unexpected token <' + token + '> at ' + line + ':' + column;
+		}
+	};
+
+	var tokenizeErrorTypes = {
+		cannotTokenizeSymbol: function cannotTokenizeSymbol(symbol, line, column) {
+			return 'Cannot tokenize symbol <' + symbol + '> at ' + line + ':' + column;
+		}
+	};
 
 	var tokenTypes = {
 		LEFT_BRACE: 'LEFT_BRACE', // {
@@ -120,10 +118,6 @@
 		DIGIT_FRACTION: 5,
 		EXP: 6,
 		EXP_DIGIT_OR_SIGN: 7
-	};
-
-	var errors$1 = {
-		cannotTokenizeSymbol: 'Cannot tokenize symbol {char} at {position}'
 	};
 
 	// HELPERS
@@ -389,7 +383,7 @@
 	};
 
 	function tokenize(source, settings) {
-		settings = _extends(defaultSettings$1, settings);
+		settings = _extends({}, defaultSettings$1, settings);
 		var line = 1;
 		var column = 1;
 		var index = 0;
@@ -422,7 +416,7 @@
 				line = matched.line;
 				column = matched.column;
 			} else {
-				error(errors$1.cannotTokenizeSymbol, source.charAt(index), line.toString(), column.toString());
+				error(tokenizeErrorTypes.cannotTokenizeSymbol(source.charAt(index), line.toString(), column.toString()));
 			}
 		}
 
@@ -455,10 +449,6 @@
 		'true': tokenTypes.TRUE,
 		'false': tokenTypes.FALSE,
 		'null': tokenTypes.NULL
-	};
-
-	var errors = {
-		emptyString: 'JSON is empty'
 	};
 
 	function parseObject(tokenList, index, settings) {
@@ -508,7 +498,7 @@
 							index: index
 						};
 					} else {
-						return null;
+						error(parseErrorTypes.unexpectedToken(token.type, token.position.start.line, token.position.start.column));
 					}
 					break;
 
@@ -517,20 +507,16 @@
 						state = objectStates.COLON;
 						index++;
 					} else {
-						return null;
+						error(parseErrorTypes.unexpectedToken(token.type, token.position.start.line, token.position.start.column));
 					}
 					break;
 
 				case objectStates.COLON:
 					var value = parseValue(tokenList, index, settings);
 					index = value.index;
-					if (value !== null) {
-						property.value = value.value;
-						object.properties.push(property);
-						state = objectStates.VALUE;
-					} else {
-						return null;
-					}
+					property.value = value.value;
+					object.properties.push(property);
+					state = objectStates.VALUE;
 					break;
 
 				case objectStates.VALUE:
@@ -547,7 +533,7 @@
 						state = objectStates.COMMA;
 						index++;
 					} else {
-						return null;
+						error(parseErrorTypes.unexpectedToken(token.type, token.position.start.line, token.position.start.column));
 					}
 					break;
 
@@ -568,16 +554,17 @@
 						state = objectStates.KEY;
 						index++;
 					} else {
-						return null;
+						error(parseErrorTypes.unexpectedToken(token.type, token.position.start.line, token.position.start.column));
 					}
 					break;
 			}
 		}
+
+		error(parseErrorTypes.unexpectedEnd());
 	}
 
 	function parseArray(tokenList, index, settings) {
 		var startToken = void 0;
-		var value = void 0;
 		var array = {
 			type: 'array',
 			items: []
@@ -609,14 +596,10 @@
 							index: index
 						};
 					} else {
-						value = parseValue(tokenList, index, settings);
-						index = value.index;
-						if (value !== null) {
-							array.items.push(value.value);
-							state = arrayStates.VALUE;
-						} else {
-							return null;
-						}
+						var _value = parseValue(tokenList, index, settings);
+						index = _value.index;
+						array.items.push(_value.value);
+						state = arrayStates.VALUE;
 					}
 					break;
 
@@ -634,22 +617,20 @@
 						state = arrayStates.COMMA;
 						index++;
 					} else {
-						return null;
+						error(parseErrorTypes.unexpectedToken(token.type, token.position.start.line, token.position.start.column));
 					}
 					break;
 
 				case arrayStates.COMMA:
-					value = parseValue(tokenList, index, settings);
+					var value = parseValue(tokenList, index, settings);
 					index = value.index;
-					if (value !== null) {
-						array.items.push(value.value);
-						state = arrayStates.VALUE;
-					} else {
-						return null;
-					}
+					array.items.push(value.value);
+					state = arrayStates.VALUE;
 					break;
 			}
 		}
+
+		error(parseErrorTypes.unexpectedEnd());
 	}
 
 	function parseValue(tokenList, index, settings) {
@@ -688,32 +669,31 @@
 				index: index
 			};
 		} else {
-			var objectOrArray = parseObject(tokenList, index, settings) || parseArray(tokenList, index, settings);
+			var objectOrValue = parseObject(tokenList, index, settings) || parseArray(tokenList, index, settings);
 
-			if (objectOrArray !== null) {
-				return objectOrArray;
+			if (objectOrValue) {
+				return objectOrValue;
 			} else {
-				error('!!!!!');
+				error(parseErrorTypes.unexpectedToken(token.type, token.position.start.line, token.position.start.column));
 			}
 		}
 	}
 
 	function parse(source, settings) {
 		settings = _extends({}, defaultSettings, settings);
-		var tokenList = tokenize(source, {
-			verbose: settings.verbose
-		});
+		var tokenList = tokenize(source);
 
-		if (!tokenList.length) {
-			error(errors.emptyString);
+		if (tokenList.length === 0) {
+			error(parseErrorTypes.unexpectedEnd());
 		}
 
-		var json = parseValue(tokenList, 0, settings).value;
+		var value = parseValue(tokenList, 0, settings);
 
-		if (json) {
-			return json;
+		if (value.index === tokenList.length) {
+			return value.value;
 		} else {
-			error('Unknown error');
+			var token = tokenList[value.index];
+			error(parseErrorTypes.unexpectedToken(token.type, token.position.start.line, token.position.start.column));
 		}
 	}
 

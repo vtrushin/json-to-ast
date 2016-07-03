@@ -26,30 +26,30 @@ function getCases(dirname, callback) {
 
 	cases.forEach(function(_case) {
 		var inputFile = readFile(path.join(folderPath, _case + '.json'));
-		var expectedAst = require(path.join(folderPath, _case + '.js'));
-
+		var expectedFile = require(path.join(folderPath, _case + '.js'));
 		if (callback) {
-			callback(_case, inputFile, expectedAst);
+			callback(_case, inputFile, expectedFile);
 		}
 	});
 }
 
 describe('Test cases', function() {
-	getCases('cases', function(caseName, inputFile, expectedAst) {
+	getCases('cases', function(caseName, inputFile, expectedFile) {
 		it(caseName, function() {
-			var parsedAst = parse(inputFile, expectedAst.options);
-			assert.deepEqual(parsedAst, expectedAst.ast, 'asts are not equal');
+			var parsedFile = parse(inputFile, expectedFile.options);
+			assert.deepEqual(parsedFile, expectedFile.ast, 'asts are not equal');
 		});
 	});
-
-
 });
 
 describe('Error test cases', function() {
-	getCases('error-cases', function(caseName, inputFile, expectedAst) {
+	getCases('error-cases', function(caseName, inputFile, expectedFile) {
 		it(caseName, function() {
-			var parsedAst = parse(inputFile, expectedAst.options);
-			assert.deepEqual(parsedAst, expectedAst.ast, 'asts are not equal');
+			try {
+				parse(inputFile, expectedFile.options);
+			} catch (e) {
+				assert.deepEqual(e.message, expectedFile.error.message, 'asts are not equal');
+			}
 		});
 	});
 });

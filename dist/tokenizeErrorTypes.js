@@ -8,14 +8,16 @@
 			exports: {}
 		};
 		factory(mod);
-		global.error = mod.exports;
+		global.tokenizeErrorTypes = mod.exports;
 	}
 })(this, function (module) {
 	'use strict';
 
-	function error(message, symbol, line, column) {
-		throw new SyntaxError(message.replace('{symbol}', symbol).replace('{position}', line + ':' + column));
-	}
+	var tokenizeErrorTypes = {
+		cannotTokenizeSymbol: function cannotTokenizeSymbol(symbol, line, column) {
+			return 'Cannot tokenize symbol <' + symbol + '> at ' + line + ':' + column;
+		}
+	};
 
-	module.exports = error;
+	module.exports = tokenizeErrorTypes;
 });
