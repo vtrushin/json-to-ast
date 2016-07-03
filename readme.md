@@ -118,8 +118,7 @@ for primitive type
 }
 ```
 
-[Try out in online (Look at console)](https://rawgit.com/vtrushin/json-to-ast/master/demo/index.html)
-
+[Try out in online](https://rawgit.com/vtrushin/json-to-ast/master/demo/astexplorer/index.html) (Fork of [astexplorer.net](https://astexplorer.net/))
 
 ## License
 MIT
