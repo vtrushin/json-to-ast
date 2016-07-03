@@ -27,6 +27,36 @@
 		return target;
 	};
 
+	function _classCallCheck(instance, Constructor) {
+		if (!(instance instanceof Constructor)) {
+			throw new TypeError("Cannot call a class as a function");
+		}
+	}
+
+	function _possibleConstructorReturn(self, call) {
+		if (!self) {
+			throw new ReferenceError("this hasn't been initialised - super() hasn't been called");
+		}
+
+		return call && (typeof call === "object" || typeof call === "function") ? call : self;
+	}
+
+	function _inherits(subClass, superClass) {
+		if (typeof superClass !== "function" && superClass !== null) {
+			throw new TypeError("Super expression must either be null or a function, not " + typeof superClass);
+		}
+
+		subClass.prototype = Object.create(superClass && superClass.prototype, {
+			constructor: {
+				value: subClass,
+				enumerable: false,
+				writable: true,
+				configurable: true
+			}
+		});
+		if (superClass) Object.setPrototypeOf ? Object.setPrototypeOf(subClass, superClass) : subClass.__proto__ = superClass;
+	}
+
 	function position(startLine, startColumn, startChar, endLine, endColumn, endChar) {
 		return {
 			start: {
@@ -43,8 +73,33 @@
 		};
 	}
 
-	function error(message, symbol, line, column) {
-		throw new SyntaxError(message);
+	function showCodeFragment(source, linePosition, columnPosition) {
+		var lines = source.split(/\n|\r\n?|\f/);
+		var line = lines[linePosition - 1];
+		var marker = new Array(columnPosition).join(' ') + '^';
+
+		return line + '\n' + marker;
+	}
+
+	var ParseError = function (_SyntaxError) {
+		_inherits(ParseError, _SyntaxError);
+
+		function ParseError(message, source, linePosition, columnPosition) {
+			_classCallCheck(this, ParseError);
+
+			var fullMessage = linePosition ? message + '\n' + showCodeFragment(source, linePosition, columnPosition) : message;
+
+			var _this = _possibleConstructorReturn(this, Object.getPrototypeOf(ParseError).call(this, fullMessage));
+
+			_this.rawMessage = message;
+			return _this;
+		}
+
+		return ParseError;
+	}(SyntaxError);
+
+	function error(message, source, line, column) {
+		throw new ParseError(message, source, line, column);
 	}
 
 	var parseErrorTypes = {
@@ -416,7 +471,7 @@
 				line = matched.line;
 				column = matched.column;
 			} else {
-				error(tokenizeErrorTypes.cannotTokenizeSymbol(source.charAt(index), line.toString(), column.toString()));
+				error(tokenizeErrorTypes.cannotTokenizeSymbol(source.charAt(index), line, column), source, line, column);
 			}
 		}
 
@@ -451,7 +506,7 @@
 		'null': tokenTypes.NULL
 	};
 
-	function parseObject(tokenList, index, settings) {
+	function parseObject(source, tokenList, index, settings) {
 		var startToken = void 0;
 		var property = void 0;
 		var object = {
@@ -459,9 +514,10 @@
 			properties: []
 		};
 		var state = objectStates._START_;
+		var token = void 0;
 
 		while (index < tokenList.length) {
-			var token = tokenList[index];
+			token = tokenList[index];
 
 			switch (state) {
 				case objectStates._START_:
@@ -498,7 +554,7 @@
 							index: index
 						};
 					} else {
-						error(parseErrorTypes.unexpectedToken(token.type, token.position.start.line, token.position.start.column));
+						error(parseErrorTypes.unexpectedToken(source.substring(token.position.start.char, token.position.end.char), token.position.start.line, token.position.start.column), source, token.position.start.line, token.position.start.column);
 					}
 					break;
 
@@ -507,12 +563,12 @@
 						state = objectStates.COLON;
 						index++;
 					} else {
-						error(parseErrorTypes.unexpectedToken(token.type, token.position.start.line, token.position.start.column));
+						error(parseErrorTypes.unexpectedToken(source.substring(token.position.start.char, token.position.end.char), token.position.start.line, token.position.start.column), source, token.position.start.line, token.position.start.column);
 					}
 					break;
 
 				case objectStates.COLON:
-					var value = parseValue(tokenList, index, settings);
+					var value = parseValue(source, tokenList, index, settings);
 					index = value.index;
 					property.value = value.value;
 					object.properties.push(property);
@@ -533,7 +589,7 @@
 						state = objectStates.COMMA;
 						index++;
 					} else {
-						error(parseErrorTypes.unexpectedToken(token.type, token.position.start.line, token.position.start.column));
+						error(parseErrorTypes.unexpectedToken(source.substring(token.position.start.char, token.position.end.char), token.position.start.line, token.position.start.column), source, token.position.start.line, token.position.start.column);
 					}
 					break;
 
@@ -554,7 +610,7 @@
 						state = objectStates.KEY;
 						index++;
 					} else {
-						error(parseErrorTypes.unexpectedToken(token.type, token.position.start.line, token.position.start.column));
+						error(parseErrorTypes.unexpectedToken(source.substring(token.position.start.char, token.position.end.char), token.position.start.line, token.position.start.column), source, token.position.start.line, token.position.start.column);
 					}
 					break;
 			}
@@ -563,16 +619,17 @@
 		error(parseErrorTypes.unexpectedEnd());
 	}
 
-	function parseArray(tokenList, index, settings) {
+	function parseArray(source, tokenList, index, settings) {
 		var startToken = void 0;
 		var array = {
 			type: 'array',
 			items: []
 		};
 		var state = arrayStates._START_;
+		var token = void 0;
 
 		while (index < tokenList.length) {
-			var token = tokenList[index];
+			token = tokenList[index];
 
 			switch (state) {
 				case arrayStates._START_:
@@ -596,7 +653,7 @@
 							index: index
 						};
 					} else {
-						var _value = parseValue(tokenList, index, settings);
+						var _value = parseValue(source, tokenList, index, settings);
 						index = _value.index;
 						array.items.push(_value.value);
 						state = arrayStates.VALUE;
@@ -617,12 +674,12 @@
 						state = arrayStates.COMMA;
 						index++;
 					} else {
-						error(parseErrorTypes.unexpectedToken(token.type, token.position.start.line, token.position.start.column));
+						error(parseErrorTypes.unexpectedToken(source.substring(token.position.start.char, token.position.end.char), token.position.start.line, token.position.start.column), source, token.position.start.line, token.position.start.column);
 					}
 					break;
 
 				case arrayStates.COMMA:
-					var value = parseValue(tokenList, index, settings);
+					var value = parseValue(source, tokenList, index, settings);
 					index = value.index;
 					array.items.push(value.value);
 					state = arrayStates.VALUE;
@@ -633,7 +690,7 @@
 		error(parseErrorTypes.unexpectedEnd());
 	}
 
-	function parseValue(tokenList, index, settings) {
+	function parseValue(source, tokenList, index, settings) {
 		// value: object | array | STRING | NUMBER | TRUE | FALSE | NULL
 		var token = tokenList[index];
 		var tokenType = void 0;
@@ -669,12 +726,12 @@
 				index: index
 			};
 		} else {
-			var objectOrValue = parseObject(tokenList, index, settings) || parseArray(tokenList, index, settings);
+			var objectOrValue = parseObject(source, tokenList, index, settings) || parseArray(source, tokenList, index, settings);
 
 			if (objectOrValue) {
 				return objectOrValue;
 			} else {
-				error(parseErrorTypes.unexpectedToken(token.type, token.position.start.line, token.position.start.column));
+				error(parseErrorTypes.unexpectedToken(source.substring(token.position.start.char, token.position.end.char), token.position.start.line, token.position.start.column), source, token.position.start.line, token.position.start.column);
 			}
 		}
 	}
@@ -684,16 +741,16 @@
 		var tokenList = tokenize(source);
 
 		if (tokenList.length === 0) {
-			error(parseErrorTypes.unexpectedEnd());
+			error(parseErrorTypes.unexpectedEnd(), source, 1, 1);
 		}
 
-		var value = parseValue(tokenList, 0, settings);
+		var value = parseValue(source, tokenList, 0, settings);
 
 		if (value.index === tokenList.length) {
 			return value.value;
 		} else {
 			var token = tokenList[value.index];
-			error(parseErrorTypes.unexpectedToken(token.type, token.position.start.line, token.position.start.column));
+			error(parseErrorTypes.unexpectedToken(source.substring(token.position.start.char, token.position.end.char), token.position.start.line, token.position.start.column), source, token.position.start.line, token.position.start.column);
 		}
 	}
 

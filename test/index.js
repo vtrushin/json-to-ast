@@ -48,7 +48,7 @@ describe('Error test cases', function() {
 			try {
 				parse(inputFile, expectedFile.options);
 			} catch (e) {
-				assert.deepEqual(e.message, expectedFile.error.message, 'asts are not equal');
+				assert.deepEqual(expectedFile.error.message, e.rawMessage, 'asts are not equal');
 			}
 		});
 	});

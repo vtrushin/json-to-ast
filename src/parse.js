@@ -31,7 +31,7 @@ const primitiveTokenTypes = {
 	'null': tokenTypes.NULL
 };
 
-function parseObject(tokenList, index, settings) {
+function parseObject(source, tokenList, index, settings) {
 	let startToken;
 	let property;
 	let object = {
@@ -39,9 +39,10 @@ function parseObject(tokenList, index, settings) {
 		properties: []
 	};
 	let state = objectStates._START_;
+	let token;
 
 	while (index < tokenList.length) {
-		const token = tokenList[index];
+		token = tokenList[index];
 
 		switch (state) {
 			case objectStates._START_:
@@ -85,7 +86,12 @@ function parseObject(tokenList, index, settings) {
 						index: index
 					};
 				} else {
-					error(parseErrorTypes.unexpectedToken(token.type, token.position.start.line, token.position.start.column));
+					error(
+						parseErrorTypes.unexpectedToken(source.substring(token.position.start.char, token.position.end.char), token.position.start.line, token.position.start.column),
+						source,
+						token.position.start.line,
+						token.position.start.column
+					);
 				}
 				break;
 
@@ -94,12 +100,17 @@ function parseObject(tokenList, index, settings) {
 					state = objectStates.COLON;
 					index ++;
 				} else {
-					error(parseErrorTypes.unexpectedToken(token.type, token.position.start.line, token.position.start.column));
+					error(
+						parseErrorTypes.unexpectedToken(source.substring(token.position.start.char, token.position.end.char), token.position.start.line, token.position.start.column),
+						source,
+						token.position.start.line,
+						token.position.start.column
+					);
 				}
 				break;
 
 			case objectStates.COLON:
-				let value = parseValue(tokenList, index, settings);
+				let value = parseValue(source, tokenList, index, settings);
 				index = value.index;
 				property.value = value.value;
 				object.properties.push(property);
@@ -127,7 +138,12 @@ function parseObject(tokenList, index, settings) {
 					state = objectStates.COMMA;
 					index ++;
 				} else {
-					error(parseErrorTypes.unexpectedToken(token.type, token.position.start.line, token.position.start.column));
+					error(
+						parseErrorTypes.unexpectedToken(source.substring(token.position.start.char, token.position.end.char), token.position.start.line, token.position.start.column),
+						source,
+						token.position.start.line,
+						token.position.start.column
+					);
 				}
 				break;
 
@@ -148,27 +164,35 @@ function parseObject(tokenList, index, settings) {
 					state = objectStates.KEY;
 					index ++;
 				} else {
-					error(parseErrorTypes.unexpectedToken(token.type, token.position.start.line, token.position.start.column));
+					error(
+						parseErrorTypes.unexpectedToken(source.substring(token.position.start.char, token.position.end.char), token.position.start.line, token.position.start.column),
+						source,
+						token.position.start.line,
+						token.position.start.column
+					);
 				}
 				break;
 		}
 
 	}
 
-	error(parseErrorTypes.unexpectedEnd());
+	error(
+		parseErrorTypes.unexpectedEnd()
+	);
 
 }
 
-function parseArray(tokenList, index, settings) {
+function parseArray(source, tokenList, index, settings) {
 	let startToken;
 	let array = {
 		type: 'array',
 		items: []
 	};
 	let state = arrayStates._START_;
+	let token;
 
 	while (index < tokenList.length) {
-		const token = tokenList[index];
+		token = tokenList[index];
 
 		switch (state) {
 			case arrayStates._START_:
@@ -199,7 +223,7 @@ function parseArray(tokenList, index, settings) {
 						index: index
 					};
 				} else {
-					let value = parseValue(tokenList, index, settings);
+					let value = parseValue(source, tokenList, index, settings);
 					index = value.index;
 					array.items.push(value.value);
 					state = arrayStates.VALUE;
@@ -227,12 +251,17 @@ function parseArray(tokenList, index, settings) {
 					state = arrayStates.COMMA;
 					index ++;
 				} else {
-					error(parseErrorTypes.unexpectedToken(token.type, token.position.start.line, token.position.start.column));
+					error(
+						parseErrorTypes.unexpectedToken(source.substring(token.position.start.char, token.position.end.char), token.position.start.line, token.position.start.column),
+						source,
+						token.position.start.line,
+						token.position.start.column
+					);
 				}
 				break;
 
 			case arrayStates.COMMA:
-				let value = parseValue(tokenList, index, settings);
+				let value = parseValue(source, tokenList, index, settings);
 				index = value.index;
 				array.items.push(value.value);
 				state = arrayStates.VALUE;
@@ -240,10 +269,12 @@ function parseArray(tokenList, index, settings) {
 		}
 	}
 
-	error(parseErrorTypes.unexpectedEnd());
+	error(
+		parseErrorTypes.unexpectedEnd()
+	);
 }
 
-function parseValue(tokenList, index, settings) {
+function parseValue(source, tokenList, index, settings) {
 	// value: object | array | STRING | NUMBER | TRUE | FALSE | NULL
 	let token = tokenList[index];
 	let tokenType;
@@ -280,12 +311,17 @@ function parseValue(tokenList, index, settings) {
 		}
 
 	} else {
-		let objectOrValue = parseObject(tokenList, index, settings) || parseArray(tokenList, index, settings);
+		let objectOrValue = parseObject(source, tokenList, index, settings) || parseArray(source, tokenList, index, settings);
 
 		if (objectOrValue) {
 			return objectOrValue;
 		} else {
-			error(parseErrorTypes.unexpectedToken(token.type, token.position.start.line, token.position.start.column));
+			error(
+				parseErrorTypes.unexpectedToken(source.substring(token.position.start.char, token.position.end.char), token.position.start.line, token.position.start.column),
+				source,
+				token.position.start.line,
+				token.position.start.column
+			);
 		}
 	}
 }
@@ -295,15 +331,25 @@ export default function(source, settings) {
 	const tokenList = tokenize(source);
 
 	if (tokenList.length === 0) {
-		error(parseErrorTypes.unexpectedEnd());
+		error(
+			parseErrorTypes.unexpectedEnd(),
+			source,
+			1,
+			1
+		);
 	}
 
-	let value = parseValue(tokenList, 0, settings);
+	let value = parseValue(source, tokenList, 0, settings);
 
 	if (value.index === tokenList.length) {
 		return value.value;
 	} else {
 		let token = tokenList[value.index];
-		error(parseErrorTypes.unexpectedToken(token.type, token.position.start.line, token.position.start.column));
+		error(
+			parseErrorTypes.unexpectedToken(source.substring(token.position.start.char, token.position.end.char), token.position.start.line, token.position.start.column),
+			source,
+			token.position.start.line,
+			token.position.start.column
+		);
 	}
 }

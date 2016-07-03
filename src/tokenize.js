@@ -360,7 +360,12 @@ export function tokenize(source, settings) {
 			column = matched.column;
 
 		} else {
-			error(tokenizeErrorTypes.cannotTokenizeSymbol(source.charAt(index), line.toString(), column.toString()));
+			error(
+				tokenizeErrorTypes.cannotTokenizeSymbol(source.charAt(index), line, column),
+				source,
+				line,
+				column
+			);
 
 		}
 	}
