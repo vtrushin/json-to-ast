@@ -1,7 +1,5 @@
-var errorTypes = require('../../dist/parseErrorTypes');
-
 module.exports = {
 	error: {
-		message: errorTypes.unexpectedEnd()
+		message: 'Unexpected end of JSON input'
 	}
 };
