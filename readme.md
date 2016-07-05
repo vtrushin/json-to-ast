@@ -5,70 +5,75 @@
 [![Build Status](https://travis-ci.org/vtrushin/json-to-ast.svg?branch=master)](https://travis-ci.org/vtrushin/json-to-ast)
 <!-- [![Coverage Status](https://coveralls.io/repos/github/vtrushin/json-to-ast/badge.svg?branch=master)](https://coveralls.io/github/vtrushin/json-to-ast?branch=master) -->
 
-## About usage
-```js
-  var parse = require('json-to-ast');
+> npm install json-to-ast
 
-  console.log(parse('{"a": 1}'))
-  /*
-  =>
-  {
-    type: 'object',
-    properties: [
-      {
-        type: 'property',
-        key: {
-          type: 'key',
-          value: 'a',
-          position: {
-            start: {
-              line: 1,
-              column: 2,
-              char: 1
-            },
-            end: {
-              line: 1,
-              column: 9,
-              char: 8
-            }
+## API
+
+```js
+var parse = require('json-to-ast');
+
+console.log(parse('{"a": 1}'))
+/*
+=>
+{
+  type: 'object',
+  properties: [
+    {
+      type: 'property',
+      key: {
+        type: 'key',
+        value: 'a',
+        position: {
+          start: {
+            line: 1,
+            column: 2,
+            char: 1
+          },
+          end: {
+            line: 1,
+            column: 9,
+            char: 8
           }
-        },
-        value: {
-          type: 'number',
-          value: '1',
-          position: {
-            start: {
-              line: 1,
-              column: 11,
-              char: 10
-            },
-            end: {
-              line: 1,
-              column: 12,
-              char: 11
-            }
+        }
+      },
+      value: {
+        type: 'number',
+        value: '1',
+        position: {
+          start: {
+            line: 1,
+            column: 11,
+            char: 10
+          },
+          end: {
+            line: 1,
+            column: 12,
+            char: 11
           }
         }
       }
-    ],
-    position: {
-      start: {
-        line: 1,
-        column: 1,
-        char: 0,
-      },
-      end: {
-        line: 1,
-        column: 13,
-        char: 12
-      }
+    }
+  ],
+  position: {
+    start: {
+      line: 1,
+      column: 1,
+      char: 0,
+    },
+    end: {
+      line: 1,
+      column: 13,
+      char: 12
     }
   }
-  */
+}
+*/
 ```
 
-## Output
-AST format for object
+## AST format
+
+Object:
+
 ```js
 {
   type: 'object',
@@ -98,7 +103,8 @@ AST format for object
 }
 ```
 
-for array
+Array:
+
 ```js
 {
   type: 'array',
@@ -109,7 +115,8 @@ for array
 }
 ```
 
-for primitive type
+Primitive:
+
 ```js
 {
   type: 'string|number|true|false|null',

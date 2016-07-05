@@ -1,7 +1,5 @@
-var errorTypes = require('../../dist/parseErrorTypes');
-
 module.exports = {
 	error: {
-		message: errorTypes.unexpectedToken(']', 1, 4)
+		message: 'Unexpected token <]> at 1:4'
 	}
 };

@@ -8,13 +8,6 @@ const handleErrors = require('./utils/handleErrors');
 
 const src = './src';
 const dist = './dist';
-const es6Path = [
-	src + '/Parser.js',
-	src + '/error.js',
-	src + '/parse.js',
-	src + '/errorTypes.js',
-	src + '/tokenize.js'
-];
 const distJsPath = dist;
 
 gulp.task('default', [
@@ -29,7 +22,7 @@ gulp.task('clean', function(){
 });
 
 gulp.task('es6', function(){
-	gulp.src(src + '/**/*.js')
+	gulp.src(src + '/parse.js')
 		.pipe(
 			rollup({
 				format: 'cjs'
