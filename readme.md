@@ -125,7 +125,7 @@ Primitive:
 }
 ```
 
-[Try out online](https://rawgit.com/vtrushin/json-to-ast/master/demo/astexplorer/index.html) (Fork of [astexplorer.net](https://astexplorer.net/))
+[Try it online](https://rawgit.com/vtrushin/json-to-ast/master/demo/astexplorer/index.html) (Fork of [astexplorer.net](https://astexplorer.net/))
 
 ## License
 MIT
