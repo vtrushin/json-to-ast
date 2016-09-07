@@ -149,9 +149,7 @@ function parseObject(source, tokenList, index, settings) {
 						}
 					};
 					if (settings.verbose) {
-						property.key = {
-							position: token.position
-						};
+						property.key.position = token.position;
 					}
 					state = objectStates.KEY;
 					index ++;
