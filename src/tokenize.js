@@ -139,7 +139,6 @@ function parseKeyword(source, index, line, column) {
 	}
 
 	return null;
-
 }
 
 function parseString(source, index, line, column) {
