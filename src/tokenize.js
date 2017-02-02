@@ -126,21 +126,20 @@ function parseChar(source, index, line, column) {
 }
 
 function parseKeyword(source, index, line, column) {
-	const matched = Object.keys(keywordsTokens).find(name =>
-		name === source.substr(index, name.length)
-	);
-
-	if (matched) {
-		return {
-			type: keywordsTokens[matched],
-			line: line,
-			column: column + matched.length,
-			index: index + matched.length,
-			value: null
-		};
-	} else {
-		return null;
+	for (var name in keywordsTokens) {
+		if (keywordsTokens.hasOwnProperty(name) && source.substr(index, name.length) === name) {
+			return {
+				type: keywordsTokens[name],
+				line: line,
+				column: column + name.length,
+				index: index + name.length,
+				value: null
+			};
+		}
 	}
+
+	return null;
+
 }
 
 function parseString(source, index, line, column) {
