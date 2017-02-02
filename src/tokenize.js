@@ -89,7 +89,7 @@ function parseWhitespace(source, index, line, column) {
 		index ++;
 		line ++;
 		column = 1;
-		if (source.charAt(index + 1) === '\n') { // CRLF (Windows)
+		if (source.charAt(index) === '\n') { // CRLF (Windows)
 			index ++;
 		}
 	} else if (char === '\n') { // LF (MacOS)
