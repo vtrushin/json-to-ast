@@ -10,7 +10,7 @@ function position(startLine, startColumn, startChar, endLine, endColumn, endChar
 			column: endColumn,
 			char: endChar
 		},
-		human: `${startLine}:${startColumn} - ${endLine}:${endColumn} [${startChar}:${endChar}]`
+		human: startLine + ':' + startColumn + ' - ' + endLine + ':' + endColumn + ' [' + startChar + ':' + endChar + ']'
 	}
 }
 
