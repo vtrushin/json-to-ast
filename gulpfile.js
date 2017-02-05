@@ -1,14 +1,12 @@
-'use strict';
+var del = require('del');
+var gulp = require('gulp');
+var rollup = require('gulp-rollup');
+var babel = require('gulp-babel');
+var handleErrors = require('./utils/handleErrors');
 
-const del = require('del');
-const gulp = require('gulp');
-const rollup = require('gulp-rollup');
-const babel = require('gulp-babel');
-const handleErrors = require('./utils/handleErrors');
-
-const src = './src';
-const dist = './dist';
-const distJsPath = dist;
+var src = './src';
+var dist = './dist';
+var distJsPath = dist;
 
 gulp.task('default', [
 	'clean',
