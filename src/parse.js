@@ -1,4 +1,4 @@
-import position from './position';
+import offset from './offset';
 import error from './error';
 import parseErrorTypes from './parseErrorTypes';
 import {tokenize, tokenTypes} from './tokenize';
@@ -57,19 +57,19 @@ function parseObject(source, tokenList, index, settings) {
 						}
 					};
 					if (settings.verbose) {
-						property.key.position = token.position;
+						property.key.offset = token.offset;
 					}
 					state = objectStates.KEY;
 					index ++;
 				} else if (token.type === tokenTypes.RIGHT_BRACE) {
 					if (settings.verbose) {
-						object.position = position(
-							startToken.position.start.line,
-							startToken.position.start.column,
-							startToken.position.start.char,
-							token.position.end.line,
-							token.position.end.column,
-							token.position.end.char
+						object.offset = offset(
+							startToken.offset.start.line,
+							startToken.offset.start.column,
+							startToken.offset.start.char,
+							token.offset.end.line,
+							token.offset.end.column,
+							token.offset.end.char
 						);
 					}
 					index ++;
@@ -79,10 +79,10 @@ function parseObject(source, tokenList, index, settings) {
 					};
 				} else {
 					error(
-						parseErrorTypes.unexpectedToken(source.substring(token.position.start.char, token.position.end.char), token.position.start.line, token.position.start.column),
+						parseErrorTypes.unexpectedToken(source.substring(token.offset.start.char, token.offset.end.char), token.offset.start.line, token.offset.start.column),
 						source,
-						token.position.start.line,
-						token.position.start.column
+						token.offset.start.line,
+						token.offset.start.column
 					);
 				}
 				break;
@@ -93,10 +93,10 @@ function parseObject(source, tokenList, index, settings) {
 					index ++;
 				} else {
 					error(
-						parseErrorTypes.unexpectedToken(source.substring(token.position.start.char, token.position.end.char), token.position.start.line, token.position.start.column),
+						parseErrorTypes.unexpectedToken(source.substring(token.offset.start.char, token.offset.end.char), token.offset.start.line, token.offset.start.column),
 						source,
-						token.position.start.line,
-						token.position.start.column
+						token.offset.start.line,
+						token.offset.start.column
 					);
 				}
 				break;
@@ -112,13 +112,13 @@ function parseObject(source, tokenList, index, settings) {
 			case objectStates.VALUE:
 				if (token.type === tokenTypes.RIGHT_BRACE) {
 					if (settings.verbose) {
-						object.position = position(
-							startToken.position.start.line,
-							startToken.position.start.column,
-							startToken.position.start.char,
-							token.position.end.line,
-							token.position.end.column,
-							token.position.end.char
+						object.offset = offset(
+							startToken.offset.start.line,
+							startToken.offset.start.column,
+							startToken.offset.start.char,
+							token.offset.end.line,
+							token.offset.end.column,
+							token.offset.end.char
 						);
 					}
 					index ++;
@@ -131,10 +131,10 @@ function parseObject(source, tokenList, index, settings) {
 					index ++;
 				} else {
 					error(
-						parseErrorTypes.unexpectedToken(source.substring(token.position.start.char, token.position.end.char), token.position.start.line, token.position.start.column),
+						parseErrorTypes.unexpectedToken(source.substring(token.offset.start.char, token.offset.end.char), token.offset.start.line, token.offset.start.column),
 						source,
-						token.position.start.line,
-						token.position.start.column
+						token.offset.start.line,
+						token.offset.start.column
 					);
 				}
 				break;
@@ -149,16 +149,16 @@ function parseObject(source, tokenList, index, settings) {
 						}
 					};
 					if (settings.verbose) {
-						property.key.position = token.position;
+						property.key.offset = token.offset;
 					}
 					state = objectStates.KEY;
 					index ++;
 				} else {
 					error(
-						parseErrorTypes.unexpectedToken(source.substring(token.position.start.char, token.position.end.char), token.position.start.line, token.position.start.column),
+						parseErrorTypes.unexpectedToken(source.substring(token.offset.start.char, token.offset.end.char), token.offset.start.line, token.offset.start.column),
 						source,
-						token.position.start.line,
-						token.position.start.column
+						token.offset.start.line,
+						token.offset.start.column
 					);
 				}
 				break;
@@ -198,13 +198,13 @@ function parseArray(source, tokenList, index, settings) {
 			case arrayStates.OPEN_ARRAY:
 				if (token.type === tokenTypes.RIGHT_BRACKET) {
 					if (settings.verbose) {
-						array.position = position(
-							startToken.position.start.line,
-							startToken.position.start.column,
-							startToken.position.start.char,
-							token.position.end.line,
-							token.position.end.column,
-							token.position.end.char
+						array.offset = offset(
+							startToken.offset.start.line,
+							startToken.offset.start.column,
+							startToken.offset.start.char,
+							token.offset.end.line,
+							token.offset.end.column,
+							token.offset.end.char
 						);
 					}
 					index ++;
@@ -223,13 +223,13 @@ function parseArray(source, tokenList, index, settings) {
 			case arrayStates.VALUE:
 				if (token.type === tokenTypes.RIGHT_BRACKET) {
 					if (settings.verbose) {
-						array.position = position(
-							startToken.position.start.line,
-							startToken.position.start.column,
-							startToken.position.start.char,
-							token.position.end.line,
-							token.position.end.column,
-							token.position.end.char
+						array.offset = offset(
+							startToken.offset.start.line,
+							startToken.offset.start.column,
+							startToken.offset.start.char,
+							token.offset.end.line,
+							token.offset.end.column,
+							token.offset.end.char
 						);
 					}
 					index ++;
@@ -242,10 +242,10 @@ function parseArray(source, tokenList, index, settings) {
 					index ++;
 				} else {
 					error(
-						parseErrorTypes.unexpectedToken(source.substring(token.position.start.char, token.position.end.char), token.position.start.line, token.position.start.column),
+						parseErrorTypes.unexpectedToken(source.substring(token.offset.start.char, token.offset.end.char), token.offset.start.line, token.offset.start.column),
 						source,
-						token.position.start.line,
-						token.position.start.column
+						token.offset.start.line,
+						token.offset.start.column
 					);
 				}
 				break;
@@ -293,7 +293,7 @@ function parseValue(source, tokenList, index, settings) {
 			value: token.value
 		};
 		if (settings.verbose) {
-			value.position = token.position;
+			value.offset = token.offset;
 		}
 		return {
 			value: value,
@@ -307,10 +307,10 @@ function parseValue(source, tokenList, index, settings) {
 			return objectOrValue;
 		} else {
 			error(
-				parseErrorTypes.unexpectedToken(source.substring(token.position.start.char, token.position.end.char), token.position.start.line, token.position.start.column),
+				parseErrorTypes.unexpectedToken(source.substring(token.offset.start.char, token.offset.end.char), token.offset.start.line, token.offset.start.column),
 				source,
-				token.position.start.line,
-				token.position.start.column
+				token.offset.start.line,
+				token.offset.start.column
 			);
 		}
 	}
@@ -333,10 +333,10 @@ export default function(source, settings) {
 	} else {
 		let token = tokenList[value.index];
 		error(
-			parseErrorTypes.unexpectedToken(source.substring(token.position.start.char, token.position.end.char), token.position.start.line, token.position.start.column),
+			parseErrorTypes.unexpectedToken(source.substring(token.offset.start.char, token.offset.end.char), token.offset.start.line, token.offset.start.column),
 			source,
-			token.position.start.line,
-			token.position.start.column
+			token.offset.start.line,
+			token.offset.start.column
 		);
 	}
 }

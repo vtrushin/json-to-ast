@@ -1,4 +1,4 @@
-import position from './position';
+import offset from './offset';
 import error from './error';
 import tokenizeErrorTypes from './tokenizeErrorTypes';
 
@@ -349,7 +349,7 @@ export function tokenize(source, settings) {
 			};
 
 			if (settings.verbose) {
-				token.position = position(line, column, index, matched.line, matched.column, matched.index);
+				token.offset = offset(line, column, index, matched.line, matched.column, matched.index);
 			}
 
 			tokens.push(token);

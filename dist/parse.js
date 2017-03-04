@@ -57,7 +57,7 @@
 		if (superClass) Object.setPrototypeOf ? Object.setPrototypeOf(subClass, superClass) : subClass.__proto__ = superClass;
 	}
 
-	function position(startLine, startColumn, startChar, endLine, endColumn, endChar) {
+	var offset = function offset(startLine, startColumn, startChar, endLine, endColumn, endChar) {
 		return {
 			start: {
 				line: startLine,
@@ -71,7 +71,7 @@
 			},
 			human: startLine + ':' + startColumn + ' - ' + endLine + ':' + endColumn + ' [' + startChar + ':' + endChar + ']'
 		};
-	}
+	};
 
 	function showCodeFragment(source, linePosition, columnPosition) {
 		var lines = source.split(/\n|\r\n?|\f/);
@@ -461,7 +461,7 @@
 				};
 
 				if (settings.verbose) {
-					token.position = position(line, column, index, matched.line, matched.column, matched.index);
+					token.offset = offset(line, column, index, matched.line, matched.column, matched.index);
 				}
 
 				tokens.push(token);
@@ -530,13 +530,13 @@
 							}
 						};
 						if (settings.verbose) {
-							property.key.position = token.position;
+							property.key.offset = token.offset;
 						}
 						state = objectStates.KEY;
 						index++;
 					} else if (token.type === tokenTypes.RIGHT_BRACE) {
 						if (settings.verbose) {
-							object.position = position(startToken.position.start.line, startToken.position.start.column, startToken.position.start.char, token.position.end.line, token.position.end.column, token.position.end.char);
+							object.offset = offset(startToken.offset.start.line, startToken.offset.start.column, startToken.offset.start.char, token.offset.end.line, token.offset.end.column, token.offset.end.char);
 						}
 						index++;
 						return {
@@ -544,7 +544,7 @@
 							index: index
 						};
 					} else {
-						error(parseErrorTypes.unexpectedToken(source.substring(token.position.start.char, token.position.end.char), token.position.start.line, token.position.start.column), source, token.position.start.line, token.position.start.column);
+						error(parseErrorTypes.unexpectedToken(source.substring(token.offset.start.char, token.offset.end.char), token.offset.start.line, token.offset.start.column), source, token.offset.start.line, token.offset.start.column);
 					}
 					break;
 
@@ -553,7 +553,7 @@
 						state = objectStates.COLON;
 						index++;
 					} else {
-						error(parseErrorTypes.unexpectedToken(source.substring(token.position.start.char, token.position.end.char), token.position.start.line, token.position.start.column), source, token.position.start.line, token.position.start.column);
+						error(parseErrorTypes.unexpectedToken(source.substring(token.offset.start.char, token.offset.end.char), token.offset.start.line, token.offset.start.column), source, token.offset.start.line, token.offset.start.column);
 					}
 					break;
 
@@ -568,7 +568,7 @@
 				case objectStates.VALUE:
 					if (token.type === tokenTypes.RIGHT_BRACE) {
 						if (settings.verbose) {
-							object.position = position(startToken.position.start.line, startToken.position.start.column, startToken.position.start.char, token.position.end.line, token.position.end.column, token.position.end.char);
+							object.offset = offset(startToken.offset.start.line, startToken.offset.start.column, startToken.offset.start.char, token.offset.end.line, token.offset.end.column, token.offset.end.char);
 						}
 						index++;
 						return {
@@ -579,7 +579,7 @@
 						state = objectStates.COMMA;
 						index++;
 					} else {
-						error(parseErrorTypes.unexpectedToken(source.substring(token.position.start.char, token.position.end.char), token.position.start.line, token.position.start.column), source, token.position.start.line, token.position.start.column);
+						error(parseErrorTypes.unexpectedToken(source.substring(token.offset.start.char, token.offset.end.char), token.offset.start.line, token.offset.start.column), source, token.offset.start.line, token.offset.start.column);
 					}
 					break;
 
@@ -593,12 +593,12 @@
 							}
 						};
 						if (settings.verbose) {
-							property.key.position = token.position;
+							property.key.offset = token.offset;
 						}
 						state = objectStates.KEY;
 						index++;
 					} else {
-						error(parseErrorTypes.unexpectedToken(source.substring(token.position.start.char, token.position.end.char), token.position.start.line, token.position.start.column), source, token.position.start.line, token.position.start.column);
+						error(parseErrorTypes.unexpectedToken(source.substring(token.offset.start.char, token.offset.end.char), token.offset.start.line, token.offset.start.column), source, token.offset.start.line, token.offset.start.column);
 					}
 					break;
 			}
@@ -633,7 +633,7 @@
 				case arrayStates.OPEN_ARRAY:
 					if (token.type === tokenTypes.RIGHT_BRACKET) {
 						if (settings.verbose) {
-							array.position = position(startToken.position.start.line, startToken.position.start.column, startToken.position.start.char, token.position.end.line, token.position.end.column, token.position.end.char);
+							array.offset = offset(startToken.offset.start.line, startToken.offset.start.column, startToken.offset.start.char, token.offset.end.line, token.offset.end.column, token.offset.end.char);
 						}
 						index++;
 						return {
@@ -651,7 +651,7 @@
 				case arrayStates.VALUE:
 					if (token.type === tokenTypes.RIGHT_BRACKET) {
 						if (settings.verbose) {
-							array.position = position(startToken.position.start.line, startToken.position.start.column, startToken.position.start.char, token.position.end.line, token.position.end.column, token.position.end.char);
+							array.offset = offset(startToken.offset.start.line, startToken.offset.start.column, startToken.offset.start.char, token.offset.end.line, token.offset.end.column, token.offset.end.char);
 						}
 						index++;
 						return {
@@ -662,7 +662,7 @@
 						state = arrayStates.COMMA;
 						index++;
 					} else {
-						error(parseErrorTypes.unexpectedToken(source.substring(token.position.start.char, token.position.end.char), token.position.start.line, token.position.start.column), source, token.position.start.line, token.position.start.column);
+						error(parseErrorTypes.unexpectedToken(source.substring(token.offset.start.char, token.offset.end.char), token.offset.start.line, token.offset.start.column), source, token.offset.start.line, token.offset.start.column);
 					}
 					break;
 
@@ -707,7 +707,7 @@
 				value: token.value
 			};
 			if (settings.verbose) {
-				value.position = token.position;
+				value.offset = token.offset;
 			}
 			return {
 				value: value,
@@ -719,7 +719,7 @@
 			if (objectOrValue) {
 				return objectOrValue;
 			} else {
-				error(parseErrorTypes.unexpectedToken(source.substring(token.position.start.char, token.position.end.char), token.position.start.line, token.position.start.column), source, token.position.start.line, token.position.start.column);
+				error(parseErrorTypes.unexpectedToken(source.substring(token.offset.start.char, token.offset.end.char), token.offset.start.line, token.offset.start.column), source, token.offset.start.line, token.offset.start.column);
 			}
 		}
 	}
@@ -738,7 +738,7 @@
 			return value.value;
 		} else {
 			var token = tokenList[value.index];
-			error(parseErrorTypes.unexpectedToken(source.substring(token.position.start.char, token.position.end.char), token.position.start.line, token.position.start.column), source, token.position.start.line, token.position.start.column);
+			error(parseErrorTypes.unexpectedToken(source.substring(token.offset.start.char, token.offset.end.char), token.offset.start.line, token.offset.start.column), source, token.offset.start.line, token.offset.start.column);
 		}
 	}
 
