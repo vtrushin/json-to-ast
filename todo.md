@@ -12,3 +12,6 @@
 но вот чтобы получить нормальную строку, как возвращает JSON.parse, нужно сделать  
 `JSON.parse('"' + property.key.value + '"')`  
 не очень то прикольно :wink:
+- [ ] Add more tests from "test" branch
+- [ ] Move astexplorer example to solid project
+- [ ] Add coverage
