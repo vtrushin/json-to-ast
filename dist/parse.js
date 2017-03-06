@@ -57,8 +57,7 @@
 		if (superClass) Object.setPrototypeOf ? Object.setPrototypeOf(subClass, superClass) : subClass.__proto__ = superClass;
 	}
 
-	var location = function location(startLine, startColumn, startOffset, endLine, endColumn, endOffset) {
-		var source = arguments.length > 6 && arguments[6] !== undefined ? arguments[6] : '<unknown>';
+	var location = function location(startLine, startColumn, startOffset, endLine, endColumn, endOffset, source) {
 		return {
 			start: {
 				line: startLine,
@@ -70,7 +69,7 @@
 				column: endColumn,
 				offset: endOffset
 			},
-			source: source
+			source: source || '<unknown>'
 		};
 	};
 
@@ -90,7 +89,7 @@
 
 			var fullMessage = linePosition ? message + '\n' + showCodeFragment(source, linePosition, columnPosition) : message;
 
-			var _this = _possibleConstructorReturn(this, (ParseError.__proto__ || Object.getPrototypeOf(ParseError)).call(this, fullMessage));
+			var _this = _possibleConstructorReturn(this, Object.getPrototypeOf(ParseError).call(this, fullMessage));
 
 			_this.rawMessage = message;
 			return _this;

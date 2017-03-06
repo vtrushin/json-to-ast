@@ -1,4 +1,4 @@
-export default (startLine, startColumn, startOffset, endLine, endColumn, endOffset, source = '<unknown>') => ({
+export default (startLine, startColumn, startOffset, endLine, endColumn, endOffset, source) => ({
 	start: {
 		line: startLine,
 		column: startColumn,
@@ -9,5 +9,5 @@ export default (startLine, startColumn, startOffset, endLine, endColumn, endOffs
 		column: endColumn,
 		offset: endOffset
 	},
-	source
+	source: source || '<unknown>'
 });

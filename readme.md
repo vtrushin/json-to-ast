@@ -12,7 +12,12 @@
 ```js
 var parse = require('json-to-ast');
 
-console.log(parse('{"a": 1}'))
+var settings = {
+	verbose: true, // Show addition information, like node locations. Default is `true`
+	fileName: 'data.json' // Name of file, addes into node's location. Default is `<unknown>`
+};
+
+parse('{"a": 1}', settings);
 /*
 =>
 {
