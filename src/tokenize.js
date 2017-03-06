@@ -1,4 +1,4 @@
-import position from './position';
+import location from './location';
 import error from './error';
 import tokenizeErrorTypes from './tokenizeErrorTypes';
 
@@ -352,7 +352,7 @@ export function tokenize(source, settings) {
 			};
 
 			if (settings.verbose) {
-				token.position = position(line, column, index, matched.line, matched.column, matched.index);
+				token.loc = location(line, column, index, matched.line, matched.column, matched.index);
 			}
 
 			tokens.push(token);

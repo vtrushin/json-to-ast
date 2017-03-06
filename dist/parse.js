@@ -57,21 +57,20 @@
 		if (superClass) Object.setPrototypeOf ? Object.setPrototypeOf(subClass, superClass) : subClass.__proto__ = superClass;
 	}
 
-	function position(startLine, startColumn, startChar, endLine, endColumn, endChar) {
+	var location = function location(startLine, startColumn, startOffset, endLine, endColumn, endOffset) {
 		return {
 			start: {
 				line: startLine,
 				column: startColumn,
-				char: startChar
+				offset: startOffset
 			},
 			end: {
 				line: endLine,
 				column: endColumn,
-				char: endChar
-			},
-			human: startLine + ':' + startColumn + ' - ' + endLine + ':' + endColumn + ' [' + startChar + ':' + endChar + ']'
+				offset: endOffset
+			}
 		};
-	}
+	};
 
 	function showCodeFragment(source, linePosition, columnPosition) {
 		var lines = source.split(/\n|\r\n?|\f/);
@@ -89,7 +88,7 @@
 
 			var fullMessage = linePosition ? message + '\n' + showCodeFragment(source, linePosition, columnPosition) : message;
 
-			var _this = _possibleConstructorReturn(this, Object.getPrototypeOf(ParseError).call(this, fullMessage));
+			var _this = _possibleConstructorReturn(this, (ParseError.__proto__ || Object.getPrototypeOf(ParseError)).call(this, fullMessage));
 
 			_this.rawMessage = message;
 			return _this;
@@ -98,9 +97,9 @@
 		return ParseError;
 	}(SyntaxError);
 
-	function error(message, source, line, column) {
+	var error = function error(message, source, line, column) {
 		throw new ParseError(message, source, line, column);
-	}
+	};
 
 	var parseErrorTypes = {
 		unexpectedEnd: function unexpectedEnd() {
@@ -236,9 +235,9 @@
 				column: column + 1,
 				index: index + 1
 			};
-		} else {
-			return null;
 		}
+
+		return null;
 	}
 
 	function parseKeyword(source, index, line, column) {
@@ -426,9 +425,9 @@
 				index: passedValueIndex,
 				column: column + passedValueIndex - startIndex
 			};
-		} else {
-			return null;
 		}
+
+		return null;
 	}
 
 	var defaultSettings$1 = {
@@ -461,7 +460,7 @@
 				};
 
 				if (settings.verbose) {
-					token.position = position(line, column, index, matched.line, matched.column, matched.index);
+					token.loc = location(line, column, index, matched.line, matched.column, matched.index);
 				}
 
 				tokens.push(token);
@@ -530,13 +529,13 @@
 							}
 						};
 						if (settings.verbose) {
-							property.key.position = token.position;
+							property.key.loc = token.loc;
 						}
 						state = objectStates.KEY;
 						index++;
 					} else if (token.type === tokenTypes.RIGHT_BRACE) {
 						if (settings.verbose) {
-							object.position = position(startToken.position.start.line, startToken.position.start.column, startToken.position.start.char, token.position.end.line, token.position.end.column, token.position.end.char);
+							object.loc = location(startToken.loc.start.line, startToken.loc.start.column, startToken.loc.start.offset, token.loc.end.line, token.loc.end.column, token.loc.end.offset);
 						}
 						index++;
 						return {
@@ -544,7 +543,7 @@
 							index: index
 						};
 					} else {
-						error(parseErrorTypes.unexpectedToken(source.substring(token.position.start.char, token.position.end.char), token.position.start.line, token.position.start.column), source, token.position.start.line, token.position.start.column);
+						error(parseErrorTypes.unexpectedToken(source.substring(token.loc.start.offset, token.loc.end.offset), token.loc.start.line, token.loc.start.column), source, token.loc.start.line, token.loc.start.column);
 					}
 					break;
 
@@ -553,7 +552,7 @@
 						state = objectStates.COLON;
 						index++;
 					} else {
-						error(parseErrorTypes.unexpectedToken(source.substring(token.position.start.char, token.position.end.char), token.position.start.line, token.position.start.column), source, token.position.start.line, token.position.start.column);
+						error(parseErrorTypes.unexpectedToken(source.substring(token.loc.start.offset, token.loc.end.offset), token.loc.start.line, token.loc.start.column), source, token.loc.start.line, token.loc.start.column);
 					}
 					break;
 
@@ -568,7 +567,7 @@
 				case objectStates.VALUE:
 					if (token.type === tokenTypes.RIGHT_BRACE) {
 						if (settings.verbose) {
-							object.position = position(startToken.position.start.line, startToken.position.start.column, startToken.position.start.char, token.position.end.line, token.position.end.column, token.position.end.char);
+							object.loc = location(startToken.loc.start.line, startToken.loc.start.column, startToken.loc.start.offset, token.loc.end.line, token.loc.end.column, token.loc.end.offset);
 						}
 						index++;
 						return {
@@ -579,7 +578,7 @@
 						state = objectStates.COMMA;
 						index++;
 					} else {
-						error(parseErrorTypes.unexpectedToken(source.substring(token.position.start.char, token.position.end.char), token.position.start.line, token.position.start.column), source, token.position.start.line, token.position.start.column);
+						error(parseErrorTypes.unexpectedToken(source.substring(token.loc.start.offset, token.loc.end.offset), token.loc.start.line, token.loc.start.column), source, token.loc.start.line, token.loc.start.column);
 					}
 					break;
 
@@ -593,12 +592,12 @@
 							}
 						};
 						if (settings.verbose) {
-							property.key.position = token.position;
+							property.key.loc = token.loc;
 						}
 						state = objectStates.KEY;
 						index++;
 					} else {
-						error(parseErrorTypes.unexpectedToken(source.substring(token.position.start.char, token.position.end.char), token.position.start.line, token.position.start.column), source, token.position.start.line, token.position.start.column);
+						error(parseErrorTypes.unexpectedToken(source.substring(token.loc.start.offset, token.loc.end.offset), token.loc.start.line, token.loc.start.column), source, token.loc.start.line, token.loc.start.column);
 					}
 					break;
 			}
@@ -633,7 +632,7 @@
 				case arrayStates.OPEN_ARRAY:
 					if (token.type === tokenTypes.RIGHT_BRACKET) {
 						if (settings.verbose) {
-							array.position = position(startToken.position.start.line, startToken.position.start.column, startToken.position.start.char, token.position.end.line, token.position.end.column, token.position.end.char);
+							array.loc = location(startToken.loc.start.line, startToken.loc.start.column, startToken.loc.start.offset, token.loc.end.line, token.loc.end.column, token.loc.end.offset);
 						}
 						index++;
 						return {
@@ -651,7 +650,7 @@
 				case arrayStates.VALUE:
 					if (token.type === tokenTypes.RIGHT_BRACKET) {
 						if (settings.verbose) {
-							array.position = position(startToken.position.start.line, startToken.position.start.column, startToken.position.start.char, token.position.end.line, token.position.end.column, token.position.end.char);
+							array.loc = location(startToken.loc.start.line, startToken.loc.start.column, startToken.loc.start.offset, token.loc.end.line, token.loc.end.column, token.loc.end.offset);
 						}
 						index++;
 						return {
@@ -662,7 +661,7 @@
 						state = arrayStates.COMMA;
 						index++;
 					} else {
-						error(parseErrorTypes.unexpectedToken(source.substring(token.position.start.char, token.position.end.char), token.position.start.line, token.position.start.column), source, token.position.start.line, token.position.start.column);
+						error(parseErrorTypes.unexpectedToken(source.substring(token.loc.start.offset, token.loc.end.offset), token.loc.start.line, token.loc.start.column), source, token.loc.start.line, token.loc.start.column);
 					}
 					break;
 
@@ -707,7 +706,7 @@
 				value: token.value
 			};
 			if (settings.verbose) {
-				value.position = token.position;
+				value.loc = token.loc;
 			}
 			return {
 				value: value,
@@ -719,28 +718,28 @@
 			if (objectOrValue) {
 				return objectOrValue;
 			} else {
-				error(parseErrorTypes.unexpectedToken(source.substring(token.position.start.char, token.position.end.char), token.position.start.line, token.position.start.column), source, token.position.start.line, token.position.start.column);
+				error(parseErrorTypes.unexpectedToken(source.substring(token.loc.start.offset, token.loc.end.offset), token.loc.start.line, token.loc.start.column), source, token.loc.start.line, token.loc.start.column);
 			}
 		}
 	}
 
-	function parse(source, settings) {
+	var parse = function parse(json, settings) {
 		settings = _extends({}, defaultSettings, settings);
-		var tokenList = tokenize(source);
+		var tokenList = tokenize(json);
 
 		if (tokenList.length === 0) {
 			error(parseErrorTypes.unexpectedEnd());
 		}
 
-		var value = parseValue(source, tokenList, 0, settings);
+		var value = parseValue(json, tokenList, 0, settings);
 
 		if (value.index === tokenList.length) {
 			return value.value;
 		} else {
 			var token = tokenList[value.index];
-			error(parseErrorTypes.unexpectedToken(source.substring(token.position.start.char, token.position.end.char), token.position.start.line, token.position.start.column), source, token.position.start.line, token.position.start.column);
+			error(parseErrorTypes.unexpectedToken(json.substring(token.loc.start.offset, token.loc.end.offset), token.loc.start.line, token.loc.start.column), json, token.loc.start.line, token.loc.start.column);
 		}
-	}
+	};
 
 	module.exports = parse;
 });

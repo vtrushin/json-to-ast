@@ -23,47 +23,47 @@ console.log(parse('{"a": 1}'))
       key: {
         type: 'key',
         value: 'a',
-        position: {
+        loc: {
           start: {
             line: 1,
             column: 2,
-            char: 1
+            offset: 1
           },
           end: {
             line: 1,
             column: 9,
-            char: 8
+            offset: 8
           }
         }
       },
       value: {
         type: 'number',
         value: '1',
-        position: {
+        loc: {
           start: {
             line: 1,
             column: 11,
-            char: 10
+            offset: 10
           },
           end: {
             line: 1,
             column: 12,
-            char: 11
+            offset: 11
           }
         }
       }
     }
   ],
-  position: {
+  loc: {
     start: {
       line: 1,
       column: 1,
-      char: 0,
+      offset: 0,
     },
     end: {
       line: 1,
       column: 13,
-      char: 12
+      offset: 12
     }
   }
 }
@@ -83,23 +83,23 @@ Object:
       key: {
         type: 'key',
         value: 'keyName',
-        position: {
+        loc: {
           start: {
             line: ...,
             column: ...,
-            char: ...
+            offset: ...
           },
           end: {
             line: ...,
             column: ...,
-            char: ...
+            offset: ...
           }
         }
       },
       value: ...
     }
   ],
-  position: {...}
+  loc: {...}
 }
 ```
 
@@ -111,7 +111,7 @@ Array:
   items: [
     ...
   ],
-  position: {...}
+  loc: {...}
 }
 ```
 
@@ -121,7 +121,7 @@ Primitive:
 {
   type: 'string|number|true|false|null',
   value: ...,
-  position: {...}
+  loc: {...}
 }
 ```
 
