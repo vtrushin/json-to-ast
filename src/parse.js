@@ -23,7 +23,7 @@ const defaultSettings = {
 	verbose: true
 };
 
-function parseObject(source, tokenList, index, settings) {
+function parseObject(json, tokenList, index, settings) {
 	let startToken;
 	let property;
 	let object = {
@@ -69,7 +69,8 @@ function parseObject(source, tokenList, index, settings) {
 							startToken.loc.start.offset,
 							token.loc.end.line,
 							token.loc.end.column,
-							token.loc.end.offset
+							token.loc.end.offset,
+							settings.source
 						);
 					}
 					index ++;
@@ -80,11 +81,11 @@ function parseObject(source, tokenList, index, settings) {
 				} else {
 					error(
 						parseErrorTypes.unexpectedToken(
-							source.substring(token.loc.start.offset, token.loc.end.offset),
+							json.substring(token.loc.start.offset, token.loc.end.offset),
 							token.loc.start.line,
 							token.loc.start.column
 						),
-						source,
+						json,
 						token.loc.start.line,
 						token.loc.start.column
 					);
@@ -98,11 +99,11 @@ function parseObject(source, tokenList, index, settings) {
 				} else {
 					error(
 						parseErrorTypes.unexpectedToken(
-							source.substring(token.loc.start.offset, token.loc.end.offset),
+							json.substring(token.loc.start.offset, token.loc.end.offset),
 							token.loc.start.line,
 							token.loc.start.column
 						),
-						source,
+						json,
 						token.loc.start.line,
 						token.loc.start.column
 					);
@@ -110,7 +111,7 @@ function parseObject(source, tokenList, index, settings) {
 				break;
 
 			case objectStates.COLON:
-				let value = parseValue(source, tokenList, index, settings);
+				let value = parseValue(json, tokenList, index, settings);
 				index = value.index;
 				property.value = value.value;
 				object.properties.push(property);
@@ -126,7 +127,8 @@ function parseObject(source, tokenList, index, settings) {
 							startToken.loc.start.offset,
 							token.loc.end.line,
 							token.loc.end.column,
-							token.loc.end.offset
+							token.loc.end.offset,
+							settings.source
 						);
 					}
 					index ++;
@@ -140,11 +142,11 @@ function parseObject(source, tokenList, index, settings) {
 				} else {
 					error(
 						parseErrorTypes.unexpectedToken(
-							source.substring(token.loc.start.offset, token.loc.end.offset),
+							json.substring(token.loc.start.offset, token.loc.end.offset),
 							token.loc.start.line,
 							token.loc.start.column
 						),
-						source,
+						json,
 						token.loc.start.line,
 						token.loc.start.column
 					);
@@ -168,11 +170,11 @@ function parseObject(source, tokenList, index, settings) {
 				} else {
 					error(
 						parseErrorTypes.unexpectedToken(
-							source.substring(token.loc.start.offset, token.loc.end.offset),
+							json.substring(token.loc.start.offset, token.loc.end.offset),
 							token.loc.start.line,
 							token.loc.start.column
 						),
-						source,
+						json,
 						token.loc.start.line,
 						token.loc.start.column
 					);
@@ -188,7 +190,7 @@ function parseObject(source, tokenList, index, settings) {
 
 }
 
-function parseArray(source, tokenList, index, settings) {
+function parseArray(json, tokenList, index, settings) {
 	let startToken;
 	let array = {
 		type: 'array',
@@ -220,7 +222,8 @@ function parseArray(source, tokenList, index, settings) {
 							startToken.loc.start.offset,
 							token.loc.end.line,
 							token.loc.end.column,
-							token.loc.end.offset
+							token.loc.end.offset,
+							settings.source
 						);
 					}
 					index ++;
@@ -229,7 +232,7 @@ function parseArray(source, tokenList, index, settings) {
 						index
 					};
 				} else {
-					let value = parseValue(source, tokenList, index, settings);
+					let value = parseValue(json, tokenList, index, settings);
 					index = value.index;
 					array.items.push(value.value);
 					state = arrayStates.VALUE;
@@ -245,7 +248,8 @@ function parseArray(source, tokenList, index, settings) {
 							startToken.loc.start.offset,
 							token.loc.end.line,
 							token.loc.end.column,
-							token.loc.end.offset
+							token.loc.end.offset,
+							settings.source
 						);
 					}
 					index ++;
@@ -259,11 +263,11 @@ function parseArray(source, tokenList, index, settings) {
 				} else {
 					error(
 						parseErrorTypes.unexpectedToken(
-							source.substring(token.loc.start.offset, token.loc.end.offset),
+							json.substring(token.loc.start.offset, token.loc.end.offset),
 							token.loc.start.line,
 							token.loc.start.column
 						),
-						source,
+						json,
 						token.loc.start.line,
 						token.loc.start.column
 					);
@@ -271,7 +275,7 @@ function parseArray(source, tokenList, index, settings) {
 				break;
 
 			case arrayStates.COMMA:
-				let value = parseValue(source, tokenList, index, settings);
+				let value = parseValue(json, tokenList, index, settings);
 				index = value.index;
 				array.items.push(value.value);
 				state = arrayStates.VALUE;
@@ -284,7 +288,7 @@ function parseArray(source, tokenList, index, settings) {
 	);
 }
 
-function parseValue(source, tokenList, index, settings) {
+function parseValue(json, tokenList, index, settings) {
 	// value: object | array | STRING | NUMBER | TRUE | FALSE | NULL
 	let token = tokenList[index];
 	let tokenType;
@@ -322,8 +326,8 @@ function parseValue(source, tokenList, index, settings) {
 
 	} else {
 		const objectOrValue = (
-			parseObject(source, tokenList, index, settings)
-			|| parseArray(source, tokenList, index, settings)
+			parseObject(json, tokenList, index, settings)
+			|| parseArray(json, tokenList, index, settings)
 		);
 
 		if (objectOrValue) {
@@ -331,11 +335,11 @@ function parseValue(source, tokenList, index, settings) {
 		} else {
 			error(
 				parseErrorTypes.unexpectedToken(
-					source.substring(token.loc.start.offset, token.loc.end.offset),
+					json.substring(token.loc.start.offset, token.loc.end.offset),
 					token.loc.start.line,
 					token.loc.start.column
 				),
-				source,
+				json,
 				token.loc.start.line,
 				token.loc.start.column
 			);
@@ -345,12 +349,10 @@ function parseValue(source, tokenList, index, settings) {
 
 export default (json, settings) => {
 	settings = Object.assign({}, defaultSettings, settings);
-	const tokenList = tokenize(json);
+	const tokenList = tokenize(json, settings);
 
 	if (tokenList.length === 0) {
-		error(
-			parseErrorTypes.unexpectedEnd()
-		);
+		error(parseErrorTypes.unexpectedEnd());
 	}
 
 	const value = parseValue(json, tokenList, 0, settings);

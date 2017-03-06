@@ -84,14 +84,14 @@ function isExp(char) {
 
 // PARSERS
 
-function parseWhitespace(source, index, line, column) {
-	const char = source.charAt(index);
+function parseWhitespace(json, index, line, column) {
+	const char = json.charAt(index);
 
 	if (char === '\r') { // CR (Unix)
 		index ++;
 		line ++;
 		column = 1;
-		if (source.charAt(index) === '\n') { // CRLF (Windows)
+		if (json.charAt(index) === '\n') { // CRLF (Windows)
 			index ++;
 		}
 	} else if (char === '\n') { // LF (MacOS)
@@ -112,8 +112,8 @@ function parseWhitespace(source, index, line, column) {
 	};
 }
 
-function parseChar(source, index, line, column) {
-	const char = source.charAt(index);
+function parseChar(json, index, line, column) {
+	const char = json.charAt(index);
 
 	if (char in charTokens) {
 		return {
@@ -127,9 +127,9 @@ function parseChar(source, index, line, column) {
 	return null;
 }
 
-function parseKeyword(source, index, line, column) {
+function parseKeyword(json, index, line, column) {
 	for (const name in keywordsTokens) {
-		if (keywordsTokens.hasOwnProperty(name) && source.substr(index, name.length) === name) {
+		if (keywordsTokens.hasOwnProperty(name) && json.substr(index, name.length) === name) {
 			return {
 				type: keywordsTokens[name],
 				line,
@@ -143,13 +143,13 @@ function parseKeyword(source, index, line, column) {
 	return null;
 }
 
-function parseString(source, index, line, column) {
+function parseString(json, index, line, column) {
 	const startIndex = index;
 	let buffer = '';
 	let state = stringStates._START_;
 
-	while (index < source.length) {
-		const char = source.charAt(index);
+	while (index < json.length) {
+		const char = json.charAt(index);
 
 		switch (state) {
 			case stringStates._START_:
@@ -187,7 +187,7 @@ function parseString(source, index, line, column) {
 					index ++;
 					if (char === 'u') {
 						for (let i = 0; i < 4; i ++) {
-							let curChar = source.charAt(index);
+							let curChar = json.charAt(index);
 							if (curChar && isHex(curChar)) {
 								buffer += curChar;
 								index ++;
@@ -205,13 +205,13 @@ function parseString(source, index, line, column) {
 	}
 }
 
-function parseNumber(source, index, line, column) {
+function parseNumber(json, index, line, column) {
 	const startIndex = index;
 	let passedValueIndex = index;
 	let state = numberStates._START_;
 
-	iterator: while (index < source.length) {
-		let char = source.charAt(index);
+	iterator: while (index < json.length) {
+		let char = json.charAt(index);
 
 		switch (state) {
 			case numberStates._START_:
@@ -307,7 +307,7 @@ function parseNumber(source, index, line, column) {
 	if (passedValueIndex > 0) {
 		return {
 			type: tokenTypes.NUMBER,
-			value: source.substring(startIndex, passedValueIndex),
+			value: json.substring(startIndex, passedValueIndex),
 			line,
 			index: passedValueIndex,
 			column: column + passedValueIndex - startIndex
@@ -321,15 +321,15 @@ const defaultSettings = {
 	verbose: true
 };
 
-export function tokenize(source, settings) {
+export function tokenize(json, settings) {
 	settings = Object.assign({}, defaultSettings, settings);
 	let line = 1;
 	let column = 1;
 	let index = 0;
 	const tokens = [];
 
-	while (index < source.length) {
-		const whitespace = parseWhitespace(source, index, line, column);
+	while (index < json.length) {
+		const whitespace = parseWhitespace(json, index, line, column);
 
 		if (whitespace) {
 			index = whitespace.index;
@@ -339,10 +339,10 @@ export function tokenize(source, settings) {
 		}
 
 		const matched = (
-			parseChar(source, index, line, column)
-			|| parseKeyword(source, index, line, column)
-			|| parseString(source, index, line, column)
-			|| parseNumber(source, index, line, column)
+			parseChar(json, index, line, column)
+			|| parseKeyword(json, index, line, column)
+			|| parseString(json, index, line, column)
+			|| parseNumber(json, index, line, column)
 		);
 
 		if (matched) {
@@ -352,7 +352,7 @@ export function tokenize(source, settings) {
 			};
 
 			if (settings.verbose) {
-				token.loc = location(line, column, index, matched.line, matched.column, matched.index);
+				token.loc = location(line, column, index, matched.line, matched.column, matched.index, settings.source);
 			}
 
 			tokens.push(token);
@@ -362,8 +362,8 @@ export function tokenize(source, settings) {
 
 		} else {
 			error(
-				tokenizeErrorTypes.cannotTokenizeSymbol(source.charAt(index), line, column),
-				source,
+				tokenizeErrorTypes.cannotTokenizeSymbol(json.charAt(index), line, column),
+				json,
 				line,
 				column
 			);

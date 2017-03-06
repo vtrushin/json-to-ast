@@ -1,4 +1,6 @@
-function location(startLine, startColumn, startOffset, endLine, endColumn, endOffset) {
+function location(startLine, startColumn, startOffset, endLine, endColumn, endOffset, source) {
+	source = source || '<unknown>';
+
 	return {
 		start: {
 			line: startLine,
@@ -9,7 +11,8 @@ function location(startLine, startColumn, startOffset, endLine, endColumn, endOf
 			line: endLine,
 			column: endColumn,
 			offset: endOffset
-		}
+		},
+		source: source
 	}
 }
 
