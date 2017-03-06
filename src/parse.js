@@ -20,7 +20,8 @@ const arrayStates = {
 };
 
 const defaultSettings = {
-	verbose: true
+	verbose: true,
+	source: null
 };
 
 function parseObject(json, tokenList, index, settings) {

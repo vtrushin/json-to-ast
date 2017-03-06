@@ -433,7 +433,8 @@
 	}
 
 	var defaultSettings$1 = {
-		verbose: true
+		verbose: true,
+		source: null
 	};
 
 	function tokenize(json, settings) {
@@ -494,7 +495,8 @@
 	};
 
 	var defaultSettings = {
-		verbose: true
+		verbose: true,
+		source: null
 	};
 
 	function parseObject(json, tokenList, index, settings) {

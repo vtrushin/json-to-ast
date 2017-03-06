@@ -318,7 +318,8 @@ function parseNumber(json, index, line, column) {
 }
 
 const defaultSettings = {
-	verbose: true
+	verbose: true,
+	source: null
 };
 
 export function tokenize(json, settings) {
