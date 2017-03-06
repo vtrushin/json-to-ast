@@ -1,7 +1,7 @@
 - [X] Remove `position.human`
-- [X] `position[start/end].char` -> `position[start/end].offset`
+- [X] `position.char` -> `position.offset`
 - [X] `position` -> `loc`
-- [X] Added `fileName`
+- [X] Added `fileName` to `loc`
 - [ ] String escaping<sup>1</sup>
 - [ ] Set consistent structure. Change `properties` and `items` to `nodes`/`children`/`items`
 
