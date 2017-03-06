@@ -1,27 +1,29 @@
-function position(startLine, startColumn, startChar, endLine, endColumn, endChar) {
+function location(startLine, startColumn, startOffset, endLine, endColumn, endOffset, source) {
+	source = source || '<unknown>';
+
 	return {
 		start: {
 			line: startLine,
 			column: startColumn,
-			char: startChar
+			offset: startOffset
 		},
 		end: {
 			line: endLine,
 			column: endColumn,
-			char: endChar
+			offset: endOffset
 		},
-		human: startLine + ':' + startColumn + ' - ' + endLine + ':' + endColumn + ' [' + startChar + ':' + endChar + ']'
+		source: source
 	}
 }
 
-function createObjectKey(value, position) {
+function createObjectKey(value, location) {
 	var result = {
 		type: 'key',
 		value: value
 	};
 
-	if (position) {
-		result.position = position;
+	if (location) {
+		result.loc = location;
 	}
 
 	return result;
@@ -35,99 +37,99 @@ function createObjectProperty(key, value) {
 	}
 }
 
-function createObject(properties, position) {
+function createObject(properties, location) {
 	var result = {
 		type: 'object',
 		properties: properties
 	};
 
-	if (position) {
-		result.position = position;
+	if (location) {
+		result.loc = location;
 	}
 
 	return result;
 }
 
-function createArray(items, position) {
+function createArray(items, location) {
 	var result = {
 		type: 'array',
 		items: items
 	};
 
-	if (position) {
-		result.position = position;
+	if (location) {
+		result.loc = location;
 	}
 
 	return result;
 }
 
-function createString(value, position) {
+function createString(value, location) {
 	var result = {
 		type: 'string',
 		value: value
 	};
 
-	if (position) {
-		result.position = position;
+	if (location) {
+		result.loc = location;
 	}
 
 	return result;
 }
 
-function createNumber(value, position) {
+function createNumber(value, location) {
 	var result = {
 		type: 'number',
 		value: value
 	};
 
-	if (position) {
-		result.position = position;
+	if (location) {
+		result.loc = location;
 	}
 
 	return result;
 }
 
-function createTrue(position) {
+function createTrue(location) {
 	var result = {
 		type: 'true',
 		value: null
 	};
 
-	if (position) {
-		result.position = position;
+	if (location) {
+		result.loc = location;
 	}
 
 	return result;
 }
 
-function createFalse(position) {
+function createFalse(location) {
 	var result = {
 		type: 'false',
 		value: null
 	};
 
-	if (position) {
-		result.position = position;
+	if (location) {
+		result.loc = location;
 	}
 
 	return result;
 }
 
-function createNull(position) {
+function createNull(location) {
 	var result = {
 		type: 'null',
 		value: null
 	};
 
-	if (position) {
-		result.position = position;
+	if (location) {
+		result.loc = location;
 	}
 
 	return result;
 }
 
 module.exports = {
-	position: position,
+	location: location,
 	createObjectKey: createObjectKey,
 	createObjectProperty: createObjectProperty,
 	createObject: createObject,

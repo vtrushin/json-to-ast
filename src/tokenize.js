@@ -1,4 +1,4 @@
-import offset from './offset';
+import location from './location';
 import error from './error';
 import tokenizeErrorTypes from './tokenizeErrorTypes';
 
@@ -71,9 +71,11 @@ function isDigit(char) {
 }
 
 function isHex(char) {
-	return isDigit(char)
+	return (
+		isDigit(char)
 		|| (char >= 'a' && char <= 'f')
-		|| (char >= 'A' && char <= 'F');
+		|| (char >= 'A' && char <= 'F')
+	);
 }
 
 function isExp(char) {
@@ -82,14 +84,14 @@ function isExp(char) {
 
 // PARSERS
 
-function parseWhitespace(source, index, line, column) {
-	const char = source.charAt(index);
+function parseWhitespace(json, index, line, column) {
+	const char = json.charAt(index);
 
 	if (char === '\r') { // CR (Unix)
 		index ++;
 		line ++;
 		column = 1;
-		if (source.charAt(index) === '\n') { // CRLF (Windows)
+		if (json.charAt(index) === '\n') { // CRLF (Windows)
 			index ++;
 		}
 	} else if (char === '\n') { // LF (MacOS)
@@ -104,33 +106,33 @@ function parseWhitespace(source, index, line, column) {
 	}
 
 	return {
-		index: index,
-		line: line,
-		column: column
+		index,
+		line,
+		column
 	};
 }
 
-function parseChar(source, index, line, column) {
-	const char = source.charAt(index);
+function parseChar(json, index, line, column) {
+	const char = json.charAt(index);
 
 	if (char in charTokens) {
 		return {
 			type: charTokens[char],
-			line: line,
+			line,
 			column: column + 1,
 			index: index + 1
 		};
-	} else {
-		return null;
 	}
+
+	return null;
 }
 
-function parseKeyword(source, index, line, column) {
-	for (var name in keywordsTokens) {
-		if (keywordsTokens.hasOwnProperty(name) && source.substr(index, name.length) === name) {
+function parseKeyword(json, index, line, column) {
+	for (const name in keywordsTokens) {
+		if (keywordsTokens.hasOwnProperty(name) && json.substr(index, name.length) === name) {
 			return {
 				type: keywordsTokens[name],
-				line: line,
+				line,
 				column: column + name.length,
 				index: index + name.length,
 				value: null
@@ -141,13 +143,13 @@ function parseKeyword(source, index, line, column) {
 	return null;
 }
 
-function parseString(source, index, line, column) {
+function parseString(json, index, line, column) {
 	const startIndex = index;
 	let buffer = '';
 	let state = stringStates._START_;
 
-	while (index < source.length) {
-		const char = source.charAt(index);
+	while (index < json.length) {
+		const char = json.charAt(index);
 
 		switch (state) {
 			case stringStates._START_:
@@ -169,8 +171,8 @@ function parseString(source, index, line, column) {
 					return {
 						type: tokenTypes.STRING,
 						value: buffer,
-						line: line,
-						index: index,
+						line,
+						index,
 						column: column + index - startIndex
 					};
 				} else {
@@ -185,7 +187,7 @@ function parseString(source, index, line, column) {
 					index ++;
 					if (char === 'u') {
 						for (let i = 0; i < 4; i ++) {
-							let curChar = source.charAt(index);
+							let curChar = json.charAt(index);
 							if (curChar && isHex(curChar)) {
 								buffer += curChar;
 								index ++;
@@ -203,13 +205,13 @@ function parseString(source, index, line, column) {
 	}
 }
 
-function parseNumber(source, index, line, column) {
+function parseNumber(json, index, line, column) {
 	const startIndex = index;
 	let passedValueIndex = index;
 	let state = numberStates._START_;
 
-	iterator: while (index < source.length) {
-		let char = source.charAt(index);
+	iterator: while (index < json.length) {
+		let char = json.charAt(index);
 
 		switch (state) {
 			case numberStates._START_:
@@ -305,29 +307,30 @@ function parseNumber(source, index, line, column) {
 	if (passedValueIndex > 0) {
 		return {
 			type: tokenTypes.NUMBER,
-			value: source.substring(startIndex, passedValueIndex),
-			line: line,
+			value: json.substring(startIndex, passedValueIndex),
+			line,
 			index: passedValueIndex,
 			column: column + passedValueIndex - startIndex
 		};
-	} else {
-		return null;
 	}
+
+	return null;
 }
 
 const defaultSettings = {
-	verbose: true
+	verbose: true,
+	source: null
 };
 
-export function tokenize(source, settings) {
+export function tokenize(json, settings) {
 	settings = Object.assign({}, defaultSettings, settings);
 	let line = 1;
 	let column = 1;
 	let index = 0;
-	let tokens = [];
+	const tokens = [];
 
-	while (index < source.length) {
-		let whitespace = parseWhitespace(source, index, line, column);
+	while (index < json.length) {
+		const whitespace = parseWhitespace(json, index, line, column);
 
 		if (whitespace) {
 			index = whitespace.index;
@@ -336,11 +339,12 @@ export function tokenize(source, settings) {
 			continue;
 		}
 
-		let matched =
-			parseChar(source, index, line, column) ||
-			parseKeyword(source, index, line, column) ||
-			parseString(source, index, line, column) ||
-			parseNumber(source, index, line, column);
+		const matched = (
+			parseChar(json, index, line, column)
+			|| parseKeyword(json, index, line, column)
+			|| parseString(json, index, line, column)
+			|| parseNumber(json, index, line, column)
+		);
 
 		if (matched) {
 			let token = {
@@ -349,7 +353,7 @@ export function tokenize(source, settings) {
 			};
 
 			if (settings.verbose) {
-				token.offset = offset(line, column, index, matched.line, matched.column, matched.index);
+				token.loc = location(line, column, index, matched.line, matched.column, matched.index, settings.source);
 			}
 
 			tokens.push(token);
@@ -359,8 +363,8 @@ export function tokenize(source, settings) {
 
 		} else {
 			error(
-				tokenizeErrorTypes.cannotTokenizeSymbol(source.charAt(index), line, column),
-				source,
+				tokenizeErrorTypes.cannotTokenizeSymbol(json.charAt(index), line, column),
+				json,
 				line,
 				column
 			);

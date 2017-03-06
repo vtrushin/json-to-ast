@@ -1,4 +1,4 @@
-import offset from './offset';
+import location from './location';
 import error from './error';
 import parseErrorTypes from './parseErrorTypes';
 import {tokenize, tokenTypes} from './tokenize';
@@ -20,10 +20,11 @@ const arrayStates = {
 };
 
 const defaultSettings = {
-	verbose: true
+	verbose: true,
+	source: null
 };
 
-function parseObject(source, tokenList, index, settings) {
+function parseObject(json, tokenList, index, settings) {
 	let startToken;
 	let property;
 	let object = {
@@ -57,32 +58,37 @@ function parseObject(source, tokenList, index, settings) {
 						}
 					};
 					if (settings.verbose) {
-						property.key.offset = token.offset;
+						property.key.loc = token.loc;
 					}
 					state = objectStates.KEY;
 					index ++;
 				} else if (token.type === tokenTypes.RIGHT_BRACE) {
 					if (settings.verbose) {
-						object.offset = offset(
-							startToken.offset.start.line,
-							startToken.offset.start.column,
-							startToken.offset.start.char,
-							token.offset.end.line,
-							token.offset.end.column,
-							token.offset.end.char
+						object.loc = location(
+							startToken.loc.start.line,
+							startToken.loc.start.column,
+							startToken.loc.start.offset,
+							token.loc.end.line,
+							token.loc.end.column,
+							token.loc.end.offset,
+							settings.source
 						);
 					}
 					index ++;
 					return {
 						value: object,
-						index: index
+						index
 					};
 				} else {
 					error(
-						parseErrorTypes.unexpectedToken(source.substring(token.offset.start.char, token.offset.end.char), token.offset.start.line, token.offset.start.column),
-						source,
-						token.offset.start.line,
-						token.offset.start.column
+						parseErrorTypes.unexpectedToken(
+							json.substring(token.loc.start.offset, token.loc.end.offset),
+							token.loc.start.line,
+							token.loc.start.column
+						),
+						json,
+						token.loc.start.line,
+						token.loc.start.column
 					);
 				}
 				break;
@@ -93,16 +99,20 @@ function parseObject(source, tokenList, index, settings) {
 					index ++;
 				} else {
 					error(
-						parseErrorTypes.unexpectedToken(source.substring(token.offset.start.char, token.offset.end.char), token.offset.start.line, token.offset.start.column),
-						source,
-						token.offset.start.line,
-						token.offset.start.column
+						parseErrorTypes.unexpectedToken(
+							json.substring(token.loc.start.offset, token.loc.end.offset),
+							token.loc.start.line,
+							token.loc.start.column
+						),
+						json,
+						token.loc.start.line,
+						token.loc.start.column
 					);
 				}
 				break;
 
 			case objectStates.COLON:
-				let value = parseValue(source, tokenList, index, settings);
+				let value = parseValue(json, tokenList, index, settings);
 				index = value.index;
 				property.value = value.value;
 				object.properties.push(property);
@@ -112,29 +122,34 @@ function parseObject(source, tokenList, index, settings) {
 			case objectStates.VALUE:
 				if (token.type === tokenTypes.RIGHT_BRACE) {
 					if (settings.verbose) {
-						object.offset = offset(
-							startToken.offset.start.line,
-							startToken.offset.start.column,
-							startToken.offset.start.char,
-							token.offset.end.line,
-							token.offset.end.column,
-							token.offset.end.char
+						object.loc = location(
+							startToken.loc.start.line,
+							startToken.loc.start.column,
+							startToken.loc.start.offset,
+							token.loc.end.line,
+							token.loc.end.column,
+							token.loc.end.offset,
+							settings.source
 						);
 					}
 					index ++;
 					return {
 						value: object,
-						index: index
+						index
 					};
 				} else if (token.type === tokenTypes.COMMA) {
 					state = objectStates.COMMA;
 					index ++;
 				} else {
 					error(
-						parseErrorTypes.unexpectedToken(source.substring(token.offset.start.char, token.offset.end.char), token.offset.start.line, token.offset.start.column),
-						source,
-						token.offset.start.line,
-						token.offset.start.column
+						parseErrorTypes.unexpectedToken(
+							json.substring(token.loc.start.offset, token.loc.end.offset),
+							token.loc.start.line,
+							token.loc.start.column
+						),
+						json,
+						token.loc.start.line,
+						token.loc.start.column
 					);
 				}
 				break;
@@ -149,16 +164,20 @@ function parseObject(source, tokenList, index, settings) {
 						}
 					};
 					if (settings.verbose) {
-						property.key.offset = token.offset;
+						property.key.loc = token.loc;
 					}
 					state = objectStates.KEY;
 					index ++;
 				} else {
 					error(
-						parseErrorTypes.unexpectedToken(source.substring(token.offset.start.char, token.offset.end.char), token.offset.start.line, token.offset.start.column),
-						source,
-						token.offset.start.line,
-						token.offset.start.column
+						parseErrorTypes.unexpectedToken(
+							json.substring(token.loc.start.offset, token.loc.end.offset),
+							token.loc.start.line,
+							token.loc.start.column
+						),
+						json,
+						token.loc.start.line,
+						token.loc.start.column
 					);
 				}
 				break;
@@ -172,7 +191,7 @@ function parseObject(source, tokenList, index, settings) {
 
 }
 
-function parseArray(source, tokenList, index, settings) {
+function parseArray(json, tokenList, index, settings) {
 	let startToken;
 	let array = {
 		type: 'array',
@@ -198,22 +217,23 @@ function parseArray(source, tokenList, index, settings) {
 			case arrayStates.OPEN_ARRAY:
 				if (token.type === tokenTypes.RIGHT_BRACKET) {
 					if (settings.verbose) {
-						array.offset = offset(
-							startToken.offset.start.line,
-							startToken.offset.start.column,
-							startToken.offset.start.char,
-							token.offset.end.line,
-							token.offset.end.column,
-							token.offset.end.char
+						array.loc = location(
+							startToken.loc.start.line,
+							startToken.loc.start.column,
+							startToken.loc.start.offset,
+							token.loc.end.line,
+							token.loc.end.column,
+							token.loc.end.offset,
+							settings.source
 						);
 					}
 					index ++;
 					return {
 						value: array,
-						index: index
+						index
 					};
 				} else {
-					let value = parseValue(source, tokenList, index, settings);
+					let value = parseValue(json, tokenList, index, settings);
 					index = value.index;
 					array.items.push(value.value);
 					state = arrayStates.VALUE;
@@ -223,35 +243,40 @@ function parseArray(source, tokenList, index, settings) {
 			case arrayStates.VALUE:
 				if (token.type === tokenTypes.RIGHT_BRACKET) {
 					if (settings.verbose) {
-						array.offset = offset(
-							startToken.offset.start.line,
-							startToken.offset.start.column,
-							startToken.offset.start.char,
-							token.offset.end.line,
-							token.offset.end.column,
-							token.offset.end.char
+						array.loc = location(
+							startToken.loc.start.line,
+							startToken.loc.start.column,
+							startToken.loc.start.offset,
+							token.loc.end.line,
+							token.loc.end.column,
+							token.loc.end.offset,
+							settings.source
 						);
 					}
 					index ++;
 					return {
 						value: array,
-						index: index
+						index
 					};
 				} else if (token.type === tokenTypes.COMMA) {
 					state = arrayStates.COMMA;
 					index ++;
 				} else {
 					error(
-						parseErrorTypes.unexpectedToken(source.substring(token.offset.start.char, token.offset.end.char), token.offset.start.line, token.offset.start.column),
-						source,
-						token.offset.start.line,
-						token.offset.start.column
+						parseErrorTypes.unexpectedToken(
+							json.substring(token.loc.start.offset, token.loc.end.offset),
+							token.loc.start.line,
+							token.loc.start.column
+						),
+						json,
+						token.loc.start.line,
+						token.loc.start.column
 					);
 				}
 				break;
 
 			case arrayStates.COMMA:
-				let value = parseValue(source, tokenList, index, settings);
+				let value = parseValue(json, tokenList, index, settings);
 				index = value.index;
 				array.items.push(value.value);
 				state = arrayStates.VALUE;
@@ -264,7 +289,7 @@ function parseArray(source, tokenList, index, settings) {
 	);
 }
 
-function parseValue(source, tokenList, index, settings) {
+function parseValue(json, tokenList, index, settings) {
 	// value: object | array | STRING | NUMBER | TRUE | FALSE | NULL
 	let token = tokenList[index];
 	let tokenType;
@@ -293,50 +318,59 @@ function parseValue(source, tokenList, index, settings) {
 			value: token.value
 		};
 		if (settings.verbose) {
-			value.offset = token.offset;
+			value.loc = token.loc;
 		}
 		return {
-			value: value,
-			index: index
+			value,
+			index
 		}
 
 	} else {
-		let objectOrValue = parseObject(source, tokenList, index, settings) || parseArray(source, tokenList, index, settings);
+		const objectOrValue = (
+			parseObject(json, tokenList, index, settings)
+			|| parseArray(json, tokenList, index, settings)
+		);
 
 		if (objectOrValue) {
 			return objectOrValue;
 		} else {
 			error(
-				parseErrorTypes.unexpectedToken(source.substring(token.offset.start.char, token.offset.end.char), token.offset.start.line, token.offset.start.column),
-				source,
-				token.offset.start.line,
-				token.offset.start.column
+				parseErrorTypes.unexpectedToken(
+					json.substring(token.loc.start.offset, token.loc.end.offset),
+					token.loc.start.line,
+					token.loc.start.column
+				),
+				json,
+				token.loc.start.line,
+				token.loc.start.column
 			);
 		}
 	}
 }
 
-export default function(source, settings) {
+export default (json, settings) => {
 	settings = Object.assign({}, defaultSettings, settings);
-	const tokenList = tokenize(source);
+	const tokenList = tokenize(json, settings);
 
 	if (tokenList.length === 0) {
-		error(
-			parseErrorTypes.unexpectedEnd()
-		);
+		error(parseErrorTypes.unexpectedEnd());
 	}
 
-	let value = parseValue(source, tokenList, 0, settings);
+	const value = parseValue(json, tokenList, 0, settings);
 
 	if (value.index === tokenList.length) {
 		return value.value;
 	} else {
-		let token = tokenList[value.index];
+		const token = tokenList[value.index];
 		error(
-			parseErrorTypes.unexpectedToken(source.substring(token.offset.start.char, token.offset.end.char), token.offset.start.line, token.offset.start.column),
-			source,
-			token.offset.start.line,
-			token.offset.start.column
+			parseErrorTypes.unexpectedToken(
+				json.substring(token.loc.start.offset, token.loc.end.offset),
+				token.loc.start.line,
+				token.loc.start.column
+			),
+			json,
+			token.loc.start.line,
+			token.loc.start.column
 		);
 	}
 }
