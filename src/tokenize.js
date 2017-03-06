@@ -71,9 +71,11 @@ function isDigit(char) {
 }
 
 function isHex(char) {
-	return isDigit(char)
+	return (
+		isDigit(char)
 		|| (char >= 'a' && char <= 'f')
-		|| (char >= 'A' && char <= 'F');
+		|| (char >= 'A' && char <= 'F')
+	);
 }
 
 function isExp(char) {
@@ -104,9 +106,9 @@ function parseWhitespace(source, index, line, column) {
 	}
 
 	return {
-		index: index,
-		line: line,
-		column: column
+		index,
+		line,
+		column
 	};
 }
 
@@ -116,21 +118,21 @@ function parseChar(source, index, line, column) {
 	if (char in charTokens) {
 		return {
 			type: charTokens[char],
-			line: line,
+			line,
 			column: column + 1,
 			index: index + 1
 		};
-	} else {
-		return null;
 	}
+
+	return null;
 }
 
 function parseKeyword(source, index, line, column) {
-	for (var name in keywordsTokens) {
+	for (const name in keywordsTokens) {
 		if (keywordsTokens.hasOwnProperty(name) && source.substr(index, name.length) === name) {
 			return {
 				type: keywordsTokens[name],
-				line: line,
+				line,
 				column: column + name.length,
 				index: index + name.length,
 				value: null
@@ -169,8 +171,8 @@ function parseString(source, index, line, column) {
 					return {
 						type: tokenTypes.STRING,
 						value: buffer,
-						line: line,
-						index: index,
+						line,
+						index,
 						column: column + index - startIndex
 					};
 				} else {
@@ -306,13 +308,13 @@ function parseNumber(source, index, line, column) {
 		return {
 			type: tokenTypes.NUMBER,
 			value: source.substring(startIndex, passedValueIndex),
-			line: line,
+			line,
 			index: passedValueIndex,
 			column: column + passedValueIndex - startIndex
 		};
-	} else {
-		return null;
 	}
+
+	return null;
 }
 
 const defaultSettings = {
@@ -324,10 +326,10 @@ export function tokenize(source, settings) {
 	let line = 1;
 	let column = 1;
 	let index = 0;
-	let tokens = [];
+	const tokens = [];
 
 	while (index < source.length) {
-		let whitespace = parseWhitespace(source, index, line, column);
+		const whitespace = parseWhitespace(source, index, line, column);
 
 		if (whitespace) {
 			index = whitespace.index;
@@ -336,11 +338,12 @@ export function tokenize(source, settings) {
 			continue;
 		}
 
-		let matched =
-			parseChar(source, index, line, column) ||
-			parseKeyword(source, index, line, column) ||
-			parseString(source, index, line, column) ||
-			parseNumber(source, index, line, column);
+		const matched = (
+			parseChar(source, index, line, column)
+			|| parseKeyword(source, index, line, column)
+			|| parseString(source, index, line, column)
+			|| parseNumber(source, index, line, column)
+		);
 
 		if (matched) {
 			let token = {

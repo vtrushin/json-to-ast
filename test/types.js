@@ -1,16 +1,15 @@
-function position(startLine, startColumn, startChar, endLine, endColumn, endChar) {
+function position(startLine, startColumn, startOffset, endLine, endColumn, endOffset) {
 	return {
 		start: {
 			line: startLine,
 			column: startColumn,
-			char: startChar
+			offset: startOffset
 		},
 		end: {
 			line: endLine,
 			column: endColumn,
-			char: endChar
-		},
-		human: startLine + ':' + startColumn + ' - ' + endLine + ':' + endColumn + ' [' + startChar + ':' + endChar + ']'
+			offset: endOffset
+		}
 	}
 }
 
