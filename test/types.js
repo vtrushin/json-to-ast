@@ -1,6 +1,4 @@
-function location(startLine, startColumn, startOffset, endLine, endColumn, endOffset, source) {
-	source = source || '<unknown>';
-
+function location(startLine, startColumn, startOffset, endLine, endColumn, endOffset, fileName) {
 	return {
 		start: {
 			line: startLine,
@@ -12,120 +10,105 @@ function location(startLine, startColumn, startOffset, endLine, endColumn, endOf
 			column: endColumn,
 			offset: endOffset
 		},
-		source: source
+		fileName: fileName || null
 	}
 }
 
 function createObjectKey(value, location) {
-	var result = {
+	var node = {
 		type: 'key',
 		value: value
 	};
 
 	if (location) {
-		result.loc = location;
+		node.loc = location;
 	}
 
-	return result;
+	return node;
 }
 
-function createObjectProperty(key, value) {
-	return {
+function createObjectProperty(key, value, location) {
+	var node = {
 		type: 'property',
-		key: key,
-		value: value
+		children: [
+			key, value
+		]
+	};
+
+	if (location) {
+		node.loc = location;
 	}
+
+	return node;
 }
 
 function createObject(properties, location) {
-	var result = {
+	var node = {
 		type: 'object',
-		properties: properties
+		children: properties
 	};
 
 	if (location) {
-		result.loc = location;
+		node.loc = location;
 	}
 
-	return result;
+	return node;
 }
 
 function createArray(items, location) {
-	var result = {
+	var node = {
 		type: 'array',
-		items: items
+		children: items
 	};
 
 	if (location) {
-		result.loc = location;
+		node.loc = location;
 	}
 
-	return result;
+	return node;
+}
+
+function createValue(value, location) {
+	var node = {
+		type: 'value',
+		value: value
+	};
+
+	if (location) {
+		node.loc = location;
+	}
+
+	return node;
 }
 
 function createString(value, location) {
-	var result = {
-		type: 'string',
-		value: value
-	};
+	var node = createValue(value, location);
 
-	if (location) {
-		result.loc = location;
-	}
-
-	return result;
+	return node;
 }
 
 function createNumber(value, location) {
-	var result = {
-		type: 'number',
-		value: value
-	};
+	var node = createValue(value, location);
 
-	if (location) {
-		result.loc = location;
-	}
-
-	return result;
+	return node;
 }
 
 function createTrue(location) {
-	var result = {
-		type: 'true',
-		value: null
-	};
+	var node = createValue('true', location);
 
-	if (location) {
-		result.loc = location;
-	}
-
-	return result;
+	return node;
 }
 
 function createFalse(location) {
-	var result = {
-		type: 'false',
-		value: null
-	};
+	var node = createValue('false', location);
 
-	if (location) {
-		result.loc = location;
-	}
-
-	return result;
+	return node;
 }
 
 function createNull(location) {
-	var result = {
-		type: 'null',
-		value: null
-	};
+	var node = createValue('null', location);
 
-	if (location) {
-		result.loc = location;
-	}
-
-	return result;
+	return node;
 }
 
 module.exports = {
@@ -134,6 +117,7 @@ module.exports = {
 	createObjectProperty: createObjectProperty,
 	createObject: createObject,
 	createArray: createArray,
+	// createValue: createValue,
 	createString: createString,
 	createNumber: createNumber,
 	createTrue: createTrue,

@@ -328,13 +328,13 @@ function parseNumber(source, index, line, column) {
 	return null;
 }
 
-const defaultSettings = {
+/*const defaultSettings = {
 	verbose: true,
 	fileName: null
-};
+};*/
 
 export function tokenize(source, settings) {
-	settings = Object.assign({}, defaultSettings, settings);
+	/*settings = Object.assign({}, defaultSettings, settings);*/
 	let line = 1;
 	let column = 1;
 	let index = 0;
@@ -361,11 +361,8 @@ export function tokenize(source, settings) {
 		if (matched) {
 			let token = {
 				type: matched.type,
-				value: matched.value
-			};
-
-			if (settings.verbose) {
-				token.loc = location(
+				value: matched.value,
+				loc: location(
 					line,
 					column,
 					index,
@@ -373,8 +370,8 @@ export function tokenize(source, settings) {
 					matched.column,
 					matched.index,
 					settings.fileName
-				);
-			}
+				)
+			};
 
 			tokens.push(token);
 			index = matched.index;

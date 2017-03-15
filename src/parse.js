@@ -191,15 +191,17 @@ function parseProperty(source, tokenList, index, settings) {
 			case propertyStates.COLON: {
 				const value = parseValue(source, tokenList, index, settings);
 				property.children.push(value.value);
-				property.loc = location(
-					startToken.loc.start.line,
-					startToken.loc.start.column,
-					startToken.loc.start.offset,
-					value.value.loc.end.line,
-					value.value.loc.end.column,
-					value.value.loc.end.offset,
-					settings.fileName
-				);
+				if (settings.verbose) {
+					property.loc = location(
+						startToken.loc.start.line,
+						startToken.loc.start.column,
+						startToken.loc.start.offset,
+						value.value.loc.end.line,
+						value.value.loc.end.column,
+						value.value.loc.end.offset,
+						settings.fileName
+					);
+				}
 				return {
 					value: property,
 					index: value.index
@@ -319,10 +321,8 @@ function parseValue(source, tokenList, index, settings) {
 
 	switch (token.type) {
 		case tokenTypes.STRING:
-			value = 'string';
-			break;
 		case tokenTypes.NUMBER:
-			value = 'number';
+			value = token.value;
 			break;
 		case tokenTypes.TRUE:
 			value = 'true';
@@ -337,7 +337,7 @@ function parseValue(source, tokenList, index, settings) {
 	if (value) {
 		let valueObject = {
 			type: 'value',
-			value: token.value
+			value: value
 		};
 		if (settings.verbose) {
 			valueObject.loc = token.loc;

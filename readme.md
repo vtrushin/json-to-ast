@@ -5,132 +5,103 @@
 [![Build Status](https://travis-ci.org/vtrushin/json-to-ast.svg?branch=master)](https://travis-ci.org/vtrushin/json-to-ast)
 <!-- [![Coverage Status](https://coveralls.io/repos/github/vtrushin/json-to-ast/badge.svg?branch=master)](https://coveralls.io/github/vtrushin/json-to-ast?branch=master) -->
 
+## Install
+```
 > npm install json-to-ast
+```
 
-## API
+## Usage
 
 ```js
 var parse = require('json-to-ast');
 
+
 var settings = {
-	verbose: true, // Show addition information, like node locations. Default is `true`
-	fileName: 'data.json' // Name of file, addes into node's location. Default is `<unknown>`
+  verbose: true, // Show additional information, like node’s locations. Default is `true`
+  fileName: 'data.json' // Addes file name information into node's location. Default is `null`
 };
 
 parse('{"a": 1}', settings);
+
 /*
 =>
 {
   type: 'object',
-  properties: [
+  children: [
     {
       type: 'property',
-      key: {
-        type: 'key',
-        value: 'a',
-        loc: {
-          start: {
-            line: 1,
-            column: 2,
-            offset: 1
-          },
-          end: {
-            line: 1,
-            column: 9,
-            offset: 8
+      children: [
+        {
+      	  type: 'key',
+          value: 'a',
+          loc: {
+            start: { line: 1, column: 2, offset: 1 },
+            end: { line: 1, column: 9, offset: 8 }
           }
-        }
-      },
-      value: {
-        type: 'number',
-        value: '1',
-        loc: {
-          start: {
-            line: 1,
-            column: 11,
-            offset: 10
-          },
-          end: {
-            line: 1,
-            column: 12,
-            offset: 11
-          }
-        }
-      }
+      	},
+      	{
+      	  type: 'value',
+      	  value: '1',
+      	  loc: {
+      	    start: { line: 1, column: 11, offset: 10 },
+            end: { line: 1, column: 12, offset: 11 }
+      	  }
+      	}
+      ]
     }
   ],
   loc: {
-    start: {
-      line: 1,
-      column: 1,
-      offset: 0,
-    },
-    end: {
-      line: 1,
-      column: 13,
-      offset: 12
-    }
+    start: { line: 1, column: 1, offset: 0 },
+    end: { line: 1, column: 13, offset: 12 }
   }
 }
 */
 ```
 
-## AST format
+## Node types
 
 Object:
-
-```js
+```
 {
   type: 'object',
-  properties: [
-    {
-      type: 'property',
-      key: {
-        type: 'key',
-        value: 'keyName',
-        loc: {
-          start: {
-            line: ...,
-            column: ...,
-            offset: ...
-          },
-          end: {
-            line: ...,
-            column: ...,
-            offset: ...
-          }
-        }
-      },
-      value: ...
-    }
-  ],
+  children: [...],
+  loc: {...}
+}
+```
+
+
+
+Properties:
+```
+{
+  type: 'property',
+  children: [...],
   loc: {...}
 }
 ```
 
 Array:
-
 ```js
 {
   type: 'array',
-  items: [
-    ...
-  ],
+  children: [...],
   loc: {...}
 }
 ```
 
-Primitive:
-
+Value:
 ```js
 {
-  type: 'string|number|true|false|null',
-  value: ...,
+  type: 'value',
+  value: '',
+  rawValue: '',
   loc: {...}
 }
 ```
 
+<!--
 [Try it online](https://rawgit.com/vtrushin/json-to-ast/master/demo/astexplorer/index.html) (Fork of [astexplorer.net](https://astexplorer.net/))
+-->
 
 ## License
 MIT

@@ -453,13 +453,13 @@
 		return null;
 	}
 
-	var defaultSettings$1 = {
-		verbose: true,
-		fileName: null
-	};
+	/*const defaultSettings = {
+ 	verbose: true,
+ 	fileName: null
+ };*/
 
 	function tokenize(source, settings) {
-		settings = _extends({}, defaultSettings$1, settings);
+		/*settings = Object.assign({}, defaultSettings, settings);*/
 		var line = 1;
 		var column = 1;
 		var index = 0;
@@ -481,12 +481,9 @@
 			if (matched) {
 				var token = {
 					type: matched.type,
-					value: matched.value
+					value: matched.value,
+					loc: location(line, column, index, matched.line, matched.column, matched.index, settings.fileName)
 				};
-
-				if (settings.verbose) {
-					token.loc = location(line, column, index, matched.line, matched.column, matched.index, settings.fileName);
-				}
 
 				tokens.push(token);
 				index = matched.index;
@@ -652,7 +649,9 @@
 					{
 						var value = parseValue(source, tokenList, index, settings);
 						property.children.push(value.value);
-						property.loc = location(startToken.loc.start.line, startToken.loc.start.column, startToken.loc.start.offset, value.value.loc.end.line, value.value.loc.end.column, value.value.loc.end.offset, settings.fileName);
+						if (settings.verbose) {
+							property.loc = location(startToken.loc.start.line, startToken.loc.start.column, startToken.loc.start.offset, value.value.loc.end.line, value.value.loc.end.column, value.value.loc.end.offset, settings.fileName);
+						}
 						return {
 							value: property,
 							index: value.index
@@ -749,10 +748,8 @@
 
 		switch (token.type) {
 			case tokenTypes.STRING:
-				value = 'string';
-				break;
 			case tokenTypes.NUMBER:
-				value = 'number';
+				value = token.value;
 				break;
 			case tokenTypes.TRUE:
 				value = 'true';
@@ -767,7 +764,7 @@
 		if (value) {
 			var valueObject = {
 				type: 'value',
-				value: token.value
+				value: value
 			};
 			if (settings.verbose) {
 				valueObject.loc = token.loc;
