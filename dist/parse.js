@@ -761,7 +761,7 @@
 				value = 'null';
 		}
 
-		if (value) {
+		if (value !== undefined) {
 			var valueObject = {
 				type: 'value',
 				value: value

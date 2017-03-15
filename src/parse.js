@@ -334,7 +334,7 @@ function parseValue(source, tokenList, index, settings) {
 			value = 'null';
 	}
 
-	if (value) {
+	if (value !== undefined) {
 		let valueObject = {
 			type: 'value',
 			value: value
