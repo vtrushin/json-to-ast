@@ -47,7 +47,11 @@ parse('{"a": 1}', settings);
             end: { line: 1, column: 12, offset: 11 }
       	  }
       	}
-      ]
+      ],
+      loc: {
+        start: { line: 1, column: 2, offset: 1 },
+        end: { line: 1, column: 12, offset: 11 }
+      }
     }
   ],
   loc: {
@@ -64,18 +68,25 @@ Object:
 ```
 {
   type: 'object',
-  children: [...],
+  children: Property[],
   loc: {...}
 }
 ```
 
-
-
-Properties:
+Property:
 ```
 {
   type: 'property',
-  children: [...],
+  children: [ Key, Value ],
+  loc: {...}
+}
+```
+
+Key:
+```
+{
+  type: 'key',
+  value: String,
   loc: {...}
 }
 ```
@@ -84,7 +95,7 @@ Array:
 ```js
 {
   type: 'array',
-  children: [...],
+  children: Value[],
   loc: {...}
 }
 ```
@@ -93,8 +104,8 @@ Value:
 ```js
 {
   type: 'value',
-  value: '',
-  rawValue: '',
+  value: String,
+  rawValue: String | Number | True | False | Null,
   loc: {...}
 }
 ```
