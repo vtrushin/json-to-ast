@@ -65,7 +65,7 @@ parse('{"a": 1}', settings);
 ## Node types
 
 Object:
-```
+```js
 {
   type: 'object',
   children: Property[],
@@ -74,7 +74,7 @@ Object:
 ```
 
 Property:
-```
+```js
 {
   type: 'property',
   children: [ Key, Value ],
@@ -83,7 +83,7 @@ Property:
 ```
 
 Key:
-```
+```js
 {
   type: 'key',
   value: String,
