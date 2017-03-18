@@ -26,29 +26,54 @@ function getCases(dirname, callback) {
 
 	cases.forEach(function(_case) {
 		var inputFile = readFile(path.join(folderPath, _case + '.json'));
-		var expectedFile = require(path.join(folderPath, _case + '.js'));
+		var expectedFile;
+		try {
+			expectedFile = require(path.join(folderPath, _case + '.js'));
+		} catch (e) {
+			expectedFile = null;
+		}
+
 		if (callback) {
 			callback(_case, inputFile, expectedFile);
 		}
 	});
 }
 
-describe('Test cases', function() {
-	getCases('cases', function(caseName, inputFile, expectedFile) {
+describe('Right test cases', function() {
+	getCases('cases/right', function(caseName, inputFile, expectedFile) {
 		it(caseName, function() {
-			var parsedFile = parse(inputFile, expectedFile.options);
-			assert.deepEqual(parsedFile, expectedFile.ast, 'asts are not equal');
+			if (expectedFile) {
+				var parsedFile = parse(inputFile, expectedFile.options);
+				assert.deepEqual(parsedFile, expectedFile.ast, 'asts are not equal');
+			} else {
+				try {
+					parse(inputFile);
+					assert.ok(true);
+				} catch (e) {
+					assert.ok(false);
+				}
+			}
 		});
 	});
 });
 
-describe('Error test cases', function() {
-	getCases('error-cases', function(caseName, inputFile, expectedFile) {
+describe('Wrong test cases', function() {
+	getCases('cases/wrong', function(caseName, inputFile, expectedFile) {
 		it(caseName, function() {
-			try {
-				parse(inputFile, expectedFile.options);
-			} catch (e) {
-				assert.deepEqual(expectedFile.error.message, e.rawMessage, 'asts are not equal');
+			if (expectedFile) {
+				try {
+					parse(inputFile, expectedFile.options);
+				} catch (e) {
+					assert.deepEqual(expectedFile.error.message, e.rawMessage, 'asts are not equal');
+				}
+			} else {
+				try {
+					parse(inputFile);
+					assert.ok(false);
+				} catch (e) {
+					/*console.log(e);*/
+					assert.ok(true);
+				}
 			}
 		});
 	});
