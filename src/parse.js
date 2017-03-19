@@ -324,47 +324,53 @@ function parseArray(source, tokenList, index, settings) {
 	);
 }
 
-function parseValue(source, tokenList, index, settings) {
-	// value: STRING | NUMBER | TRUE | FALSE | NULL | object | array
-	let token = tokenList[index];
-	let value;
+function parseLiteral(source, tokenList, index, settings) {
+	// literal: STRING | NUMBER | TRUE | FALSE | NULL
+	const token = tokenList[index];
 
 	const isLiteral = literals.indexOf(token.type) !== -1;
 
 	if (isLiteral) {
-		let valueObject = {
-			type: 'value',
+		const literal = {
+			type: 'literal',
 			value: token.value,
 			rawValue: source.substring(token.loc.start.offset, token.loc.end.offset)
 		};
 		if (settings.verbose) {
-			valueObject.loc = token.loc;
+			literal.loc = token.loc;
 		}
 		return {
-			value: valueObject,
+			value: literal,
 			index: index + 1
 		}
+	}
 
+	return null;
+}
+
+function parseValue(source, tokenList, index, settings) {
+	// value: literal | object | array
+	const token = tokenList[index];
+
+	const value = (
+		parseLiteral(...arguments)
+		|| parseObject(...arguments)
+		|| parseArray(...arguments)
+	);
+
+	if (value) {
+		return value;
 	} else {
-		const objectOrValue = (
-			parseObject(...arguments)
-			|| parseArray(...arguments)
-		);
-
-		if (objectOrValue) {
-			return objectOrValue;
-		} else {
-			error(
-				parseErrorTypes.unexpectedToken(
-					source.substring(token.loc.start.offset, token.loc.end.offset),
-					token.loc.start.line,
-					token.loc.start.column
-				),
-				source,
+		error(
+			parseErrorTypes.unexpectedToken(
+				source.substring(token.loc.start.offset, token.loc.end.offset),
 				token.loc.start.line,
 				token.loc.start.column
-			);
-		}
+			),
+			source,
+			token.loc.start.line,
+			token.loc.start.column
+		);
 	}
 }
 

@@ -70,7 +70,7 @@ function createArray(items, location) {
 
 function createLiteral(value, rawValue, location) {
 	var node = {
-		type: 'value',
+		type: 'literal',
 		value: value,
 		rawValue: rawValue
 	};

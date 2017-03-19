@@ -745,34 +745,40 @@
 		error(parseErrorTypes.unexpectedEnd());
 	}
 
-	function parseValue(source, tokenList, index, settings) {
-		// value: STRING | NUMBER | TRUE | FALSE | NULL | object | array
+	function parseLiteral(source, tokenList, index, settings) {
+		// literal: STRING | NUMBER | TRUE | FALSE | NULL
 		var token = tokenList[index];
-		var value = void 0;
 
 		var isLiteral = literals.indexOf(token.type) !== -1;
 
 		if (isLiteral) {
-			var valueObject = {
-				type: 'value',
+			var literal = {
+				type: 'literal',
 				value: token.value,
 				rawValue: source.substring(token.loc.start.offset, token.loc.end.offset)
 			};
 			if (settings.verbose) {
-				valueObject.loc = token.loc;
+				literal.loc = token.loc;
 			}
 			return {
-				value: valueObject,
+				value: literal,
 				index: index + 1
 			};
-		} else {
-			var objectOrValue = parseObject.apply(undefined, arguments) || parseArray.apply(undefined, arguments);
+		}
 
-			if (objectOrValue) {
-				return objectOrValue;
-			} else {
-				error(parseErrorTypes.unexpectedToken(source.substring(token.loc.start.offset, token.loc.end.offset), token.loc.start.line, token.loc.start.column), source, token.loc.start.line, token.loc.start.column);
-			}
+		return null;
+	}
+
+	function parseValue(source, tokenList, index, settings) {
+		// value: literal | object | array
+		var token = tokenList[index];
+
+		var value = parseLiteral.apply(undefined, arguments) || parseObject.apply(undefined, arguments) || parseArray.apply(undefined, arguments);
+
+		if (value) {
+			return value;
+		} else {
+			error(parseErrorTypes.unexpectedToken(source.substring(token.loc.start.offset, token.loc.end.offset), token.loc.start.line, token.loc.start.column), source, token.loc.start.line, token.loc.start.column);
 		}
 	}
 
