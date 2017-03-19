@@ -3,6 +3,14 @@ import error from './error';
 import parseErrorTypes from './parseErrorTypes';
 import {tokenize, tokenTypes} from './tokenize';
 
+const literals = [
+	tokenTypes.STRING,
+	tokenTypes.NUMBER,
+	tokenTypes.TRUE,
+	tokenTypes.FALSE,
+	tokenTypes.NULL
+];
+
 const objectStates = {
 	_START_: 0,
 	OPEN_OBJECT: 1,
@@ -29,6 +37,7 @@ const defaultSettings = {
 };
 
 function parseObject(source, tokenList, index, settings) {
+	// object: LEFT_BRACE (property (COMMA property)*)? RIGHT_BRACE
 	let startToken;
 	let object = {
 		type: 'object',
@@ -139,6 +148,7 @@ function parseObject(source, tokenList, index, settings) {
 }
 
 function parseProperty(source, tokenList, index, settings) {
+	// property: STRING COLON value
 	let startToken;
 	let property = {
 		type: 'property',
@@ -213,6 +223,7 @@ function parseProperty(source, tokenList, index, settings) {
 }
 
 function parseArray(source, tokenList, index, settings) {
+	// array: LEFT_BRACKET (value (COMMA value)*)? RIGHT_BRACKET
 	let startToken;
 	let array = {
 		type: 'array',
@@ -314,30 +325,17 @@ function parseArray(source, tokenList, index, settings) {
 }
 
 function parseValue(source, tokenList, index, settings) {
-	// value: object | array | STRING | NUMBER | TRUE | FALSE | NULL
+	// value: STRING | NUMBER | TRUE | FALSE | NULL | object | array
 	let token = tokenList[index];
 	let value;
-	let rawValue;
 
-	switch (token.type) {
-		case tokenTypes.STRING:
-		case tokenTypes.NUMBER:
-			value = token.value;
-			break;
-		case tokenTypes.TRUE:
-			value = 'true';
-			break;
-		case tokenTypes.FALSE:
-			value = 'false';
-			break;
-		case tokenTypes.NULL:
-			value = 'null';
-	}
+	const isLiteral = literals.indexOf(token.type) !== -1;
 
-	if (value !== undefined) {
+	if (isLiteral) {
 		let valueObject = {
 			type: 'value',
-			value: value
+			value: token.value,
+			rawValue: source.substring(token.loc.start.offset, token.loc.end.offset)
 		};
 		if (settings.verbose) {
 			valueObject.loc = token.loc;

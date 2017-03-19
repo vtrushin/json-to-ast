@@ -3,20 +3,20 @@ import error from './error';
 import tokenizeErrorTypes from './tokenizeErrorTypes';
 
 export const tokenTypes = {
-	LEFT_BRACE: 'LEFT_BRACE',       // {
-	RIGHT_BRACE: 'RIGHT_BRACE',     // }
-	LEFT_BRACKET: 'LEFT_BRACKET',   // [
-	RIGHT_BRACKET: 'RIGHT_BRACKET', // ]
-	COLON: 'COLON',                 // :
-	COMMA: 'COMMA',                 // ,
-	STRING: 'STRING',               //
-	NUMBER: 'NUMBER',               //
-	TRUE: 'TRUE',                   // true
-	FALSE: 'FALSE',                 // false
-	NULL: 'NULL'                    // null
+	LEFT_BRACE: 0,		// {
+	RIGHT_BRACE: 1,		// }
+	LEFT_BRACKET: 2,	// [
+	RIGHT_BRACKET: 3,	// ]
+	COLON: 4,			// :
+	COMMA: 5,			// ,
+	STRING: 6,			//
+	NUMBER: 7,			//
+	TRUE: 8,			// true
+	FALSE: 9,			// false
+	NULL: 10			// null
 };
 
-const charTokens = {
+const punctuatorTokensMap = { // Lexeme: Token
 	'{': tokenTypes.LEFT_BRACE,
 	'}': tokenTypes.RIGHT_BRACE,
 	'[': tokenTypes.LEFT_BRACKET,
@@ -25,10 +25,10 @@ const charTokens = {
 	',': tokenTypes.COMMA
 };
 
-const keywordsTokens = {
-	'true': tokenTypes.TRUE,
-	'false': tokenTypes.FALSE,
-	'null': tokenTypes.NULL
+const keywordTokensMap = { // Lexeme: Token config
+	'true': { type: tokenTypes.TRUE, value: true },
+	'false': { type: tokenTypes.FALSE, value: false },
+	'null': { type: tokenTypes.NULL, value: null }
 };
 
 const stringStates = {
@@ -115,12 +115,13 @@ function parseWhitespace(source, index, line, column) {
 function parseChar(source, index, line, column) {
 	const char = source.charAt(index);
 
-	if (char in charTokens) {
+	if (char in punctuatorTokensMap) {
 		return {
-			type: charTokens[char],
+			type: punctuatorTokensMap[char],
 			line,
 			column: column + 1,
-			index: index + 1
+			index: index + 1,
+			value: null
 		};
 	}
 
@@ -128,14 +129,16 @@ function parseChar(source, index, line, column) {
 }
 
 function parseKeyword(source, index, line, column) {
-	for (const name in keywordsTokens) {
-		if (keywordsTokens.hasOwnProperty(name) && source.substr(index, name.length) === name) {
+	for (const name in keywordTokensMap) {
+		if (keywordTokensMap.hasOwnProperty(name) && source.substr(index, name.length) === name) {
+			const {type, value} = keywordTokensMap[name];
+
 			return {
-				type: keywordsTokens[name],
+				type,
 				line,
 				column: column + name.length,
 				index: index + name.length,
-				value: null
+				value
 			};
 		}
 	}
@@ -171,10 +174,10 @@ function parseString(source, index, line, column) {
 					index ++;
 					return {
 						type: tokenTypes.STRING,
-						value: buffer,
 						line,
+						column: column + index - startIndex,
 						index,
-						column: column + index - startIndex
+						value: buffer
 					};
 				} else {
 					buffer += char;
@@ -318,23 +321,17 @@ function parseNumber(source, index, line, column) {
 	if (passedValueIndex > 0) {
 		return {
 			type: tokenTypes.NUMBER,
-			value: source.substring(startIndex, passedValueIndex),
 			line,
+			column: column + passedValueIndex - startIndex,
 			index: passedValueIndex,
-			column: column + passedValueIndex - startIndex
+			value: parseFloat(source.substring(startIndex, passedValueIndex))
 		};
 	}
 
 	return null;
 }
 
-/*const defaultSettings = {
-	verbose: true,
-	fileName: null
-};*/
-
 export function tokenize(source, settings) {
-	/*settings = Object.assign({}, defaultSettings, settings);*/
 	let line = 1;
 	let column = 1;
 	let index = 0;

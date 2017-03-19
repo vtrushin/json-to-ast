@@ -118,20 +118,20 @@
 	};
 
 	var tokenTypes = {
-		LEFT_BRACE: 'LEFT_BRACE', // {
-		RIGHT_BRACE: 'RIGHT_BRACE', // }
-		LEFT_BRACKET: 'LEFT_BRACKET', // [
-		RIGHT_BRACKET: 'RIGHT_BRACKET', // ]
-		COLON: 'COLON', // :
-		COMMA: 'COMMA', // ,
-		STRING: 'STRING', //
-		NUMBER: 'NUMBER', //
-		TRUE: 'TRUE', // true
-		FALSE: 'FALSE', // false
-		NULL: 'NULL' // null
+		LEFT_BRACE: 0, // {
+		RIGHT_BRACE: 1, // }
+		LEFT_BRACKET: 2, // [
+		RIGHT_BRACKET: 3, // ]
+		COLON: 4, // :
+		COMMA: 5, // ,
+		STRING: 6, //
+		NUMBER: 7, //
+		TRUE: 8, // true
+		FALSE: 9, // false
+		NULL: 10 // null
 	};
 
-	var charTokens = {
+	var punctuatorTokensMap = { // Lexeme: Token
 		'{': tokenTypes.LEFT_BRACE,
 		'}': tokenTypes.RIGHT_BRACE,
 		'[': tokenTypes.LEFT_BRACKET,
@@ -140,10 +140,10 @@
 		',': tokenTypes.COMMA
 	};
 
-	var keywordsTokens = {
-		'true': tokenTypes.TRUE,
-		'false': tokenTypes.FALSE,
-		'null': tokenTypes.NULL
+	var keywordTokensMap = { // Lexeme: Token config
+		'true': { type: tokenTypes.TRUE, value: true },
+		'false': { type: tokenTypes.FALSE, value: false },
+		'null': { type: tokenTypes.NULL, value: null }
 	};
 
 	var stringStates = {
@@ -229,12 +229,13 @@
 	function parseChar(source, index, line, column) {
 		var char = source.charAt(index);
 
-		if (char in charTokens) {
+		if (char in punctuatorTokensMap) {
 			return {
-				type: charTokens[char],
+				type: punctuatorTokensMap[char],
 				line: line,
 				column: column + 1,
-				index: index + 1
+				index: index + 1,
+				value: null
 			};
 		}
 
@@ -242,14 +243,19 @@
 	}
 
 	function parseKeyword(source, index, line, column) {
-		for (var name in keywordsTokens) {
-			if (keywordsTokens.hasOwnProperty(name) && source.substr(index, name.length) === name) {
+		for (var name in keywordTokensMap) {
+			if (keywordTokensMap.hasOwnProperty(name) && source.substr(index, name.length) === name) {
+				var _keywordTokensMap$nam = keywordTokensMap[name],
+				    type = _keywordTokensMap$nam.type,
+				    value = _keywordTokensMap$nam.value;
+
+
 				return {
-					type: keywordsTokens[name],
+					type: type,
 					line: line,
 					column: column + name.length,
 					index: index + name.length,
-					value: null
+					value: value
 				};
 			}
 		}
@@ -287,10 +293,10 @@
 							index++;
 							return {
 								type: tokenTypes.STRING,
-								value: buffer,
 								line: line,
+								column: column + index - startIndex,
 								index: index,
-								column: column + index - startIndex
+								value: buffer
 							};
 						} else {
 							buffer += char;
@@ -443,23 +449,17 @@
 		if (passedValueIndex > 0) {
 			return {
 				type: tokenTypes.NUMBER,
-				value: source.substring(startIndex, passedValueIndex),
 				line: line,
+				column: column + passedValueIndex - startIndex,
 				index: passedValueIndex,
-				column: column + passedValueIndex - startIndex
+				value: parseFloat(source.substring(startIndex, passedValueIndex))
 			};
 		}
 
 		return null;
 	}
 
-	/*const defaultSettings = {
- 	verbose: true,
- 	fileName: null
- };*/
-
 	function tokenize(source, settings) {
-		/*settings = Object.assign({}, defaultSettings, settings);*/
 		var line = 1;
 		var column = 1;
 		var index = 0;
@@ -497,6 +497,8 @@
 		return tokens;
 	}
 
+	var literals = [tokenTypes.STRING, tokenTypes.NUMBER, tokenTypes.TRUE, tokenTypes.FALSE, tokenTypes.NULL];
+
 	var objectStates = {
 		_START_: 0,
 		OPEN_OBJECT: 1,
@@ -523,6 +525,7 @@
 	};
 
 	function parseObject(source, tokenList, index, settings) {
+		// object: LEFT_BRACE (property (COMMA property)*)? RIGHT_BRACE
 		var startToken = void 0;
 		var object = {
 			type: 'object',
@@ -603,6 +606,7 @@
 	}
 
 	function parseProperty(source, tokenList, index, settings) {
+		// property: STRING COLON value
 		var startToken = void 0;
 		var property = {
 			type: 'property',
@@ -663,6 +667,7 @@
 	}
 
 	function parseArray(source, tokenList, index, settings) {
+		// array: LEFT_BRACKET (value (COMMA value)*)? RIGHT_BRACKET
 		var startToken = void 0;
 		var array = {
 			type: 'array',
@@ -741,30 +746,17 @@
 	}
 
 	function parseValue(source, tokenList, index, settings) {
-		// value: object | array | STRING | NUMBER | TRUE | FALSE | NULL
+		// value: STRING | NUMBER | TRUE | FALSE | NULL | object | array
 		var token = tokenList[index];
 		var value = void 0;
-		var rawValue = void 0;
 
-		switch (token.type) {
-			case tokenTypes.STRING:
-			case tokenTypes.NUMBER:
-				value = token.value;
-				break;
-			case tokenTypes.TRUE:
-				value = 'true';
-				break;
-			case tokenTypes.FALSE:
-				value = 'false';
-				break;
-			case tokenTypes.NULL:
-				value = 'null';
-		}
+		var isLiteral = literals.indexOf(token.type) !== -1;
 
-		if (value !== undefined) {
+		if (isLiteral) {
 			var valueObject = {
 				type: 'value',
-				value: value
+				value: token.value,
+				rawValue: source.substring(token.loc.start.offset, token.loc.end.offset)
 			};
 			if (settings.verbose) {
 				valueObject.loc = token.loc;

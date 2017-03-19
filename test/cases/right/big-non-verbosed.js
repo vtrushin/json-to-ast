@@ -11,12 +11,12 @@ var _false = types.createFalse;
 var ast = array([
 	object([
 		prop(key('_id'), string('574d7238062156c6d9e6de99')),
-		prop(key('index'), number('0')),
+		prop(key('index'), number(0)),
 		prop(key('guid'), string('c99bf348-0345-49fd-be52-d0da82bdd47f')),
 		prop(key('isActive'), _true()),
 		prop(key('balance'), string('$1,087.03')),
 		prop(key('picture'), string('http://placehold.it/32x32')),
-		prop(key('age'), number('25')),
+		prop(key('age'), number(25)),
 		prop(key('eyeColor'), string('brown')),
 		prop(key('name'), object([
 			prop(key('first'), string('Stacie')),
@@ -38,28 +38,28 @@ var ast = array([
 			string('nisi')
 		])),
 		prop(key('range'), array([
-			number('0'),
-			number('1'),
-			number('2'),
-			number('3'),
-			number('4'),
-			number('5'),
-			number('6'),
-			number('7'),
-			number('8'),
-			number('9')
+			number(0),
+			number(1),
+			number(2),
+			number(3),
+			number(4),
+			number(5),
+			number(6),
+			number(7),
+			number(8),
+			number(9)
 		])),
 		prop(key('friends'), array([
 			object([
-				prop(key('id'), number('0')),
+				prop(key('id'), number(0)),
 				prop(key('name'), string('Juliana Valentine'))
 			]),
 			object([
-				prop(key('id'), number('1')),
+				prop(key('id'), number(1)),
 				prop(key('name'), string('Robert Eaton'))
 			]),
 			object([
-				prop(key('id'), number('2')),
+				prop(key('id'), number(2)),
 				prop(key('name'), string('Socorro Herrera'))
 			])
 		])),
@@ -68,12 +68,12 @@ var ast = array([
 	]),
 	object([
 		prop(key('_id'), string('574d7238bd4c01db9e4a4d5b')),
-		prop(key('index'), number('1')),
+		prop(key('index'), number(1)),
 		prop(key('guid'), string('5fd3fc48-e39e-4ee4-bc3a-6eb12bed2653')),
 		prop(key('isActive'), _false()),
 		prop(key('balance'), string('$1,696.52')),
 		prop(key('picture'), string('http://placehold.it/32x32')),
-		prop(key('age'), number('32')),
+		prop(key('age'), number(32)),
 		prop(key('eyeColor'), string('blue')),
 		prop(key('name'), object([
 			prop(key('first'), string('Ada')),
@@ -95,28 +95,28 @@ var ast = array([
 			string('in')
 		])),
 		prop(key('range'), array([
-			number('0'),
-			number('1'),
-			number('2'),
-			number('3'),
-			number('4'),
-			number('5'),
-			number('6'),
-			number('7'),
-			number('8'),
-			number('9')
+			number(0),
+			number(1),
+			number(2),
+			number(3),
+			number(4),
+			number(5),
+			number(6),
+			number(7),
+			number(8),
+			number(9)
 		])),
 		prop(key('friends'), array([
 			object([
-				prop(key('id'), number('0')),
+				prop(key('id'), number(0)),
 				prop(key('name'), string('Campos Pruitt'))
 			]),
 			object([
-				prop(key('id'), number('1')),
+				prop(key('id'), number(1)),
 				prop(key('name'), string('Barnett Sykes'))
 			]),
 			object([
-				prop(key('id'), number('2')),
+				prop(key('id'), number(2)),
 				prop(key('name'), string('Trudy Collier'))
 			])
 		])),

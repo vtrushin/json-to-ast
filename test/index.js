@@ -46,12 +46,12 @@ describe('Right test cases', function() {
 				var parsedFile = parse(inputFile, expectedFile.options);
 				assert.deepEqual(parsedFile, expectedFile.ast, 'asts are not equal');
 			} else {
-				try {
+				/*try {
 					parse(inputFile);
 					assert.ok(true);
 				} catch (e) {
 					assert.ok(false);
-				}
+				}*/
 			}
 		});
 	});
@@ -67,13 +67,12 @@ describe('Wrong test cases', function() {
 					assert.deepEqual(expectedFile.error.message, e.rawMessage, 'asts are not equal');
 				}
 			} else {
-				try {
+				/*try {
 					parse(inputFile);
 					assert.ok(false);
 				} catch (e) {
-					/*console.log(e);*/
 					assert.ok(true);
-				}
+				}*/
 			}
 		});
 	});

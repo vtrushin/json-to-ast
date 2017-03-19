@@ -68,10 +68,11 @@ function createArray(items, location) {
 	return node;
 }
 
-function createValue(value, location) {
+function createLiteral(value, rawValue, location) {
 	var node = {
 		type: 'value',
-		value: value
+		value: value,
+		rawValue: rawValue
 	};
 
 	if (location) {
@@ -82,33 +83,23 @@ function createValue(value, location) {
 }
 
 function createString(value, location) {
-	var node = createValue(value, location);
-
-	return node;
+	return createLiteral(value, '"' + value + '"', location);
 }
 
 function createNumber(value, location) {
-	var node = createValue(value, location);
-
-	return node;
+	return createLiteral(value, String(value), location);
 }
 
 function createTrue(location) {
-	var node = createValue('true', location);
-
-	return node;
+	return createLiteral(true, 'true', location);
 }
 
 function createFalse(location) {
-	var node = createValue('false', location);
-
-	return node;
+	return createLiteral(false, 'false', location);
 }
 
 function createNull(location) {
-	var node = createValue('null', location);
-
-	return node;
+	return createLiteral(null, 'null', location);
 }
 
 module.exports = {
@@ -116,8 +107,8 @@ module.exports = {
 	createObjectKey: createObjectKey,
 	createObjectProperty: createObjectProperty,
 	createObject: createObject,
+	createLiteral: createLiteral,
 	createArray: createArray,
-	// createValue: createValue,
 	createString: createString,
 	createNumber: createNumber,
 	createTrue: createTrue,
