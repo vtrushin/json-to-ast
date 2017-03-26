@@ -152,7 +152,8 @@ function parseProperty(source, tokenList, index, settings) {
 	let startToken;
 	let property = {
 		type: 'property',
-		children: []
+		key: null,
+		value: null
 	};
 	let state = objectStates._START_;
 
@@ -163,14 +164,14 @@ function parseProperty(source, tokenList, index, settings) {
 			case propertyStates._START_: {
 				if (token.type === tokenTypes.STRING) {
 					const key = {
-						type: 'key',
+						type: 'identifier',
 						value: token.value
 					};
 					if (settings.verbose) {
 						key.loc = token.loc;
 					}
 					startToken = token;
-					property.children.push(key);
+					property.key = key;
 					state = propertyStates.KEY;
 					index ++;
 				} else {
@@ -200,7 +201,7 @@ function parseProperty(source, tokenList, index, settings) {
 
 			case propertyStates.COLON: {
 				const value = parseValue(source, tokenList, index, settings);
-				property.children.push(value.value);
+				property.value = value.value;
 				if (settings.verbose) {
 					property.loc = location(
 						startToken.loc.start.line,

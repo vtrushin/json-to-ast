@@ -192,7 +192,7 @@ function parseString(source, index, line, column) {
 					index ++;
 					if (char === 'u') {
 						for (let i = 0; i < 4; i ++) {
-							let curChar = source.charAt(index);
+							const curChar = source.charAt(index);
 							if (curChar && isHex(curChar)) {
 								buffer += curChar;
 								index ++;
@@ -217,7 +217,7 @@ function parseNumber(source, index, line, column) {
 	let state = numberStates._START_;
 
 	iterator: while (index < source.length) {
-		let char = source.charAt(index);
+		const char = source.charAt(index);
 
 		switch (state) {
 			case numberStates._START_: {
@@ -356,7 +356,7 @@ export function tokenize(source, settings) {
 		);
 
 		if (matched) {
-			let token = {
+			const token = {
 				type: matched.type,
 				value: matched.value,
 				loc: location(

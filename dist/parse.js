@@ -610,7 +610,8 @@
 		var startToken = void 0;
 		var property = {
 			type: 'property',
-			children: []
+			key: null,
+			value: null
 		};
 		var state = objectStates._START_;
 
@@ -622,14 +623,14 @@
 					{
 						if (token.type === tokenTypes.STRING) {
 							var key = {
-								type: 'key',
+								type: 'identifier',
 								value: token.value
 							};
 							if (settings.verbose) {
 								key.loc = token.loc;
 							}
 							startToken = token;
-							property.children.push(key);
+							property.key = key;
 							state = propertyStates.KEY;
 							index++;
 						} else {
@@ -652,7 +653,7 @@
 				case propertyStates.COLON:
 					{
 						var value = parseValue(source, tokenList, index, settings);
-						property.children.push(value.value);
+						property.value = value.value;
 						if (settings.verbose) {
 							property.loc = location(startToken.loc.start.line, startToken.loc.start.column, startToken.loc.start.offset, value.value.loc.end.line, value.value.loc.end.column, value.value.loc.end.offset, settings.fileName);
 						}

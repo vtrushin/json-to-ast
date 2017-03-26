@@ -16,7 +16,7 @@ function location(startLine, startColumn, startOffset, endLine, endColumn, endOf
 
 function createObjectKey(value, location) {
 	var node = {
-		type: 'key',
+		type: 'identifier',
 		value: value
 	};
 
@@ -30,9 +30,8 @@ function createObjectKey(value, location) {
 function createObjectProperty(key, value, location) {
 	var node = {
 		type: 'property',
-		children: [
-			key, value
-		]
+		key: key,
+		value: value
 	};
 
 	if (location) {
