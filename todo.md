@@ -2,8 +2,8 @@
 - [X] `position.char` -> `position.offset`
 - [X] `position` -> `loc`
 - [X] Added `fileName` to `loc`
-- [ ] Set consistent structure. Change `properties` and `items` to `nodes`/`children`/`items`
-- [ ] String escaping  
+- [x] Set consistent structure. Change `properties` and `items` to `nodes`/`children`/`items`
+- [x] String escaping  
 *Roman Dvornov*  
 вот "\\n" превращается в 'string with escaped \\\\n'  
 нужпо видимо делать JSON.parse для нее  
@@ -12,9 +12,6 @@
 но вот чтобы получить нормальную строку, как возвращает JSON.parse, нужно сделать  
 `JSON.parse('"' + property.key.value + '"')`  
 не очень то прикольно :wink:
-- [ ] Add more tests from "test" branch
+- [x] Add more tests from "test" branch
 - [ ] Move astexplorer example to solid project
 - [ ] Add coverage
-
-
-<!-- {9999E9999:1} -->
