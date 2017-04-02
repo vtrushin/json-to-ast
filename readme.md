@@ -98,7 +98,7 @@ array:
 ```js
 {
   type: 'array',
-  children: <value[]>,
+  children: <literal[]>,
   loc: {...}
 }
 ```
