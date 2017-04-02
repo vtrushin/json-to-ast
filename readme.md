@@ -70,7 +70,7 @@ object:
 ```js
 {
   type: 'object',
-  children: property[],
+  children: <property[]>,
   loc: {...}
 }
 ```
@@ -79,8 +79,8 @@ property:
 ```js
 {
   type: 'property',
-  key: identifier,
-  value: literal | object | array,
+  key: <identifier>,
+  value: <literal | object | array>,
   loc: {...}
 }
 ```
@@ -89,7 +89,7 @@ identifier:
 ```js
 {
   type: 'identifier',
-  value: String,
+  value: <String>,
   loc: {...}
 }
 ```
@@ -98,7 +98,7 @@ array:
 ```js
 {
   type: 'array',
-  children: value[],
+  children: <value[]>,
   loc: {...}
 }
 ```
@@ -107,8 +107,8 @@ literal:
 ```js
 {
   type: 'literal',
-  value: String | Number | True | False | Null,
-  rawValue: String,
+  value: <String | Number | true | false | null>,
+  rawValue: <String>,
   loc: {...}
 }
 ```
