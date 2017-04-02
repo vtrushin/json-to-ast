@@ -107,7 +107,7 @@ literal:
 ```js
 {
   type: 'literal',
-  value: <String | Number | true | false | null>,
+  value: <String | Number | Boolean | null>,
   rawValue: <String>,
   loc: {...}
 }
