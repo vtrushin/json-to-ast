@@ -57,7 +57,7 @@
 		if (superClass) Object.setPrototypeOf ? Object.setPrototypeOf(subClass, superClass) : subClass.__proto__ = superClass;
 	}
 
-	var location = function location(startLine, startColumn, startOffset, endLine, endColumn, endOffset, fileName) {
+	var location = function location(startLine, startColumn, startOffset, endLine, endColumn, endOffset, source) {
 		return {
 			start: {
 				line: startLine,
@@ -69,7 +69,7 @@
 				column: endColumn,
 				offset: endOffset
 			},
-			fileName: fileName || null
+			source: source || null
 		};
 	};
 
@@ -195,15 +195,15 @@
 
 	// PARSERS
 
-	function parseWhitespace(source, index, line, column) {
-		var char = source.charAt(index);
+	function parseWhitespace(input, index, line, column) {
+		var char = input.charAt(index);
 
 		if (char === '\r') {
 			// CR (Unix)
 			index++;
 			line++;
 			column = 1;
-			if (source.charAt(index) === '\n') {
+			if (input.charAt(index) === '\n') {
 				// CRLF (Windows)
 				index++;
 			}
@@ -226,8 +226,8 @@
 		};
 	}
 
-	function parseChar(source, index, line, column) {
-		var char = source.charAt(index);
+	function parseChar(input, index, line, column) {
+		var char = input.charAt(index);
 
 		if (char in punctuatorTokensMap) {
 			return {
@@ -242,9 +242,9 @@
 		return null;
 	}
 
-	function parseKeyword(source, index, line, column) {
+	function parseKeyword(input, index, line, column) {
 		for (var name in keywordTokensMap) {
-			if (keywordTokensMap.hasOwnProperty(name) && source.substr(index, name.length) === name) {
+			if (keywordTokensMap.hasOwnProperty(name) && input.substr(index, name.length) === name) {
 				var _keywordTokensMap$nam = keywordTokensMap[name],
 				    type = _keywordTokensMap$nam.type,
 				    value = _keywordTokensMap$nam.value;
@@ -263,13 +263,13 @@
 		return null;
 	}
 
-	function parseString(source, index, line, column) {
+	function parseString(input, index, line, column) {
 		var startIndex = index;
 		var buffer = '';
 		var state = stringStates._START_;
 
-		while (index < source.length) {
-			var char = source.charAt(index);
+		while (index < input.length) {
+			var char = input.charAt(index);
 
 			switch (state) {
 				case stringStates._START_:
@@ -312,7 +312,7 @@
 							index++;
 							if (char === 'u') {
 								for (var i = 0; i < 4; i++) {
-									var curChar = source.charAt(index);
+									var curChar = input.charAt(index);
 									if (curChar && isHex(curChar)) {
 										buffer += curChar;
 										index++;
@@ -331,13 +331,13 @@
 		}
 	}
 
-	function parseNumber(source, index, line, column) {
+	function parseNumber(input, index, line, column) {
 		var startIndex = index;
 		var passedValueIndex = index;
 		var state = numberStates._START_;
 
-		iterator: while (index < source.length) {
-			var char = source.charAt(index);
+		iterator: while (index < input.length) {
+			var char = input.charAt(index);
 
 			switch (state) {
 				case numberStates._START_:
@@ -452,21 +452,21 @@
 				line: line,
 				column: column + passedValueIndex - startIndex,
 				index: passedValueIndex,
-				value: parseFloat(source.substring(startIndex, passedValueIndex))
+				value: parseFloat(input.substring(startIndex, passedValueIndex))
 			};
 		}
 
 		return null;
 	}
 
-	function tokenize(source, settings) {
+	function tokenize(input, settings) {
 		var line = 1;
 		var column = 1;
 		var index = 0;
 		var tokens = [];
 
-		while (index < source.length) {
-			var args = [source, index, line, column];
+		while (index < input.length) {
+			var args = [input, index, line, column];
 			var whitespace = parseWhitespace.apply(undefined, args);
 
 			if (whitespace) {
@@ -482,7 +482,7 @@
 				var token = {
 					type: matched.type,
 					value: matched.value,
-					loc: location(line, column, index, matched.line, matched.column, matched.index, settings.fileName)
+					loc: location(line, column, index, matched.line, matched.column, matched.index, settings.source)
 				};
 
 				tokens.push(token);
@@ -490,7 +490,7 @@
 				line = matched.line;
 				column = matched.column;
 			} else {
-				error(tokenizeErrorTypes.cannotTokenizeSymbol(source.charAt(index), line, column), source, line, column);
+				error(tokenizeErrorTypes.cannotTokenizeSymbol(input.charAt(index), line, column), input, line, column);
 			}
 		}
 
@@ -521,10 +521,10 @@
 
 	var defaultSettings = {
 		verbose: true,
-		fileName: null
+		source: null
 	};
 
-	function parseObject(source, tokenList, index, settings) {
+	function parseObject(input, tokenList, index, settings) {
 		// object: LEFT_BRACE (property (COMMA property)*)? RIGHT_BRACE
 		var startToken = void 0;
 		var object = {
@@ -553,14 +553,14 @@
 					{
 						if (token.type === tokenTypes.RIGHT_BRACE) {
 							if (settings.verbose) {
-								object.loc = location(startToken.loc.start.line, startToken.loc.start.column, startToken.loc.start.offset, token.loc.end.line, token.loc.end.column, token.loc.end.offset, settings.fileName);
+								object.loc = location(startToken.loc.start.line, startToken.loc.start.column, startToken.loc.start.offset, token.loc.end.line, token.loc.end.column, token.loc.end.offset, settings.source);
 								return {
 									value: object,
 									index: index + 1
 								};
 							}
 						} else {
-							var property = parseProperty(source, tokenList, index, settings);
+							var property = parseProperty(input, tokenList, index, settings);
 							object.children.push(property.value);
 							state = objectStates.PROPERTY;
 							index = property.index;
@@ -572,7 +572,7 @@
 					{
 						if (token.type === tokenTypes.RIGHT_BRACE) {
 							if (settings.verbose) {
-								object.loc = location(startToken.loc.start.line, startToken.loc.start.column, startToken.loc.start.offset, token.loc.end.line, token.loc.end.column, token.loc.end.offset, settings.fileName);
+								object.loc = location(startToken.loc.start.line, startToken.loc.start.column, startToken.loc.start.offset, token.loc.end.line, token.loc.end.column, token.loc.end.offset, settings.source);
 							}
 							return {
 								value: object,
@@ -582,20 +582,20 @@
 							state = objectStates.COMMA;
 							index++;
 						} else {
-							error(parseErrorTypes.unexpectedToken(source.substring(token.loc.start.offset, token.loc.end.offset), token.loc.start.line, token.loc.start.column), source, token.loc.start.line, token.loc.start.column);
+							error(parseErrorTypes.unexpectedToken(input.substring(token.loc.start.offset, token.loc.end.offset), token.loc.start.line, token.loc.start.column), input, token.loc.start.line, token.loc.start.column);
 						}
 						break;
 					}
 
 				case objectStates.COMMA:
 					{
-						var _property = parseProperty(source, tokenList, index, settings);
+						var _property = parseProperty(input, tokenList, index, settings);
 						if (_property) {
 							index = _property.index;
 							object.children.push(_property.value);
 							state = objectStates.PROPERTY;
 						} else {
-							error(parseErrorTypes.unexpectedToken(source.substring(token.loc.start.offset, token.loc.end.offset), token.loc.start.line, token.loc.start.column), source, token.loc.start.line, token.loc.start.column);
+							error(parseErrorTypes.unexpectedToken(input.substring(token.loc.start.offset, token.loc.end.offset), token.loc.start.line, token.loc.start.column), input, token.loc.start.line, token.loc.start.column);
 						}
 						break;
 					}
@@ -605,7 +605,7 @@
 		error(parseErrorTypes.unexpectedEnd());
 	}
 
-	function parseProperty(source, tokenList, index, settings) {
+	function parseProperty(input, tokenList, index, settings) {
 		// property: STRING COLON value
 		var startToken = void 0;
 		var property = {
@@ -645,17 +645,17 @@
 							state = propertyStates.COLON;
 							index++;
 						} else {
-							error(parseErrorTypes.unexpectedToken(source.substring(token.loc.start.offset, token.loc.end.offset), token.loc.start.line, token.loc.start.column), source, token.loc.start.line, token.loc.start.column);
+							error(parseErrorTypes.unexpectedToken(input.substring(token.loc.start.offset, token.loc.end.offset), token.loc.start.line, token.loc.start.column), input, token.loc.start.line, token.loc.start.column);
 						}
 						break;
 					}
 
 				case propertyStates.COLON:
 					{
-						var value = parseValue(source, tokenList, index, settings);
+						var value = parseValue(input, tokenList, index, settings);
 						property.value = value.value;
 						if (settings.verbose) {
-							property.loc = location(startToken.loc.start.line, startToken.loc.start.column, startToken.loc.start.offset, value.value.loc.end.line, value.value.loc.end.column, value.value.loc.end.offset, settings.fileName);
+							property.loc = location(startToken.loc.start.line, startToken.loc.start.column, startToken.loc.start.offset, value.value.loc.end.line, value.value.loc.end.column, value.value.loc.end.offset, settings.source);
 						}
 						return {
 							value: property,
@@ -667,7 +667,7 @@
 		}
 	}
 
-	function parseArray(source, tokenList, index, settings) {
+	function parseArray(input, tokenList, index, settings) {
 		// array: LEFT_BRACKET (value (COMMA value)*)? RIGHT_BRACKET
 		var startToken = void 0;
 		var array = {
@@ -697,14 +697,14 @@
 					{
 						if (token.type === tokenTypes.RIGHT_BRACKET) {
 							if (settings.verbose) {
-								array.loc = location(startToken.loc.start.line, startToken.loc.start.column, startToken.loc.start.offset, token.loc.end.line, token.loc.end.column, token.loc.end.offset, settings.fileName);
+								array.loc = location(startToken.loc.start.line, startToken.loc.start.column, startToken.loc.start.offset, token.loc.end.line, token.loc.end.column, token.loc.end.offset, settings.source);
 							}
 							return {
 								value: array,
 								index: index + 1
 							};
 						} else {
-							var value = parseValue(source, tokenList, index, settings);
+							var value = parseValue(input, tokenList, index, settings);
 							index = value.index;
 							array.children.push(value.value);
 							state = arrayStates.VALUE;
@@ -716,7 +716,7 @@
 					{
 						if (token.type === tokenTypes.RIGHT_BRACKET) {
 							if (settings.verbose) {
-								array.loc = location(startToken.loc.start.line, startToken.loc.start.column, startToken.loc.start.offset, token.loc.end.line, token.loc.end.column, token.loc.end.offset, settings.fileName);
+								array.loc = location(startToken.loc.start.line, startToken.loc.start.column, startToken.loc.start.offset, token.loc.end.line, token.loc.end.column, token.loc.end.offset, settings.source);
 							}
 							index++;
 							return {
@@ -727,14 +727,14 @@
 							state = arrayStates.COMMA;
 							index++;
 						} else {
-							error(parseErrorTypes.unexpectedToken(source.substring(token.loc.start.offset, token.loc.end.offset), token.loc.start.line, token.loc.start.column), source, token.loc.start.line, token.loc.start.column);
+							error(parseErrorTypes.unexpectedToken(input.substring(token.loc.start.offset, token.loc.end.offset), token.loc.start.line, token.loc.start.column), input, token.loc.start.line, token.loc.start.column);
 						}
 						break;
 					}
 
 				case arrayStates.COMMA:
 					{
-						var _value = parseValue(source, tokenList, index, settings);
+						var _value = parseValue(input, tokenList, index, settings);
 						index = _value.index;
 						array.children.push(_value.value);
 						state = arrayStates.VALUE;
@@ -746,7 +746,7 @@
 		error(parseErrorTypes.unexpectedEnd());
 	}
 
-	function parseLiteral(source, tokenList, index, settings) {
+	function parseLiteral(input, tokenList, index, settings) {
 		// literal: STRING | NUMBER | TRUE | FALSE | NULL
 		var token = tokenList[index];
 
@@ -756,7 +756,7 @@
 			var literal = {
 				type: 'literal',
 				value: token.value,
-				rawValue: source.substring(token.loc.start.offset, token.loc.end.offset)
+				rawValue: input.substring(token.loc.start.offset, token.loc.end.offset)
 			};
 			if (settings.verbose) {
 				literal.loc = token.loc;
@@ -770,7 +770,7 @@
 		return null;
 	}
 
-	function parseValue(source, tokenList, index, settings) {
+	function parseValue(input, tokenList, index, settings) {
 		// value: literal | object | array
 		var token = tokenList[index];
 
@@ -779,25 +779,25 @@
 		if (value) {
 			return value;
 		} else {
-			error(parseErrorTypes.unexpectedToken(source.substring(token.loc.start.offset, token.loc.end.offset), token.loc.start.line, token.loc.start.column), source, token.loc.start.line, token.loc.start.column);
+			error(parseErrorTypes.unexpectedToken(input.substring(token.loc.start.offset, token.loc.end.offset), token.loc.start.line, token.loc.start.column), input, token.loc.start.line, token.loc.start.column);
 		}
 	}
 
-	var parse = function parse(source, settings) {
+	var parse = function parse(input, settings) {
 		settings = _extends({}, defaultSettings, settings);
-		var tokenList = tokenize(source, settings);
+		var tokenList = tokenize(input, settings);
 
 		if (tokenList.length === 0) {
 			error(parseErrorTypes.unexpectedEnd());
 		}
 
-		var value = parseValue(source, tokenList, 0, settings);
+		var value = parseValue(input, tokenList, 0, settings);
 
 		if (value.index === tokenList.length) {
 			return value.value;
 		} else {
 			var token = tokenList[value.index];
-			error(parseErrorTypes.unexpectedToken(source.substring(token.loc.start.offset, token.loc.end.offset), token.loc.start.line, token.loc.start.column), source, token.loc.start.line, token.loc.start.column);
+			error(parseErrorTypes.unexpectedToken(input.substring(token.loc.start.offset, token.loc.end.offset), token.loc.start.line, token.loc.start.column), input, token.loc.start.line, token.loc.start.column);
 		}
 	};
 

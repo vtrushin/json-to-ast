@@ -15,97 +15,100 @@
 ```js
 var parse = require('json-to-ast');
 
-
 var settings = {
-  verbose: true, // Show additional information, like node’s location. Default is `true`
-  fileName: 'data.json' // Adds filename information to node’s location. Default is `null`
+  verbose: true, // Show additional information, like node’s location. Default is <true>
+  source: 'data.json' // Adds filename information to node’s location. Default is <null>
 };
 
 parse('{"a": 1}', settings);
+```
 
-/*
-=>
+Output
+```js
 {
   type: 'object',
   children: [
     {
       type: 'property',
-      children: [
-        {
-      	  type: 'key',
-          value: 'a',
-          loc: {
-            start: { line: 1, column: 2, offset: 1 },
-            end: { line: 1, column: 9, offset: 8 }
-          }
-      	},
-      	{
-      	  type: 'value',
-      	  value: '1',
-      	  loc: {
-      	    start: { line: 1, column: 11, offset: 10 },
-            end: { line: 1, column: 12, offset: 11 }
-      	  }
-      	}
-      ],
+      key: {
+        type: 'identifier',
+        value: 'a',
+        loc: {
+          start: { line: 1, column: 2, offset: 1 },
+          end: { line: 1, column: 5, offset: 4 },
+          source: 'data.json'
+        }
+      },
+      value: {
+        type: 'literal',
+        value: 1,
+        rawValue: '1',
+        loc: {
+          start: { line: 1, column: 7, offset: 6 },
+          end: { line: 1, column: 8, offset: 7 },
+          source: 'data.json'
+        }
+      },
       loc: {
         start: { line: 1, column: 2, offset: 1 },
-        end: { line: 1, column: 12, offset: 11 }
+        end: { line: 1, column: 8, offset: 7 },
+        source: 'data.json'
       }
     }
   ],
   loc: {
     start: { line: 1, column: 1, offset: 0 },
-    end: { line: 1, column: 13, offset: 12 }
+    end: { line: 1, column: 9, offset: 8 },
+    source: 'data.json'
   }
 }
-*/
 ```
 
 ## Node types
 
-Object:
+object:
 ```js
 {
   type: 'object',
-  children: Property[],
+  children: property[],
   loc: {...}
 }
 ```
 
-Property:
+property:
 ```js
 {
   type: 'property',
-  children: [ Key, Value ],
+  key: key,
+  value: value,
   loc: {...}
 }
 ```
 
-Key:
+identifier:
 ```js
 {
-  type: 'key',
+  type: 'identifier',
   value: String,
   loc: {...}
 }
 ```
 
-Array:
+array:
 ```js
 {
   type: 'array',
-  children: Value[],
+  children: value[],
   loc: {...}
 }
 ```
 
-Value:
+literal:
 ```js
 {
-  type: 'value',
-  value: String,
-  rawValue: String | Number | True | False | Null,
+  type: 'literal',
+  value: String | Number | True | False | Null,
+  rawValue: String,
   loc: {...}
 }
 ```

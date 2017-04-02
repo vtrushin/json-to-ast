@@ -1,5 +1,5 @@
 export default {
-	cannotTokenizeSymbol(symbol, line, column) {
-		return `Cannot tokenize symbol <${symbol}> at ${line}:${column}`;
-	}
+	cannotTokenizeSymbol: (symbol, line, column) => (
+		`Cannot tokenize symbol <${symbol}> at ${line}:${column}`
+	)
 };

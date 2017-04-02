@@ -1,4 +1,4 @@
-function location(startLine, startColumn, startOffset, endLine, endColumn, endOffset, fileName) {
+function location(startLine, startColumn, startOffset, endLine, endColumn, endOffset, source) {
 	return {
 		start: {
 			line: startLine,
@@ -10,7 +10,7 @@ function location(startLine, startColumn, startOffset, endLine, endColumn, endOf
 			column: endColumn,
 			offset: endOffset
 		},
-		fileName: fileName || null
+		source: source || null
 	}
 }
 

@@ -84,14 +84,14 @@ function isExp(char) {
 
 // PARSERS
 
-function parseWhitespace(source, index, line, column) {
-	const char = source.charAt(index);
+function parseWhitespace(input, index, line, column) {
+	const char = input.charAt(index);
 
 	if (char === '\r') { // CR (Unix)
 		index ++;
 		line ++;
 		column = 1;
-		if (source.charAt(index) === '\n') { // CRLF (Windows)
+		if (input.charAt(index) === '\n') { // CRLF (Windows)
 			index ++;
 		}
 	} else if (char === '\n') { // LF (MacOS)
@@ -112,8 +112,8 @@ function parseWhitespace(source, index, line, column) {
 	};
 }
 
-function parseChar(source, index, line, column) {
-	const char = source.charAt(index);
+function parseChar(input, index, line, column) {
+	const char = input.charAt(index);
 
 	if (char in punctuatorTokensMap) {
 		return {
@@ -128,9 +128,9 @@ function parseChar(source, index, line, column) {
 	return null;
 }
 
-function parseKeyword(source, index, line, column) {
+function parseKeyword(input, index, line, column) {
 	for (const name in keywordTokensMap) {
-		if (keywordTokensMap.hasOwnProperty(name) && source.substr(index, name.length) === name) {
+		if (keywordTokensMap.hasOwnProperty(name) && input.substr(index, name.length) === name) {
 			const {type, value} = keywordTokensMap[name];
 
 			return {
@@ -146,13 +146,13 @@ function parseKeyword(source, index, line, column) {
 	return null;
 }
 
-function parseString(source, index, line, column) {
+function parseString(input, index, line, column) {
 	const startIndex = index;
 	let buffer = '';
 	let state = stringStates._START_;
 
-	while (index < source.length) {
-		const char = source.charAt(index);
+	while (index < input.length) {
+		const char = input.charAt(index);
 
 		switch (state) {
 			case stringStates._START_: {
@@ -192,7 +192,7 @@ function parseString(source, index, line, column) {
 					index ++;
 					if (char === 'u') {
 						for (let i = 0; i < 4; i ++) {
-							const curChar = source.charAt(index);
+							const curChar = input.charAt(index);
 							if (curChar && isHex(curChar)) {
 								buffer += curChar;
 								index ++;
@@ -211,13 +211,13 @@ function parseString(source, index, line, column) {
 	}
 }
 
-function parseNumber(source, index, line, column) {
+function parseNumber(input, index, line, column) {
 	const startIndex = index;
 	let passedValueIndex = index;
 	let state = numberStates._START_;
 
-	iterator: while (index < source.length) {
-		const char = source.charAt(index);
+	iterator: while (index < input.length) {
+		const char = input.charAt(index);
 
 		switch (state) {
 			case numberStates._START_: {
@@ -324,21 +324,21 @@ function parseNumber(source, index, line, column) {
 			line,
 			column: column + passedValueIndex - startIndex,
 			index: passedValueIndex,
-			value: parseFloat(source.substring(startIndex, passedValueIndex))
+			value: parseFloat(input.substring(startIndex, passedValueIndex))
 		};
 	}
 
 	return null;
 }
 
-export function tokenize(source, settings) {
+export function tokenize(input, settings) {
 	let line = 1;
 	let column = 1;
 	let index = 0;
 	const tokens = [];
 
-	while (index < source.length) {
-		const args = [source, index, line, column];
+	while (index < input.length) {
+		const args = [input, index, line, column];
 		const whitespace = parseWhitespace(...args);
 
 		if (whitespace) {
@@ -366,7 +366,7 @@ export function tokenize(source, settings) {
 					matched.line,
 					matched.column,
 					matched.index,
-					settings.fileName
+					settings.source
 				)
 			};
 
@@ -377,8 +377,8 @@ export function tokenize(source, settings) {
 
 		} else {
 			error(
-				tokenizeErrorTypes.cannotTokenizeSymbol(source.charAt(index), line, column),
-				source,
+				tokenizeErrorTypes.cannotTokenizeSymbol(input.charAt(index), line, column),
+				input,
 				line,
 				column
 			);
