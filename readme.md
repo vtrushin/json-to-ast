@@ -79,8 +79,8 @@ property:
 ```js
 {
   type: 'property',
-  key: key,
-  value: value,
+  key: identifier,
+  value: literal | object | array,
   loc: {...}
 }
 ```
