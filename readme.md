@@ -17,7 +17,7 @@ var parse = require('json-to-ast');
 
 var settings = {
   verbose: true, // Show additional information, like node’s location. Default is <true>
-  source: 'data.json' // Adds filename information to node’s location. Default is <null>
+  source: 'data.json' // Adds source information to node’s location. Default is <null>
 };
 
 parse('{"a": 1}', settings);
