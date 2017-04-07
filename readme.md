@@ -80,7 +80,7 @@ property:
 {
   type: 'property',
   key: <identifier>,
-  value: <literal | object | array>,
+  value: <literal> | <object> | <array>,
   loc: {...}
 }
 ```
@@ -89,7 +89,7 @@ identifier:
 ```js
 {
   type: 'identifier',
-  value: <String>,
+  value: String,
   loc: {...}
 }
 ```
@@ -107,8 +107,8 @@ literal:
 ```js
 {
   type: 'literal',
-  value: <String | Number | Boolean | null>,
-  rawValue: <String>,
+  value: String | Number | Boolean | null,
+  rawValue: String,
   loc: {...}
 }
 ```
