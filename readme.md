@@ -113,9 +113,8 @@ literal:
 }
 ```
 
-<!--
-[Try it online](https://rawgit.com/vtrushin/json-to-ast/master/demo/astexplorer/index.html) (Fork of [astexplorer.net](https://astexplorer.net/))
--->
+## AST explorer
+[Try it online](https://astexplorer.net/#/gist/6e328cf76a27ca85e552c9cb583cdd74/1077c8842337972509a29bc9063d17bf90a1a492) on [astexplorer.net](https://astexplorer.net/)
 
 ## License
 MIT
