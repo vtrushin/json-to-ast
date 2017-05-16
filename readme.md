@@ -71,7 +71,7 @@ object:
 {
   type: 'object',
   children: <property[]>,
-  loc: {...}
+  loc: Object | null
 }
 ```
 
@@ -80,8 +80,8 @@ property:
 {
   type: 'property',
   key: <identifier>,
-  value: <literal> | <object> | <array>,
-  loc: {...}
+  value: any,
+  loc: Object | null
 }
 ```
 
@@ -90,7 +90,7 @@ identifier:
 {
   type: 'identifier',
   value: String,
-  loc: {...}
+  loc: Object | null
 }
 ```
 
@@ -98,8 +98,8 @@ array:
 ```js
 {
   type: 'array',
-  children: <literal[]>,
-  loc: {...}
+  children: <any[]>,
+  loc: Object | null
 }
 ```
 
@@ -109,7 +109,7 @@ literal:
   type: 'literal',
   value: String | Number | Boolean | null,
   rawValue: String,
-  loc: {...}
+  loc: Object | null
 }
 ```
 
