@@ -36,6 +36,20 @@ const defaultSettings = {
 	source: null
 };
 
+function comment(value, name, token) {
+  if (token.comments !== undefined) {
+    var valueComments = value[name];
+    if (valueComments === undefined)
+      valueComments = value[name] = [];
+    token.comments.forEach(function(comment) {
+      valueComments.push({
+        loc: comment.loc,
+        source: comment.value
+      });
+    });
+  }
+}
+
 function parseObject(input, tokenList, index, settings) {
 	// object: LEFT_BRACE (property (COMMA property)*)? RIGHT_BRACE
 	let startToken;
@@ -54,6 +68,10 @@ function parseObject(input, tokenList, index, settings) {
 					startToken = token;
 					state = objectStates.OPEN_OBJECT;
 					index ++;
+					if (settings.verbose) {
+					  object.startToken = index;
+					  comment(object, "leadingComments", token);
+					}
 				} else {
 					return null;
 				}
@@ -72,11 +90,13 @@ function parseObject(input, tokenList, index, settings) {
 							token.loc.end.offset,
 							settings.source
 						);
-						return {
-							value: object,
-							index: index + 1
-						};
+						object.endToken = index;
+            comment(object, "trailingComments", token);
 					}
+          return {
+            value: object,
+            index: index + 1
+          };
 				} else {
 					const property = parseProperty(input, tokenList, index, settings);
 					object.children.push(property.value);
@@ -98,12 +118,15 @@ function parseObject(input, tokenList, index, settings) {
 							token.loc.end.offset,
 							settings.source
 						);
+						object.endToken = index;
+						comment(object, "trailingComments", token);
 					}
 					return {
 						value: object,
 						index: index + 1
 					};
 				} else if (token.type === tokenTypes.COMMA) {
+				  comment(array.children[array.children.length - 1], "trailingComments", token);
 					state = objectStates.COMMA;
 					index ++;
 				} else {
@@ -169,6 +192,8 @@ function parseProperty(input, tokenList, index, settings) {
 					};
 					if (settings.verbose) {
 						key.loc = token.loc;
+						key.startToken = index;
+            comment(key, "leadingComments", token);
 					}
 					startToken = token;
 					property.key = key;
@@ -182,6 +207,10 @@ function parseProperty(input, tokenList, index, settings) {
 
 			case propertyStates.KEY: {
 				if (token.type === tokenTypes.COLON) {
+				  if (settings.verbose) {
+				    if (token.comments)
+				      comment(property.key, "trailingComments", token);
+				  }
 					state = propertyStates.COLON;
 					index ++;
 				} else {
@@ -240,6 +269,10 @@ function parseArray(input, tokenList, index, settings) {
 			case arrayStates._START_: {
 				if (token.type === tokenTypes.LEFT_BRACKET) {
 					startToken = token;
+					if (settings.verbose) {
+					  array.startToken = index;
+					  comment(array, "leadingComments", token);
+					}
 					state = arrayStates.OPEN_ARRAY;
 					index ++;
 				} else {
@@ -260,6 +293,8 @@ function parseArray(input, tokenList, index, settings) {
 							token.loc.end.offset,
 							settings.source
 						);
+						array.endToken = index;
+	          comment(array, "trailingComments", token);
 					}
 					return {
 						value: array,
@@ -286,6 +321,8 @@ function parseArray(input, tokenList, index, settings) {
 							token.loc.end.offset,
 							settings.source
 						);
+						array.endToken = index;
+	          comment(array, "trailingComments", token);
 					}
 					index ++;
 					return {
@@ -293,6 +330,7 @@ function parseArray(input, tokenList, index, settings) {
 						index
 					};
 				} else if (token.type === tokenTypes.COMMA) {
+				  comment(array.children[array.children.length - 1], "trailingComments", token);
 					state = arrayStates.COMMA;
 					index ++;
 				} else {
@@ -339,6 +377,8 @@ function parseLiteral(input, tokenList, index, settings) {
 		};
 		if (settings.verbose) {
 			literal.loc = token.loc;
+			literal.startToken = index;
+      comment(literal, "leadingComments", token);
 		}
 		return {
 			value: literal,
@@ -386,7 +426,11 @@ export default (input, settings) => {
 	const value = parseValue(input, tokenList, 0, settings);
 
 	if (value.index === tokenList.length) {
-		return value.value;
+	  var result = value.value;
+	  if (settings.verbose) {
+	    result.tokenList = tokenList;
+	  }
+		return result;
 	} else {
 		const token = tokenList[value.index];
 		error(

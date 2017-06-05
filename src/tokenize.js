@@ -112,6 +112,68 @@ function parseWhitespace(input, index, line, column) {
 	};
 }
 
+function parseComment(input, index, line, column) {
+  const str = input.substring(index, index + 2);
+  const startIndex = index;
+  
+  if (str === "/*") {
+    for (index += 2; index < input.length; index++) {
+      var char = input[index];
+      if (char === '*' && input[index + 1] === '/') {
+        index += 2;
+        column += 2;
+        break;
+      } else if (char === '\r') { // CR (Unix)
+        index ++;
+        line ++;
+        column = 1;
+        if (input.charAt(index) === '\n') { // CRLF (Windows)
+          index ++;
+        }
+      } else if (char === '\n') { // LF (MacOS)
+        index ++;
+        line ++;
+        column = 1;
+      } else
+        column++;
+    }
+    return {
+      index,
+      line,
+      column,
+      value: input.substring(startIndex, index)
+    };
+    
+  } else if (str === "//") {
+    for (index += 2; index < input.length; index++) {
+      var char = input[index];
+      if (char === '\r') { // CR (Unix)
+        index ++;
+        line ++;
+        column = 1;
+        if (input.charAt(index) === '\n') { // CRLF (Windows)
+          index ++;
+        }
+        break;
+      } else if (char === '\n') { // LF (MacOS)
+        index ++;
+        line ++;
+        column = 1;
+        break;
+      }
+    }
+    
+    return {
+      index,
+      line,
+      column,
+      value: input.substring(startIndex, index)
+    };
+  }
+  
+  return null;
+}
+
 function parseChar(input, index, line, column) {
 	const char = input.charAt(index);
 
@@ -121,7 +183,7 @@ function parseChar(input, index, line, column) {
 			line,
 			column: column + 1,
 			index: index + 1,
-			value: null
+			value: char
 		};
 	}
 
@@ -146,7 +208,7 @@ function parseKeyword(input, index, line, column) {
 	return null;
 }
 
-function parseString(input, index, line, column) {
+function parseString(input, index, line, column, settings) {
 	const startIndex = index;
 	let buffer = '';
 	let state = stringStates._START_;
@@ -172,13 +234,16 @@ function parseString(input, index, line, column) {
 					index ++;
 				} else if (char === '"') {
 					index ++;
-					return {
+					var result = {
 						type: tokenTypes.STRING,
 						line,
 						column: column + index - startIndex,
 						index,
 						value: buffer
 					};
+					if (settings.verbose)
+					  result.rawValue = input.substring(startIndex, index);
+					return result;
 				} else {
 					buffer += char;
 					index ++;
@@ -336,9 +401,10 @@ export function tokenize(input, settings) {
 	let column = 1;
 	let index = 0;
 	const tokens = [];
+	var comments = [];
 
 	while (index < input.length) {
-		const args = [input, index, line, column];
+		const args = [input, index, line, column, settings];
 		const whitespace = parseWhitespace(...args);
 
 		if (whitespace) {
@@ -346,6 +412,25 @@ export function tokenize(input, settings) {
 			line = whitespace.line;
 			column = whitespace.column;
 			continue;
+		}
+		
+		const comment = parseComment(...args);
+		if (comment) {
+		  comments.push({
+		    value: comment.value,
+        loc: location(
+          line,
+          column,
+          index,
+          comment.line,
+          comment.column,
+          comment.index
+        )
+		  });
+      index = comment.index;
+      line = comment.line;
+      column = comment.column;
+		  continue;
 		}
 
 		const matched = (
@@ -369,6 +454,12 @@ export function tokenize(input, settings) {
 					settings.source
 				)
 			};
+			if (matched.rawValue)
+			  token.rawValue = matched.rawValue;
+			if (comments.length) {
+			  token.comments = comments;
+			  comments = [];
+			}
 
 			tokens.push(token);
 			index = matched.index;

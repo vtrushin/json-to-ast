@@ -226,6 +226,72 @@
 		};
 	}
 
+	function parseComment(input, index, line, column) {
+		var str = input.substring(index, index + 2);
+		var startIndex = index;
+
+		if (str === "/*") {
+			for (index += 2; index < input.length; index++) {
+				var char = input[index];
+				if (char === '*' && input[index + 1] === '/') {
+					index += 2;
+					column += 2;
+					break;
+				} else if (char === '\r') {
+					// CR (Unix)
+					index++;
+					line++;
+					column = 1;
+					if (input.charAt(index) === '\n') {
+						// CRLF (Windows)
+						index++;
+					}
+				} else if (char === '\n') {
+					// LF (MacOS)
+					index++;
+					line++;
+					column = 1;
+				} else column++;
+			}
+			return {
+				index: index,
+				line: line,
+				column: column,
+				value: input.substring(startIndex, index)
+			};
+		} else if (str === "//") {
+			for (index += 2; index < input.length; index++) {
+				var char = input[index];
+				if (char === '\r') {
+					// CR (Unix)
+					index++;
+					line++;
+					column = 1;
+					if (input.charAt(index) === '\n') {
+						// CRLF (Windows)
+						index++;
+					}
+					break;
+				} else if (char === '\n') {
+					// LF (MacOS)
+					index++;
+					line++;
+					column = 1;
+					break;
+				}
+			}
+
+			return {
+				index: index,
+				line: line,
+				column: column,
+				value: input.substring(startIndex, index)
+			};
+		}
+
+		return null;
+	}
+
 	function parseChar(input, index, line, column) {
 		var char = input.charAt(index);
 
@@ -235,7 +301,7 @@
 				line: line,
 				column: column + 1,
 				index: index + 1,
-				value: null
+				value: char
 			};
 		}
 
@@ -263,7 +329,7 @@
 		return null;
 	}
 
-	function parseString(input, index, line, column) {
+	function parseString(input, index, line, column, settings) {
 		var startIndex = index;
 		var buffer = '';
 		var state = stringStates._START_;
@@ -291,13 +357,15 @@
 							index++;
 						} else if (char === '"') {
 							index++;
-							return {
+							var result = {
 								type: tokenTypes.STRING,
 								line: line,
 								column: column + index - startIndex,
 								index: index,
 								value: buffer
 							};
+							if (settings.verbose) result.rawValue = input.substring(startIndex, index);
+							return result;
 						} else {
 							buffer += char;
 							index++;
@@ -464,15 +532,28 @@
 		var column = 1;
 		var index = 0;
 		var tokens = [];
+		var comments = [];
 
 		while (index < input.length) {
-			var args = [input, index, line, column];
+			var args = [input, index, line, column, settings];
 			var whitespace = parseWhitespace.apply(undefined, args);
 
 			if (whitespace) {
 				index = whitespace.index;
 				line = whitespace.line;
 				column = whitespace.column;
+				continue;
+			}
+
+			var _comment = parseComment.apply(undefined, args);
+			if (_comment) {
+				comments.push({
+					value: _comment.value,
+					loc: location(line, column, index, _comment.line, _comment.column, _comment.index)
+				});
+				index = _comment.index;
+				line = _comment.line;
+				column = _comment.column;
 				continue;
 			}
 
@@ -484,6 +565,11 @@
 					value: matched.value,
 					loc: location(line, column, index, matched.line, matched.column, matched.index, settings.source)
 				};
+				if (matched.rawValue) token.rawValue = matched.rawValue;
+				if (comments.length) {
+					token.comments = comments;
+					comments = [];
+				}
 
 				tokens.push(token);
 				index = matched.index;
@@ -524,6 +610,19 @@
 		source: null
 	};
 
+	function comment(value, name, token) {
+		if (token.comments !== undefined) {
+			var valueComments = value[name];
+			if (valueComments === undefined) valueComments = value[name] = [];
+			token.comments.forEach(function (comment) {
+				valueComments.push({
+					loc: comment.loc,
+					source: comment.value
+				});
+			});
+		}
+	}
+
 	function parseObject(input, tokenList, index, settings) {
 		// object: LEFT_BRACE (property (COMMA property)*)? RIGHT_BRACE
 		var startToken = void 0;
@@ -543,6 +642,10 @@
 							startToken = token;
 							state = objectStates.OPEN_OBJECT;
 							index++;
+							if (settings.verbose) {
+								object.startToken = index;
+								comment(object, "leadingComments", token);
+							}
 						} else {
 							return null;
 						}
@@ -554,11 +657,13 @@
 						if (token.type === tokenTypes.RIGHT_BRACE) {
 							if (settings.verbose) {
 								object.loc = location(startToken.loc.start.line, startToken.loc.start.column, startToken.loc.start.offset, token.loc.end.line, token.loc.end.column, token.loc.end.offset, settings.source);
-								return {
-									value: object,
-									index: index + 1
-								};
+								object.endToken = index;
+								comment(object, "trailingComments", token);
 							}
+							return {
+								value: object,
+								index: index + 1
+							};
 						} else {
 							var property = parseProperty(input, tokenList, index, settings);
 							object.children.push(property.value);
@@ -573,12 +678,15 @@
 						if (token.type === tokenTypes.RIGHT_BRACE) {
 							if (settings.verbose) {
 								object.loc = location(startToken.loc.start.line, startToken.loc.start.column, startToken.loc.start.offset, token.loc.end.line, token.loc.end.column, token.loc.end.offset, settings.source);
+								object.endToken = index;
+								comment(object, "trailingComments", token);
 							}
 							return {
 								value: object,
 								index: index + 1
 							};
 						} else if (token.type === tokenTypes.COMMA) {
+							comment(array.children[array.children.length - 1], "trailingComments", token);
 							state = objectStates.COMMA;
 							index++;
 						} else {
@@ -628,6 +736,8 @@
 							};
 							if (settings.verbose) {
 								key.loc = token.loc;
+								key.startToken = index;
+								comment(key, "leadingComments", token);
 							}
 							startToken = token;
 							property.key = key;
@@ -642,6 +752,9 @@
 				case propertyStates.KEY:
 					{
 						if (token.type === tokenTypes.COLON) {
+							if (settings.verbose) {
+								if (token.comments) comment(property.key, "trailingComments", token);
+							}
 							state = propertyStates.COLON;
 							index++;
 						} else {
@@ -685,6 +798,10 @@
 					{
 						if (token.type === tokenTypes.LEFT_BRACKET) {
 							startToken = token;
+							if (settings.verbose) {
+								array.startToken = index;
+								comment(array, "leadingComments", token);
+							}
 							state = arrayStates.OPEN_ARRAY;
 							index++;
 						} else {
@@ -698,6 +815,8 @@
 						if (token.type === tokenTypes.RIGHT_BRACKET) {
 							if (settings.verbose) {
 								array.loc = location(startToken.loc.start.line, startToken.loc.start.column, startToken.loc.start.offset, token.loc.end.line, token.loc.end.column, token.loc.end.offset, settings.source);
+								array.endToken = index;
+								comment(array, "trailingComments", token);
 							}
 							return {
 								value: array,
@@ -717,6 +836,8 @@
 						if (token.type === tokenTypes.RIGHT_BRACKET) {
 							if (settings.verbose) {
 								array.loc = location(startToken.loc.start.line, startToken.loc.start.column, startToken.loc.start.offset, token.loc.end.line, token.loc.end.column, token.loc.end.offset, settings.source);
+								array.endToken = index;
+								comment(array, "trailingComments", token);
 							}
 							index++;
 							return {
@@ -724,6 +845,7 @@
 								index: index
 							};
 						} else if (token.type === tokenTypes.COMMA) {
+							comment(array.children[array.children.length - 1], "trailingComments", token);
 							state = arrayStates.COMMA;
 							index++;
 						} else {
@@ -760,6 +882,8 @@
 			};
 			if (settings.verbose) {
 				literal.loc = token.loc;
+				literal.startToken = index;
+				comment(literal, "leadingComments", token);
 			}
 			return {
 				value: literal,
@@ -794,7 +918,11 @@
 		var value = parseValue(input, tokenList, 0, settings);
 
 		if (value.index === tokenList.length) {
-			return value.value;
+			var result = value.value;
+			if (settings.verbose) {
+				result.tokenList = tokenList;
+			}
+			return result;
 		} else {
 			var token = tokenList[value.index];
 			error(parseErrorTypes.unexpectedToken(input.substring(token.loc.start.offset, token.loc.end.offset), token.loc.start.line, token.loc.start.column), input, token.loc.start.line, token.loc.start.column);
