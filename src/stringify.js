@@ -1,3 +1,25 @@
+/* ************************************************************************
+
+   Copyright:
+     2017 Zenesis Limited, http://www.zenesis.com
+
+   License:
+     See the LICENSE file in the project's top-level directory for details.
+
+   Authors:
+     * John Spackman @johnspackman (john.spackman@zenesis.com)
+
+************************************************************************ */
+
+import {
+  createObjectKey, 
+  createObjectProperty, 
+  createArray,
+  createObject,
+  createLiteral
+  } from './types';
+
+
 function Writer() {
   this.buffer = "";
 }
@@ -50,7 +72,7 @@ Writer.prototype = {
   }
 };
 
-export function pretty(ast) {
+export function prettyPrint(ast) {
   var writer = new Writer();
   
   function writeNode(node) {
@@ -82,6 +104,17 @@ export function pretty(ast) {
         writer.write("\n");
       writer.comments(node.trailingComments);
       writer.indent(-1).write("]\n");
+      break;
+      
+    case "property":
+      writeNode(node.key);
+      writer.write(" : ");
+      writeNode(node.value);
+      break;
+      
+    case "identifier":
+      writer.write("\"" + node.value + "\"");
+      break;
       
     case "literal":
       writer.comments(node.leadingComments);
@@ -121,6 +154,8 @@ export function rewrite(ast) {
   }
   
   function writeToken(token) {
+    if (typeof token == "number")
+      token = tokenList[token];
     if (token) {
       var nibs = [token];
       if (token.comments)
@@ -149,16 +184,40 @@ export function rewrite(ast) {
       lastToken = null;
     }
   }
-  
+
+  var lastGoodToken = -1;
   function writeNode(node) {
+    
+    
+    throw new Error(" this needs work!! ");
+    
     if (node.startToken === undefined) {
-      pretty(node);
+      if (lastGoodToken > -1) {
+        while (tokenIndex < lastGoodToken)
+          writeToken(tokenList[tokenIndex++]);
+      }
+      prettyPrint(node);
       lastToken = null;
       return;
     }
+    lastGoodToken = node.startToken;
     
-    while (tokenIndex <= node.endToken)
-      writeToken(tokenList[tokenIndex++]);
+    switch(node.type) {
+    case "object":
+      node.children.forEach(function(node) {
+        writeNode(node.key);
+        writeNode(node.value);
+      });
+      break;
+      
+    case "array":
+      node.children.forEach(writeNode);
+      break;
+      
+    default:
+      while (node.start)
+      writeToken(node.startToken);
+    }
   }
   
   writeNode(ast);
@@ -166,4 +225,136 @@ export function rewrite(ast) {
   return output;
 }
 
+export function astToObject(ast, settings) {
+  var result;
+  
+  function writeNode(node) {
+    switch (node.type) {
+    case "object":
+      result = {}; 
+      node.children.forEach(function(child, index) {
+        result[child.key.value] = writeNode(child.value);
+      });
+      break;
+      
+    case "array":
+      result = [];
+      node.children.forEach(function(child, index) {
+        result.push(writeNode(child.value));
+      });
+      break;
+      
+    case "literal":
+      result = node.value;
+      break;
+      
+    default:
+      throw new Error("Unexpected node type '" + node.type + "'");
+    }
+  }
+  
+  writeNode(ast);
+  
+  return result;
+}
 
+export function objectToAst(object, ast) {
+  
+  var tokenList = (ast && ast.tokenList)||null;
+  
+  function isArray(value) {
+    return (
+      value !== null && (
+      value instanceof Array ||
+      Object.prototype.toString.call(value) === "[object Array]")
+    );
+  }
+  
+  function isPlainObject(obj) {
+    if (typeof obj === 'object' && obj !== null) {
+      var proto = Object.getPrototypeOf(obj);
+      return proto === Object.prototype || proto === null;
+    }
+
+    return false;
+  }
+
+  
+  function deleteNode(node) {
+    if (node && tokenList) {
+      if (node.startToken) {
+        delete tokenList[node.startToken];
+        delete node.startToken;
+      }
+      if (node.children)
+        node.children.forEach(deleteNode);
+    }
+  }
+  
+  function mergeIntoAst(object, ast) {
+    if (isArray(object)) {
+      if (ast === null || ast.type !== "array") {
+        deleteNode(ast);
+        ast = createArray();
+      }
+      var lookup = {};
+      object.forEach(function(value, index) {
+        lookup[index] = value;
+      });
+      for (var index = 0; index < ast.children.length; index++) {
+        var child = ast.children[index];
+        var match = lookup[index];
+        if (match !== undefined) {
+          delete lookup[index];
+          mergeIntoAst(match, child.value);
+        } else {
+          deleteNode(child);
+          ast.children.splice(index--, 1);
+        }
+      }
+      for (var name in lookup) {
+        var node = mergeIntoAst(lookup[name], null);
+        ast.children.push(node);
+      }
+      
+      
+    } else if (isPlainObject(object)) {
+      if (ast === null || ast.type != "object") {
+        deleteNode(ast);
+        ast = createObject();
+      }
+      var lookup = {};
+      for (var name in object)
+        lookup[name] = object[name];
+      for (var index = 0; index < ast.children.length; index++) {
+        var child = ast.children[index];
+        var key = child.key.value;
+        var match = lookup[key];
+        if (match !== undefined) {
+          delete lookup[key];
+          mergeIntoAst(match, child.value);
+        } else {
+          deleteNode(child);
+          ast.children.splice(index--, 1);
+        }
+      }
+      for (var name in lookup) {
+        var node = mergeIntoAst(lookup[name], null);
+        ast.children.push(createObjectProperty(createObjectKey(name), node));
+      }
+    } else {
+      if (ast !== null && ast.type !== "literal") {
+        deleteNode(ast);
+        ast = null;
+      }
+      if (ast === null || object !== ast.value) {
+        deleteNode(ast);
+        ast = createLiteral(object, "" + object);
+      }
+    }
+    
+    return ast;
+  }
+  
+  return mergeIntoAst(object, ast||null);
+}

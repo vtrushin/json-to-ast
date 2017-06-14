@@ -1,7 +1,9 @@
 import location from './location';
+
 import error from './error';
 import parseErrorTypes from './parseErrorTypes';
 import {tokenize, tokenTypes} from './tokenize';
+import {prettyPrint, rewrite, astToObject, objectToAst} from './stringify';
 
 const literals = [
 	tokenTypes.STRING,
@@ -67,11 +69,11 @@ function parseObject(input, tokenList, index, settings) {
 				if (token.type === tokenTypes.LEFT_BRACE) {
 					startToken = token;
 					state = objectStates.OPEN_OBJECT;
-					index ++;
 					if (settings.verbose) {
 					  object.startToken = index;
 					  comment(object, "leadingComments", token);
 					}
+          index ++;
 				} else {
 					return null;
 				}
@@ -126,7 +128,7 @@ function parseObject(input, tokenList, index, settings) {
 						index: index + 1
 					};
 				} else if (token.type === tokenTypes.COMMA) {
-				  comment(array.children[array.children.length - 1], "trailingComments", token);
+				  comment(object.children[object.children.length - 1], "trailingComments", token);
 					state = objectStates.COMMA;
 					index ++;
 				} else {
@@ -210,6 +212,7 @@ function parseProperty(input, tokenList, index, settings) {
 				  if (settings.verbose) {
 				    if (token.comments)
 				      comment(property.key, "trailingComments", token);
+				    property.colonToken = token;
 				  }
 					state = propertyStates.COLON;
 					index ++;
@@ -415,33 +418,47 @@ function parseValue(input, tokenList, index, settings) {
 	}
 }
 
-export default (input, settings) => {
-	settings = Object.assign({}, defaultSettings, settings);
-	const tokenList = tokenize(input, settings);
+function parseToAst(input, settings) {
+  settings = Object.assign({}, defaultSettings, settings);
+  const tokenList = tokenize(input, settings);
 
-	if (tokenList.length === 0) {
-		error(parseErrorTypes.unexpectedEnd());
-	}
+  if (tokenList.length === 0) {
+    error(parseErrorTypes.unexpectedEnd());
+  }
 
-	const value = parseValue(input, tokenList, 0, settings);
+  const value = parseValue(input, tokenList, 0, settings);
 
-	if (value.index === tokenList.length) {
-	  var result = value.value;
-	  if (settings.verbose) {
-	    result.tokenList = tokenList;
-	  }
-		return result;
-	} else {
-		const token = tokenList[value.index];
-		error(
-			parseErrorTypes.unexpectedToken(
-				input.substring(token.loc.start.offset, token.loc.end.offset),
-				token.loc.start.line,
-				token.loc.start.column
-			),
-			input,
-			token.loc.start.line,
-			token.loc.start.column
-		);
-	}
+  if (value.index === tokenList.length) {
+    var result = value.value;
+    if (settings.verbose) {
+      result.tokenList = tokenList;
+    }
+    return result;
+  } else {
+    const token = tokenList[value.index];
+    error(
+      parseErrorTypes.unexpectedToken(
+        input.substring(token.loc.start.offset, token.loc.end.offset),
+        token.loc.start.line,
+        token.loc.start.column
+      ),
+      input,
+      token.loc.start.line,
+      token.loc.start.column
+    );
+  }
 }
+
+function defaultFunction(input, settings) {
+  return parseToAst(input, settings);
+}
+
+defaultFunction.parseToAst = parseToAst;
+defaultFunction.astToObject = astToObject;
+defaultFunction.objectToAst = objectToAst;
+defaultFunction.prettyPrint = prettyPrint;
+defaultFunction.rewrite = rewrite;
+
+export default defaultFunction;
+
+

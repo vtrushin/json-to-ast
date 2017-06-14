@@ -1,4 +1,4 @@
-var types = require('../../types');
+var types = require('../../src/types');
 var location = types.location;
 var number = types.createNumber;
 

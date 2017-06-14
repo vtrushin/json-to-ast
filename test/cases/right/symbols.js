@@ -1,4 +1,4 @@
-var types = require('../../types');
+var types = require('../../src/types');
 var object = types.createObject;
 var key = types.createObjectKey;
 var prop = types.createObjectProperty;

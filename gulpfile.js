@@ -31,17 +31,6 @@ gulp.task('es6', function(){
 			babel().on('error', handleErrors)
 		)
 		.pipe(gulp.dest(distJsPath))
-  gulp.src(src + '/stringify.js')
-    .pipe(
-      rollup({
-        format: 'cjs'
-        })
-        .on('error', handleErrors)
-    )
-    .pipe(
-      babel().on('error', handleErrors)
-    )
-    .pipe(gulp.dest(distJsPath))
 });
 
 gulp.task('es6:watch', function () {
