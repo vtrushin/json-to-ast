@@ -1,24 +1,20 @@
-var JsonAST = require("../dist/parse.js");
+var parseToAst = require("../dist/parse.js").default;
+var stringify = require("../dist/stringify.js");
 var assert = require('assert');
 var fs = require('fs');
 var path = require('path');
 
 
-var ast = JsonAST.parseToAst(
+var ast = parseToAst(
 `{
-    "a": 100,
-    /* Comment */
-    "b": {
-        "c": { "cc" : 3 }
-    }
+    "a": 100
 }`, { verbose: true });
 
-ast = JsonAST.objectToAst({
+ast = stringify.objectToAst({
     "a": 100,
-    "b": {
-        "c": { "cc" : 3 },
-        d: 4
-    }
+    "b": 200
 }, ast);
 
-console.log(JsonAST.rewrite(ast));
+console.log(stringify.prettyPrint(ast));
+console.log("============");
+console.log(stringify.rewrite(ast));

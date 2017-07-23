@@ -3,7 +3,6 @@ import location from './location';
 import error from './error';
 import parseErrorTypes from './parseErrorTypes';
 import {tokenize, tokenTypes} from './tokenize';
-import {prettyPrint, rewrite, astToObject, objectToAst} from './stringify';
 
 const literals = [
 	tokenTypes.STRING,
@@ -449,16 +448,6 @@ function parseToAst(input, settings) {
   }
 }
 
-function defaultFunction(input, settings) {
-  return parseToAst(input, settings);
-}
-
-defaultFunction.parseToAst = parseToAst;
-defaultFunction.astToObject = astToObject;
-defaultFunction.objectToAst = objectToAst;
-defaultFunction.prettyPrint = prettyPrint;
-defaultFunction.rewrite = rewrite;
-
-export default defaultFunction;
+export default parseToAst;
 
 

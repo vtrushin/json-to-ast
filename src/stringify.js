@@ -60,10 +60,11 @@ Writer.prototype = {
   
   indent: function(count) {
     var str = "";
-    for (var i = 0; i < count; i++)
+    this.__indent += count;
+    for (var i = 0; i < this.__indent; i++)
       str += "  ";
     var line = this.buffer.substring(this.__currentLine);
-    if (line == this.__indentStr) {
+    if (!line.match(/[^\s]/)) {
       this.buffer = this.buffer.substring(0, this.__currentLine) + str;
     }
     this.__indentStr = str;
@@ -89,7 +90,7 @@ export function prettyPrint(ast) {
       if (node.children.length)
         writer.write("\n");
       writer.comments(node.trailingComments);
-      writer.indent(-1).write("}\n");
+      writer.indent(-1).write("}");
       break;
       
     case "array":
@@ -189,14 +190,14 @@ export function rewrite(ast) {
   function writeNode(node) {
     
     
-    throw new Error(" this needs work!! ");
+    //throw new Error(" this needs work!! ");
     
     if (node.startToken === undefined) {
       if (lastGoodToken > -1) {
-        while (tokenIndex < lastGoodToken)
+        while (tokenIndex <= lastGoodToken)
           writeToken(tokenList[tokenIndex++]);
       }
-      prettyPrint(node);
+      output += prettyPrint(node);
       lastToken = null;
       return;
     }
@@ -205,22 +206,31 @@ export function rewrite(ast) {
     switch(node.type) {
     case "object":
       node.children.forEach(function(node) {
-        writeNode(node.key);
-        writeNode(node.value);
+        if (node.key.startToken && node.value.startToken) {
+          writeNode(node.key);
+          writeNode(node.value);
+        } else {
+          writeNode(node);
+        }
       });
       break;
+      
+    case "property":
       
     case "array":
       node.children.forEach(writeNode);
       break;
       
     default:
-      while (node.start)
-      writeToken(node.startToken);
     }
   }
   
   writeNode(ast);
+  
+  if (lastGoodToken > -1) {
+    while (tokenIndex <= lastGoodToken)
+      writeToken(tokenList[tokenIndex++]);
+  }
   
   return output;
 }
@@ -326,18 +336,26 @@ export function objectToAst(object, ast) {
       var lookup = {};
       for (var name in object)
         lookup[name] = object[name];
+      
+      // Check existing properties
       for (var index = 0; index < ast.children.length; index++) {
         var child = ast.children[index];
         var key = child.key.value;
         var match = lookup[key];
+        
+        // Found existing property
         if (match !== undefined) {
           delete lookup[key];
           mergeIntoAst(match, child.value);
+          
+        // Deleted a property
         } else {
           deleteNode(child);
           ast.children.splice(index--, 1);
         }
       }
+      
+      // Add new properties
       for (var name in lookup) {
         var node = mergeIntoAst(lookup[name], null);
         ast.children.push(createObjectProperty(createObjectKey(name), node));

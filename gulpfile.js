@@ -1,5 +1,6 @@
 var del = require('del');
 var gulp = require('gulp');
+var sourcemaps = require('gulp-sourcemaps');
 var rollup = require('gulp-rollup');
 var babel = require('gulp-babel');
 var handleErrors = require('./utils/handleErrors');
@@ -20,16 +21,16 @@ gulp.task('clean', function(){
 });
 
 gulp.task('es6', function(){
-	gulp.src(src + '/parse.js')
-		.pipe(
-			rollup({
-				format: 'cjs'
-		    })
-		    .on('error', handleErrors)
-		)
-		.pipe(
-			babel().on('error', handleErrors)
-		)
+  return gulp.src('src/**/*.js')
+    .pipe(sourcemaps.init())
+    .pipe(babel({
+        presets: ['es2015']
+    }))
+    .on('error', function(err) {
+      console.log(err.toString())
+      this.emit('end')
+    })
+    .pipe(sourcemaps.write('.'))
 		.pipe(gulp.dest(distJsPath))
 });
 
