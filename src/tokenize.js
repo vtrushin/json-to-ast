@@ -13,7 +13,9 @@ export const tokenTypes = {
 	NUMBER: 7,			//
 	TRUE: 8,			// true
 	FALSE: 9,			// false
-	NULL: 10			// null
+	NULL: 10,			// null
+	COMMENT: 11,
+	WHITESPACE: 12
 };
 
 const punctuatorTokensMap = { // Lexeme: Token
@@ -85,30 +87,41 @@ function isExp(char) {
 // PARSERS
 
 function parseWhitespace(input, index, line, column) {
-	const char = input.charAt(index);
+	var value = "";
 
-	if (char === '\r') { // CR (Unix)
-		index ++;
-		line ++;
-		column = 1;
-		if (input.charAt(index) === '\n') { // CRLF (Windows)
-			index ++;
-		}
-	} else if (char === '\n') { // LF (MacOS)
-		index ++;
-		line ++;
-		column = 1;
-	} else if (char === '\t' || char === ' ') {
-		index ++;
-		column ++;
-	} else {
-		return null;
-	}
+  while (true) {
+    var char = input.charAt(index);
+  	if (char === '\r') { // CR (Unix)
+  		index ++;
+  		line ++;
+  		column = 1;
+  		value += char;
+  		if (input.charAt(index) === '\n') { // CRLF (Windows)
+  			index ++;
+        value += '\n';
+  		}
+  	} else if (char === '\n') { // LF (MacOS)
+  		index ++;
+  		line ++;
+  		column = 1;
+      value += char;
+  	} else if (char === '\t' || char === ' ') {
+  		index ++;
+  		column ++;
+      value += char;
+  	} else {
+  		break;
+  	}
+  }
+  if (value.length == 0)
+    return null;
 
 	return {
 		index,
 		line,
-		column
+		column,
+		type: tokenTypes.WHITESPACE,
+		value: value
 	};
 }
 
@@ -141,6 +154,7 @@ function parseComment(input, index, line, column) {
       index,
       line,
       column,
+      type: tokenTypes.COMMENT,
       value: input.substring(startIndex, index)
     };
     
@@ -167,6 +181,7 @@ function parseComment(input, index, line, column) {
       index,
       line,
       column,
+      type: tokenTypes.COMMENT,
       value: input.substring(startIndex, index)
     };
   }
@@ -396,7 +411,116 @@ function parseNumber(input, index, line, column) {
 	return null;
 }
 
-export function tokenize(input, settings) {
+export class Tokenizer {
+  constructor(input, settings) {
+    this.input = input;
+    this.settings = settings||{};
+    this.tokens = null;
+    this.tokenIndex = 0;
+  }
+  
+  token() {
+    if (this.tokens === null)
+      throw new Error("No tokens to return (have you called tokenize?)");
+    if (this.tokenIndex >= this.tokens.length)
+      throw new Error("No more tokens available");
+    return this.tokens[this.tokenIndex];
+  }
+  
+  hasMore() {
+    if (this.tokens === null)
+      throw new Error("No tokens to return (have you called tokenize?)");
+    
+    if (this.settings.returnWhitespace) {
+      return this.tokenIndex < this.tokens.length;
+    }
+    
+    for (var tokenIndex = this.tokenIndex; tokenIndex < this.tokens.length; tokenIndex++) {
+      var token = this.tokens[tokenIndex];
+      if (token.type != tokenTypes.COMMENT && token.type != tokenTypes.WHITESPACE)
+        return true;
+    }
+    return false;
+  }
+  
+  next() {
+    if (this.tokens === null)
+      throw new Error("No tokens to return (have you called tokenize?)");
+    if (this.tokenIndex >= this.tokens.length)
+      throw new Error("No more tokens to get");
+    
+    if (this.settings.returnWhitespace) {
+      if (this.tokenIndex < this.tokens.length)
+        return this.tokens[++this.tokenIndex];
+      
+    } else {
+      for (++this.tokenIndex; this.tokenIndex < this.tokens.length; this.tokenIndex++) {
+        var token = this.tokens[this.tokenIndex];
+        if (token.type != tokenTypes.COMMENT && token.type != tokenTypes.WHITESPACE)
+          return token;
+      }
+    }
+    
+    return null;
+  }
+  
+  tokenize() {
+    let line = 1;
+    let column = 1;
+    let index = 0;
+    const tokens = this.tokens = [];
+    var input = this.input;
+
+    while (index < input.length) {
+      const args = [input, index, line, column, this.settings];
+
+      const matched = (
+           parseWhitespace(...args)
+        || parseComment(...args)
+        || parseChar(...args)
+        || parseKeyword(...args)
+        || parseString(...args)
+        || parseNumber(...args)
+      );
+
+      if (matched) {
+        const token = {
+          type: matched.type,
+          value: matched.value,
+          loc: location(
+            line,
+            column,
+            index,
+            matched.line,
+            matched.column,
+            matched.index,
+            this.settings.source
+          )
+        };
+        if (matched.rawValue)
+          token.rawValue = matched.rawValue;
+
+        tokens.push(token);
+        index = matched.index;
+        line = matched.line;
+        column = matched.column;
+
+      } else {
+        error(
+          tokenizeErrorTypes.cannotTokenizeSymbol(input.charAt(index), line, column),
+          input,
+          line,
+          column
+        );
+
+      }
+    }
+
+    return tokens;
+  }
+}
+
+function tokenize(input, settings) {
 	let line = 1;
 	let column = 1;
 	let index = 0;

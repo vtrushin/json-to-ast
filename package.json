@@ -41,6 +41,7 @@
     "gulp-notify": "^2.2.0",
     "gulp-rollup": "^1.7.0",
     "gulp-sourcemaps": "^2.6.0",
-    "mocha": "^2.4.5"
+    "mocha": "^2.4.5",
+    "source-map-support": "^0.4.15"
   }
 }

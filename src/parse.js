@@ -2,7 +2,7 @@ import location from './location';
 
 import error from './error';
 import parseErrorTypes from './parseErrorTypes';
-import {tokenize, tokenTypes} from './tokenize';
+import {Tokenizer, tokenTypes} from './tokenize';
 
 const literals = [
 	tokenTypes.STRING,
@@ -51,7 +51,7 @@ function comment(value, name, token) {
   }
 }
 
-function parseObject(input, tokenList, index, settings) {
+function parseObject(input, tokenizer, settings) {
 	// object: LEFT_BRACE (property (COMMA property)*)? RIGHT_BRACE
 	let startToken;
 	let object = {
@@ -60,8 +60,8 @@ function parseObject(input, tokenList, index, settings) {
 	};
 	let state = objectStates._START_;
 
-	while (index < tokenList.length) {
-		const token = tokenList[index];
+	while (tokenizer.hasMore()) {
+		const token = tokenizer.token();
 
 		switch (state) {
 			case objectStates._START_: {
@@ -69,10 +69,10 @@ function parseObject(input, tokenList, index, settings) {
 					startToken = token;
 					state = objectStates.OPEN_OBJECT;
 					if (settings.verbose) {
-					  object.startToken = index;
+					  object.startToken = tokenizer.tokenIndex;
 					  comment(object, "leadingComments", token);
 					}
-          index ++;
+					tokenizer.next();
 				} else {
 					return null;
 				}
@@ -91,18 +91,17 @@ function parseObject(input, tokenList, index, settings) {
 							token.loc.end.offset,
 							settings.source
 						);
-						object.endToken = index;
-            comment(object, "trailingComments", token);
+						object.endToken = tokenizer.tokenIndex;
+						comment(object, "trailingComments", token);
 					}
-          return {
-            value: object,
-            index: index + 1
-          };
+					tokenizer.next();
+					return {
+						value: object
+					};
 				} else {
-					const property = parseProperty(input, tokenList, index, settings);
+					const property = parseProperty(input, tokenizer, settings);
 					object.children.push(property.value);
 					state = objectStates.PROPERTY;
-					index = property.index;
 				}
 				break;
 			}
@@ -119,17 +118,17 @@ function parseObject(input, tokenList, index, settings) {
 							token.loc.end.offset,
 							settings.source
 						);
-						object.endToken = index;
+						object.endToken = tokenizer.tokenIndex;
 						comment(object, "trailingComments", token);
 					}
+					tokenizer.next();
 					return {
-						value: object,
-						index: index + 1
+						value: object
 					};
 				} else if (token.type === tokenTypes.COMMA) {
-				  comment(object.children[object.children.length - 1], "trailingComments", token);
+					comment(object.children[object.children.length - 1], "trailingComments", token);
 					state = objectStates.COMMA;
-					index ++;
+					tokenizer.next();
 				} else {
 					error(
 						parseErrorTypes.unexpectedToken(
@@ -146,9 +145,8 @@ function parseObject(input, tokenList, index, settings) {
 			}
 
 			case objectStates.COMMA: {
-				const property = parseProperty(input, tokenList, index, settings);
+				const property = parseProperty(input, tokenizer, settings);
 				if (property) {
-					index = property.index;
 					object.children.push(property.value);
 					state = objectStates.PROPERTY;
 				} else {
@@ -171,7 +169,7 @@ function parseObject(input, tokenList, index, settings) {
 	error(parseErrorTypes.unexpectedEnd());
 }
 
-function parseProperty(input, tokenList, index, settings) {
+function parseProperty(input, tokenizer, settings) {
 	// property: STRING COLON value
 	let startToken;
 	let property = {
@@ -181,8 +179,8 @@ function parseProperty(input, tokenList, index, settings) {
 	};
 	let state = objectStates._START_;
 
-	while (index < tokenList.length) {
-		const token = tokenList[index];
+	while (tokenizer.hasMore()) {
+		const token = tokenizer.token();
 
 		switch (state) {
 			case propertyStates._START_: {
@@ -193,13 +191,13 @@ function parseProperty(input, tokenList, index, settings) {
 					};
 					if (settings.verbose) {
 						key.loc = token.loc;
-						key.startToken = index;
-            comment(key, "leadingComments", token);
+						property.startToken = key.startToken = key.endToken = tokenizer.tokenIndex;
+						comment(key, "leadingComments", token);
 					}
 					startToken = token;
 					property.key = key;
 					state = propertyStates.KEY;
-					index ++;
+					tokenizer.next();
 				} else {
 					return null;
 				}
@@ -208,13 +206,12 @@ function parseProperty(input, tokenList, index, settings) {
 
 			case propertyStates.KEY: {
 				if (token.type === tokenTypes.COLON) {
-				  if (settings.verbose) {
-				    if (token.comments)
-				      comment(property.key, "trailingComments", token);
-				    property.colonToken = token;
-				  }
+					if (settings.verbose) {
+					    comment(property.key, "trailingComments", token);
+					    property.colonToken = token;
+					}
 					state = propertyStates.COLON;
-					index ++;
+					tokenizer.next();
 				} else {
 					error(
 						parseErrorTypes.unexpectedToken(
@@ -231,9 +228,10 @@ function parseProperty(input, tokenList, index, settings) {
 			}
 
 			case propertyStates.COLON: {
-				const value = parseValue(input, tokenList, index, settings);
+				const value = parseValue(input, tokenizer, settings);
 				property.value = value.value;
 				if (settings.verbose) {
+					property.endToken = value.value.endToken;
 					property.loc = location(
 						startToken.loc.start.line,
 						startToken.loc.start.column,
@@ -245,8 +243,7 @@ function parseProperty(input, tokenList, index, settings) {
 					);
 				}
 				return {
-					value: property,
-					index: value.index
+					value: property
 				};
 			}
 
@@ -254,7 +251,7 @@ function parseProperty(input, tokenList, index, settings) {
 	}
 }
 
-function parseArray(input, tokenList, index, settings) {
+function parseArray(input, tokenizer, settings) {
 	// array: LEFT_BRACKET (value (COMMA value)*)? RIGHT_BRACKET
 	let startToken;
 	let array = {
@@ -264,19 +261,19 @@ function parseArray(input, tokenList, index, settings) {
 	let state = arrayStates._START_;
 	let token;
 
-	while (index < tokenList.length) {
-		token = tokenList[index];
+	while (tokenizer.hasMore()) {
+		token = tokenizer.next();
 
 		switch (state) {
 			case arrayStates._START_: {
 				if (token.type === tokenTypes.LEFT_BRACKET) {
 					startToken = token;
 					if (settings.verbose) {
-					  array.startToken = index;
+					  array.startToken = tokenizer.tokenIndex;
 					  comment(array, "leadingComments", token);
 					}
 					state = arrayStates.OPEN_ARRAY;
-					index ++;
+					tokenizer.next();
 				} else {
 					return null;
 				}
@@ -295,16 +292,15 @@ function parseArray(input, tokenList, index, settings) {
 							token.loc.end.offset,
 							settings.source
 						);
-						array.endToken = index;
-	          comment(array, "trailingComments", token);
+						array.endToken = tokenizer.tokenIndex;
+						comment(array, "trailingComments", token);
 					}
+					tokenizer.next();
 					return {
-						value: array,
-						index: index + 1
+						value: array
 					};
 				} else {
-					let value = parseValue(input, tokenList, index, settings);
-					index = value.index;
+					let value = parseValue(input, tokenizer, settings);
 					array.children.push(value.value);
 					state = arrayStates.VALUE;
 				}
@@ -323,18 +319,16 @@ function parseArray(input, tokenList, index, settings) {
 							token.loc.end.offset,
 							settings.source
 						);
-						array.endToken = index;
-	          comment(array, "trailingComments", token);
+						array.endToken = tokenizer.tokenIndex;
+						comment(array, "trailingComments", token);
 					}
-					index ++;
+					tokenizer.next();
 					return {
-						value: array,
-						index
+						value: array
 					};
 				} else if (token.type === tokenTypes.COMMA) {
-				  comment(array.children[array.children.length - 1], "trailingComments", token);
 					state = arrayStates.COMMA;
-					index ++;
+					tokenizer.next();
 				} else {
 					error(
 						parseErrorTypes.unexpectedToken(
@@ -351,8 +345,7 @@ function parseArray(input, tokenList, index, settings) {
 			}
 
 			case arrayStates.COMMA: {
-				let value = parseValue(input, tokenList, index, settings);
-				index = value.index;
+				let value = parseValue(input, tokenizer, settings);
 				array.children.push(value.value);
 				state = arrayStates.VALUE;
 				break;
@@ -365,9 +358,9 @@ function parseArray(input, tokenList, index, settings) {
 	);
 }
 
-function parseLiteral(input, tokenList, index, settings) {
+function parseLiteral(input, tokenizer, settings) {
 	// literal: STRING | NUMBER | TRUE | FALSE | NULL
-	const token = tokenList[index];
+	const token = tokenizer.token();
 
 	const isLiteral = literals.indexOf(token.type) !== -1;
 
@@ -379,21 +372,21 @@ function parseLiteral(input, tokenList, index, settings) {
 		};
 		if (settings.verbose) {
 			literal.loc = token.loc;
-			literal.startToken = index;
-      comment(literal, "leadingComments", token);
+			literal.startToken = literal.endToken = tokenizer.tokenIndex;
+			comment(literal, "leadingComments", token);
 		}
+		tokenizer.next();
 		return {
-			value: literal,
-			index: index + 1
+			value: literal
 		}
 	}
 
 	return null;
 }
 
-function parseValue(input, tokenList, index, settings) {
+function parseValue(input, tokenizer, settings) {
 	// value: literal | object | array
-	const token = tokenList[index];
+	const token = tokenizer.token();
 
 	const value = (
 		parseLiteral(...arguments)
@@ -419,22 +412,23 @@ function parseValue(input, tokenList, index, settings) {
 
 function parseToAst(input, settings) {
   settings = Object.assign({}, defaultSettings, settings);
-  const tokenList = tokenize(input, settings);
+  const tokenizer = new Tokenizer(input, settings);
+  tokenizer.tokenize();
 
-  if (tokenList.length === 0) {
+  if (!tokenizer.hasMore()) {
     error(parseErrorTypes.unexpectedEnd());
   }
 
-  const value = parseValue(input, tokenList, 0, settings);
+  const value = parseValue(input, tokenizer, settings);
 
-  if (value.index === tokenList.length) {
+  if (!tokenizer.hasMore()) {
     var result = value.value;
     if (settings.verbose) {
-      result.tokenList = tokenList;
+      result.tokenizer = tokenizer;
     }
     return result;
   } else {
-    const token = tokenList[value.index];
+    const token = tokenizer.next();
     error(
       parseErrorTypes.unexpectedToken(
         input.substring(token.loc.start.offset, token.loc.end.offset),

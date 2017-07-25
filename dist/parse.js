@@ -83,7 +83,7 @@
 		}
 	}
 
-	function parseObject(input, tokenList, index, settings) {
+	function parseObject(input, tokenizer, settings) {
 		// object: LEFT_BRACE (property (COMMA property)*)? RIGHT_BRACE
 		var startToken = void 0;
 		var object = {
@@ -92,8 +92,8 @@
 		};
 		var state = objectStates._START_;
 
-		while (index < tokenList.length) {
-			var token = tokenList[index];
+		while (tokenizer.hasMore()) {
+			var token = tokenizer.token();
 
 			switch (state) {
 				case objectStates._START_:
@@ -102,10 +102,10 @@
 							startToken = token;
 							state = objectStates.OPEN_OBJECT;
 							if (settings.verbose) {
-								object.startToken = index;
+								object.startToken = tokenizer.tokenIndex;
 								comment(object, "leadingComments", token);
 							}
-							index++;
+							tokenizer.next();
 						} else {
 							return null;
 						}
@@ -117,18 +117,17 @@
 						if (token.type === _tokenize.tokenTypes.RIGHT_BRACE) {
 							if (settings.verbose) {
 								object.loc = (0, _location2.default)(startToken.loc.start.line, startToken.loc.start.column, startToken.loc.start.offset, token.loc.end.line, token.loc.end.column, token.loc.end.offset, settings.source);
-								object.endToken = index;
+								object.endToken = tokenizer.tokenIndex;
 								comment(object, "trailingComments", token);
 							}
+							tokenizer.next();
 							return {
-								value: object,
-								index: index + 1
+								value: object
 							};
 						} else {
-							var property = parseProperty(input, tokenList, index, settings);
+							var property = parseProperty(input, tokenizer, settings);
 							object.children.push(property.value);
 							state = objectStates.PROPERTY;
-							index = property.index;
 						}
 						break;
 					}
@@ -138,17 +137,17 @@
 						if (token.type === _tokenize.tokenTypes.RIGHT_BRACE) {
 							if (settings.verbose) {
 								object.loc = (0, _location2.default)(startToken.loc.start.line, startToken.loc.start.column, startToken.loc.start.offset, token.loc.end.line, token.loc.end.column, token.loc.end.offset, settings.source);
-								object.endToken = index;
+								object.endToken = tokenizer.tokenIndex;
 								comment(object, "trailingComments", token);
 							}
+							tokenizer.next();
 							return {
-								value: object,
-								index: index + 1
+								value: object
 							};
 						} else if (token.type === _tokenize.tokenTypes.COMMA) {
 							comment(object.children[object.children.length - 1], "trailingComments", token);
 							state = objectStates.COMMA;
-							index++;
+							tokenizer.next();
 						} else {
 							(0, _error2.default)(_parseErrorTypes2.default.unexpectedToken(input.substring(token.loc.start.offset, token.loc.end.offset), token.loc.start.line, token.loc.start.column), input, token.loc.start.line, token.loc.start.column);
 						}
@@ -157,9 +156,8 @@
 
 				case objectStates.COMMA:
 					{
-						var _property = parseProperty(input, tokenList, index, settings);
+						var _property = parseProperty(input, tokenizer, settings);
 						if (_property) {
-							index = _property.index;
 							object.children.push(_property.value);
 							state = objectStates.PROPERTY;
 						} else {
@@ -173,7 +171,7 @@
 		(0, _error2.default)(_parseErrorTypes2.default.unexpectedEnd());
 	}
 
-	function parseProperty(input, tokenList, index, settings) {
+	function parseProperty(input, tokenizer, settings) {
 		// property: STRING COLON value
 		var startToken = void 0;
 		var property = {
@@ -183,8 +181,8 @@
 		};
 		var state = objectStates._START_;
 
-		while (index < tokenList.length) {
-			var token = tokenList[index];
+		while (tokenizer.hasMore()) {
+			var token = tokenizer.token();
 
 			switch (state) {
 				case propertyStates._START_:
@@ -196,13 +194,13 @@
 							};
 							if (settings.verbose) {
 								key.loc = token.loc;
-								key.startToken = index;
+								property.startToken = key.startToken = key.endToken = tokenizer.tokenIndex;
 								comment(key, "leadingComments", token);
 							}
 							startToken = token;
 							property.key = key;
 							state = propertyStates.KEY;
-							index++;
+							tokenizer.next();
 						} else {
 							return null;
 						}
@@ -213,11 +211,11 @@
 					{
 						if (token.type === _tokenize.tokenTypes.COLON) {
 							if (settings.verbose) {
-								if (token.comments) comment(property.key, "trailingComments", token);
+								comment(property.key, "trailingComments", token);
 								property.colonToken = token;
 							}
 							state = propertyStates.COLON;
-							index++;
+							tokenizer.next();
 						} else {
 							(0, _error2.default)(_parseErrorTypes2.default.unexpectedToken(input.substring(token.loc.start.offset, token.loc.end.offset), token.loc.start.line, token.loc.start.column), input, token.loc.start.line, token.loc.start.column);
 						}
@@ -226,14 +224,14 @@
 
 				case propertyStates.COLON:
 					{
-						var value = parseValue(input, tokenList, index, settings);
+						var value = parseValue(input, tokenizer, settings);
 						property.value = value.value;
 						if (settings.verbose) {
+							property.endToken = value.value.endToken;
 							property.loc = (0, _location2.default)(startToken.loc.start.line, startToken.loc.start.column, startToken.loc.start.offset, value.value.loc.end.line, value.value.loc.end.column, value.value.loc.end.offset, settings.source);
 						}
 						return {
-							value: property,
-							index: value.index
+							value: property
 						};
 					}
 
@@ -241,7 +239,7 @@
 		}
 	}
 
-	function parseArray(input, tokenList, index, settings) {
+	function parseArray(input, tokenizer, settings) {
 		// array: LEFT_BRACKET (value (COMMA value)*)? RIGHT_BRACKET
 		var startToken = void 0;
 		var array = {
@@ -251,8 +249,8 @@
 		var state = arrayStates._START_;
 		var token = void 0;
 
-		while (index < tokenList.length) {
-			token = tokenList[index];
+		while (tokenizer.hasMore()) {
+			token = tokenizer.next();
 
 			switch (state) {
 				case arrayStates._START_:
@@ -260,11 +258,11 @@
 						if (token.type === _tokenize.tokenTypes.LEFT_BRACKET) {
 							startToken = token;
 							if (settings.verbose) {
-								array.startToken = index;
+								array.startToken = tokenizer.tokenIndex;
 								comment(array, "leadingComments", token);
 							}
 							state = arrayStates.OPEN_ARRAY;
-							index++;
+							tokenizer.next();
 						} else {
 							return null;
 						}
@@ -276,16 +274,15 @@
 						if (token.type === _tokenize.tokenTypes.RIGHT_BRACKET) {
 							if (settings.verbose) {
 								array.loc = (0, _location2.default)(startToken.loc.start.line, startToken.loc.start.column, startToken.loc.start.offset, token.loc.end.line, token.loc.end.column, token.loc.end.offset, settings.source);
-								array.endToken = index;
+								array.endToken = tokenizer.tokenIndex;
 								comment(array, "trailingComments", token);
 							}
+							tokenizer.next();
 							return {
-								value: array,
-								index: index + 1
+								value: array
 							};
 						} else {
-							var value = parseValue(input, tokenList, index, settings);
-							index = value.index;
+							var value = parseValue(input, tokenizer, settings);
 							array.children.push(value.value);
 							state = arrayStates.VALUE;
 						}
@@ -297,18 +294,16 @@
 						if (token.type === _tokenize.tokenTypes.RIGHT_BRACKET) {
 							if (settings.verbose) {
 								array.loc = (0, _location2.default)(startToken.loc.start.line, startToken.loc.start.column, startToken.loc.start.offset, token.loc.end.line, token.loc.end.column, token.loc.end.offset, settings.source);
-								array.endToken = index;
+								array.endToken = tokenizer.tokenIndex;
 								comment(array, "trailingComments", token);
 							}
-							index++;
+							tokenizer.next();
 							return {
-								value: array,
-								index: index
+								value: array
 							};
 						} else if (token.type === _tokenize.tokenTypes.COMMA) {
-							comment(array.children[array.children.length - 1], "trailingComments", token);
 							state = arrayStates.COMMA;
-							index++;
+							tokenizer.next();
 						} else {
 							(0, _error2.default)(_parseErrorTypes2.default.unexpectedToken(input.substring(token.loc.start.offset, token.loc.end.offset), token.loc.start.line, token.loc.start.column), input, token.loc.start.line, token.loc.start.column);
 						}
@@ -317,8 +312,7 @@
 
 				case arrayStates.COMMA:
 					{
-						var _value = parseValue(input, tokenList, index, settings);
-						index = _value.index;
+						var _value = parseValue(input, tokenizer, settings);
 						array.children.push(_value.value);
 						state = arrayStates.VALUE;
 						break;
@@ -329,9 +323,9 @@
 		(0, _error2.default)(_parseErrorTypes2.default.unexpectedEnd());
 	}
 
-	function parseLiteral(input, tokenList, index, settings) {
+	function parseLiteral(input, tokenizer, settings) {
 		// literal: STRING | NUMBER | TRUE | FALSE | NULL
-		var token = tokenList[index];
+		var token = tokenizer.token();
 
 		var isLiteral = literals.indexOf(token.type) !== -1;
 
@@ -343,21 +337,21 @@
 			};
 			if (settings.verbose) {
 				literal.loc = token.loc;
-				literal.startToken = index;
+				literal.startToken = literal.endToken = tokenizer.tokenIndex;
 				comment(literal, "leadingComments", token);
 			}
+			tokenizer.next();
 			return {
-				value: literal,
-				index: index + 1
+				value: literal
 			};
 		}
 
 		return null;
 	}
 
-	function parseValue(input, tokenList, index, settings) {
+	function parseValue(input, tokenizer, settings) {
 		// value: literal | object | array
-		var token = tokenList[index];
+		var token = tokenizer.token();
 
 		var value = parseLiteral.apply(undefined, arguments) || parseObject.apply(undefined, arguments) || parseArray.apply(undefined, arguments);
 
@@ -370,22 +364,23 @@
 
 	function parseToAst(input, settings) {
 		settings = _extends({}, defaultSettings, settings);
-		var tokenList = (0, _tokenize.tokenize)(input, settings);
+		var tokenizer = new _tokenize.Tokenizer(input, settings);
+		tokenizer.tokenize();
 
-		if (tokenList.length === 0) {
+		if (!tokenizer.hasMore()) {
 			(0, _error2.default)(_parseErrorTypes2.default.unexpectedEnd());
 		}
 
-		var value = parseValue(input, tokenList, 0, settings);
+		var value = parseValue(input, tokenizer, settings);
 
-		if (value.index === tokenList.length) {
+		if (!tokenizer.hasMore()) {
 			var result = value.value;
 			if (settings.verbose) {
-				result.tokenList = tokenList;
+				result.tokenizer = tokenizer;
 			}
 			return result;
 		} else {
-			var token = tokenList[value.index];
+			var token = tokenizer.next();
 			(0, _error2.default)(_parseErrorTypes2.default.unexpectedToken(input.substring(token.loc.start.offset, token.loc.end.offset), token.loc.start.line, token.loc.start.column), input, token.loc.start.line, token.loc.start.column);
 		}
 	}
