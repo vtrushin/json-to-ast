@@ -1,7 +1,7 @@
 var fs = require('fs');
 var path = require('path');
 var assert = require('assert');
-var parse = require('../dist/parse.js');
+var parse = require('../dist/parse.js').default;
 
 function readFile(file) {
 	var src = fs.readFileSync(file, 'utf8');

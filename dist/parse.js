@@ -250,7 +250,7 @@
 		var token = void 0;
 
 		while (tokenizer.hasMore()) {
-			token = tokenizer.next();
+			token = tokenizer.token();
 
 			switch (state) {
 				case arrayStates._START_:

@@ -416,7 +416,7 @@ export class Tokenizer {
     this.input = input;
     this.settings = settings||{};
     this.tokens = null;
-    this.tokenIndex = 0;
+    this.tokenIndex = -1;
   }
   
   token() {
@@ -424,6 +424,8 @@ export class Tokenizer {
       throw new Error("No tokens to return (have you called tokenize?)");
     if (this.tokenIndex >= this.tokens.length)
       throw new Error("No more tokens available");
+    if (this.tokenIndex < 0)
+    	return this.next();
     return this.tokens[this.tokenIndex];
   }
   
@@ -435,7 +437,10 @@ export class Tokenizer {
       return this.tokenIndex < this.tokens.length;
     }
     
-    for (var tokenIndex = this.tokenIndex; tokenIndex < this.tokens.length; tokenIndex++) {
+    var tokenIndex = this.tokenIndex;
+    if (tokenIndex < 0)
+    	tokenIndex = 0;
+    for (; tokenIndex < this.tokens.length; tokenIndex++) {
       var token = this.tokens[tokenIndex];
       if (token.type != tokenTypes.COMMENT && token.type != tokenTypes.WHITESPACE)
         return true;
@@ -518,88 +523,4 @@ export class Tokenizer {
 
     return tokens;
   }
-}
-
-function tokenize(input, settings) {
-	let line = 1;
-	let column = 1;
-	let index = 0;
-	const tokens = [];
-	var comments = [];
-
-	while (index < input.length) {
-		const args = [input, index, line, column, settings];
-		const whitespace = parseWhitespace(...args);
-
-		if (whitespace) {
-			index = whitespace.index;
-			line = whitespace.line;
-			column = whitespace.column;
-			continue;
-		}
-		
-		const comment = parseComment(...args);
-		if (comment) {
-		  comments.push({
-		    value: comment.value,
-        loc: location(
-          line,
-          column,
-          index,
-          comment.line,
-          comment.column,
-          comment.index
-        )
-		  });
-      index = comment.index;
-      line = comment.line;
-      column = comment.column;
-		  continue;
-		}
-
-		const matched = (
-			parseChar(...args)
-			|| parseKeyword(...args)
-			|| parseString(...args)
-			|| parseNumber(...args)
-		);
-
-		if (matched) {
-			const token = {
-				type: matched.type,
-				value: matched.value,
-				loc: location(
-					line,
-					column,
-					index,
-					matched.line,
-					matched.column,
-					matched.index,
-					settings.source
-				)
-			};
-			if (matched.rawValue)
-			  token.rawValue = matched.rawValue;
-			if (comments.length) {
-			  token.comments = comments;
-			  comments = [];
-			}
-
-			tokens.push(token);
-			index = matched.index;
-			line = matched.line;
-			column = matched.column;
-
-		} else {
-			error(
-				tokenizeErrorTypes.cannotTokenizeSymbol(input.charAt(index), line, column),
-				input,
-				line,
-				column
-			);
-
-		}
-	}
-
-	return tokens;
 }

@@ -262,7 +262,7 @@ function parseArray(input, tokenizer, settings) {
 	let token;
 
 	while (tokenizer.hasMore()) {
-		token = tokenizer.next();
+		token = tokenizer.token();
 
 		switch (state) {
 			case arrayStates._START_: {

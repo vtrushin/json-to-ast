@@ -220,6 +220,8 @@ export function prettyPrint(ast) {
  * @return {String}
  */
 export function reprint(object, ast) {
+	if (!ast)
+		return prettyPrint(object);
 	var writer = new Writer();
 	var tokenizer = ast.tokenizer;
 

@@ -8,20 +8,9 @@ var path = require('path');
 
 
 var ast = parseToAst(
-`{
-    "a": 100,
-    /* Comment */
-    "b": {
-        "c": { "cc" : 3 },
-        "d": 4
-    }
-}
+`[1,]
 `, { verbose: true });
 
 var obj = Stringify.astToObject(ast);
 
-console.log(Stringify.reprint({
-    "b": {
-    	"d": 4
-    }
-}, ast));
+console.log(Stringify.reprint(obj, ast));
