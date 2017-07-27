@@ -1,5 +1,3 @@
-debugger;
-
 var parseToAst = require("./dist/parse").default;
 var stringify = require("./dist/stringify");
 
