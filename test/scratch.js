@@ -8,9 +8,14 @@ var path = require('path');
 
 
 var ast = parseToAst(
-`[1,]
-`, { verbose: true });
+`{
+  "libraries": [ {
+    "path": "../qooxdoo"
+  }, {
+    "path": "."
+  } ]
+}`, { verbose: true });
 
 var obj = Stringify.astToObject(ast);
-
+obj.libraries[1] = [1,2];
 console.log(Stringify.reprint(obj, ast));

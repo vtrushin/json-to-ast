@@ -220,9 +220,12 @@ export function prettyPrint(ast) {
  * @return {String}
  */
 export function reprint(object, ast) {
-	if (!ast)
-		return prettyPrint(object);
 	var writer = new Writer();
+	
+	if (!ast) {
+		prettyPojo(object);
+		return writer.buffer;
+	}
 	var tokenizer = ast.tokenizer;
 
 	/*
@@ -386,12 +389,29 @@ export function reprint(object, ast) {
 		case "array":
 			if (!isArray(object))
 				return prettyPojo(object);
+			
+			// Opening brace
+			writeTokensUntil(node.startToken + 1);
 
-			writer.write("[[ARRAY]]");
+			for (var i = 0; i < object.length; i++) {
+				var child = i < node.children.length ? node.children[i] : null;
+				if (child) {
+					writeTokensUntil(child.startToken);
+					writeNode(object[i], child);
+					startTokenIndex = child.endToken + 1;
+				} else {
+					if (i == 0)
+						writer.write(", ");
+					prettyPojo(object[i]);
+					startTokenIndex = node.endToken + 1;
+				}
+			}
+			
+			// Closing brace
+			writeTokensUntil(node.endToken + 1);
 			break;
 
 		case "property":
-			writer.write("[[PROPERTY]]");
 			break;
 
 		case "literal":
@@ -400,14 +420,16 @@ export function reprint(object, ast) {
 				return prettyPojo(object);
 			
 			// If it has not changed, then use the AST
-			if ((node.rawValue === null && object === null) || 
-					(node.rawValue !== null && object !== null && node.rawValue == object.toString())) {
+			if (isSameLiteral(node, object)) {
 				writeTokensUntil(node.startToken + 1);
 			
 			// New value, but try and preserve prefix comment & whitespace
 			} else {
 				writeTokensUntil(node.startToken);
-				writer.write(object);
+				if (typeof object === "string")
+					writer.write("\"" + object + "\"");
+				else
+					writer.write(object);
 				startTokenIndex = node.startToken + 1;
 			}
 			break;
@@ -452,7 +474,7 @@ export function astToObject(ast, settings) {
 		case "array":
 			result = [];
 			node.children.forEach(function(child, index) {
-				result.push(writeNode(child.value));
+				result.push(writeNode(child));
 			});
 			break;
 
@@ -510,3 +532,15 @@ function isLiteral(obj) {
 	return false;
 }
 
+function isSameLiteral(node, object) {
+	if (node.rawValue === null && object === null)
+		return true;
+	if ((node.rawValue !== null && object === null) || (node.rawValue === null && object !== null))
+		return false;
+	if (typeof node.value !== typeof object)
+		return false;
+	if (typeof node.value === "string") {
+		return node.value === object;
+	}
+	return node.rawValue == object;
+}
