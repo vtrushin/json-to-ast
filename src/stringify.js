@@ -238,6 +238,8 @@ export function reprint(object, ast) {
 			writer.write("\"" + obj + "\"");
 		else if (typeof obj == "number")
 			writer.write(obj);
+		else if (typeof obj == "boolean")
+			writer.write(!!obj ? "true" : "false");
 		else if (isArray(obj)) {
 			writer.write("[ ");
 			obj.forEach(function(elem, index) {
@@ -396,16 +398,18 @@ export function reprint(object, ast) {
 			writeTokensUntil(node.startToken + 1);
 
 			for (var i = 0; i < object.length; i++) {
-				var child = i < node.children.length ? node.children[i] : null;
-				if (child) {
+				var child = i < node.children.length ? node.children[i] : undefined;
+				if (child !== undefined) {
 					writeTokensUntil(child.startToken);
 					writeNode(object[i], child);
 					startTokenIndex = child.endToken + 1;
 				} else {
-					if (i == 0)
-						writer.write(", ");
+					var oldIndent = writer.matchIndent();
+					if (i != 0)
+						writer.write(",\n");
 					prettyPojo(object[i]);
-					startTokenIndex = node.endToken + 1;
+					writer.resetIndent(oldIndent);
+					//startTokenIndex = node.endToken;
 				}
 			}
 			
@@ -418,8 +422,11 @@ export function reprint(object, ast) {
 
 		case "literal":
 			// Check type
-			if (!isLiteral(object))
-				return prettyPojo(object);
+			if (!isLiteral(object)) {
+				prettyPojo(object);
+				startTokenIndex = node.endToken + 1;
+				return;
+			}
 			
 			// If it has not changed, then use the AST
 			if (isSameLiteral(node, object)) {
@@ -529,7 +536,7 @@ function isPlainObject(obj) {
  * @returns boolean
  */
 function isLiteral(obj) {
-	if (obj === null || typeof obj === "string" || typeof obj === "number")
+	if (obj === null || typeof obj === "string" || typeof obj === "number" || typeof obj === "boolean")
 		return true;
 	return false;
 }

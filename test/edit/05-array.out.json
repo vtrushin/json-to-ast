@@ -1,0 +1,7 @@
+{
+    "libraries": [
+        ".",
+        "../../framework",
+        "./blah"
+    ]
+}

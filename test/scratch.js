@@ -9,13 +9,12 @@ var path = require('path');
 
 var ast = parseToAst(
 `{
-  "libraries": [ {
-    "path": "../qooxdoo"
-  }, {
-    "path": "."
-  } ]
+	"libraries": [
+		".",
+		"../../framework"
+	]
 }`, { verbose: true });
 
 var obj = Stringify.astToObject(ast);
-obj.libraries[1] = [1,2];
+obj.libraries.push("./blah");
 console.log(Stringify.reprint(obj, ast));
