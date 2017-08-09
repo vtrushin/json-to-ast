@@ -44,8 +44,10 @@ class Writer {
 			str = "null";
 		else if (str === undefined)
 			str = "undefined";
-		else if (typeof str == "number")
+		else if (typeof str === "number")
 			str = str.toString();
+		else if (typeof str === "boolean")
+			str = !!str ? "true" : "false";
 		else if (typeof str !== "string")
 			throw new Error("Can only write strings and numbers");
 
