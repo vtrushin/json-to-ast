@@ -20,7 +20,9 @@ function getTests(dirname, cb) {
 	var folder = fs.readdirSync(folderPath);
 	var files = {};
 	folder.forEach(function(name) {
-		if (!name.endsWith(".json") && !name.endsWith(".js"))
+		var pos = name.lastIndexOf('.');
+		var ext = pos > -1 ? name.substring(pos) : null;
+		if (ext !== ".json" && ext !== ".js")
 			return;
 		var pos = name.lastIndexOf('.');
 		var subname = name.substring(0, pos);
