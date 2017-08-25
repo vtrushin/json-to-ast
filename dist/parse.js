@@ -554,11 +554,11 @@
 						if (token.type === tokenTypes.RIGHT_BRACE) {
 							if (settings.verbose) {
 								object.loc = location(startToken.loc.start.line, startToken.loc.start.column, startToken.loc.start.offset, token.loc.end.line, token.loc.end.column, token.loc.end.offset, settings.source);
-								return {
-									value: object,
-									index: index + 1
-								};
 							}
+							return {
+								value: object,
+								index: index + 1
+							};
 						} else {
 							var property = parseProperty(input, tokenList, index, settings);
 							object.children.push(property.value);
