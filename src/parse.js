@@ -72,11 +72,11 @@ function parseObject(input, tokenList, index, settings) {
 							token.loc.end.offset,
 							settings.source
 						);
-						return {
-							value: object,
-							index: index + 1
-						};
 					}
+					return {
+						value: object,
+						index: index + 1
+					};
 				} else {
 					const property = parseProperty(input, tokenList, index, settings);
 					object.children.push(property.value);
