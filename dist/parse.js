@@ -27,36 +27,6 @@
 		return target;
 	};
 
-	function _classCallCheck(instance, Constructor) {
-		if (!(instance instanceof Constructor)) {
-			throw new TypeError("Cannot call a class as a function");
-		}
-	}
-
-	function _possibleConstructorReturn(self, call) {
-		if (!self) {
-			throw new ReferenceError("this hasn't been initialised - super() hasn't been called");
-		}
-
-		return call && (typeof call === "object" || typeof call === "function") ? call : self;
-	}
-
-	function _inherits(subClass, superClass) {
-		if (typeof superClass !== "function" && superClass !== null) {
-			throw new TypeError("Super expression must either be null or a function, not " + typeof superClass);
-		}
-
-		subClass.prototype = Object.create(superClass && superClass.prototype, {
-			constructor: {
-				value: subClass,
-				enumerable: false,
-				writable: true,
-				configurable: true
-			}
-		});
-		if (superClass) Object.setPrototypeOf ? Object.setPrototypeOf(subClass, superClass) : subClass.__proto__ = superClass;
-	}
-
 	var location = function location(startLine, startColumn, startOffset, endLine, endColumn, endOffset, source) {
 		return {
 			start: {
@@ -73,47 +43,92 @@
 		};
 	};
 
-	function showCodeFragment(source, linePosition, columnPosition) {
-		var lines = source.split(/\n|\r\n?|\f/);
-		var line = lines[linePosition - 1];
-		var marker = new Array(columnPosition).join(' ') + '^';
+	var OVERFLOW_SYMBOLS = '\u2026'; // …
 
-		return line + '\n' + marker;
-	}
+	var EXTRA_LINES = 2;
+	var MAX_LINE_LENGTH = 100;
+	var OFFSET_CORRECTION = 60;
+	var TAB_REPLACEMENT = '	';
 
-	var ParseError = function (_SyntaxError) {
-		_inherits(ParseError, _SyntaxError);
+	function sourceFragment(input, line, column) {
+		function printLines(start, end) {
+			return lines.slice(start, end).map(function (line, idx) {
+				var num = String(start + idx + 1);
 
-		function ParseError(message, source, linePosition, columnPosition) {
-			_classCallCheck(this, ParseError);
+				while (num.length < maxNumLength) {
+					num = ' ' + num;
+				}
 
-			var fullMessage = linePosition ? message + '\n' + showCodeFragment(source, linePosition, columnPosition) : message;
-
-			var _this = _possibleConstructorReturn(this, Object.getPrototypeOf(ParseError).call(this, fullMessage));
-
-			_this.rawMessage = message;
-			return _this;
+				return num + ' |' + line;
+			}).join('\n');
 		}
 
-		return ParseError;
-	}(SyntaxError);
+		var lines = input.split(/\r\n?|\n|\f/);
+		var startLine = Math.max(1, line - EXTRA_LINES) - 1;
+		var endLine = Math.min(line + EXTRA_LINES, lines.length + 1);
+		var maxNumLength = Math.max(4, String(endLine).length) + 1;
+		var cutLeft = 0;
 
-	var error = function error(message, source, line, column) {
-		throw new ParseError(message, source, line, column);
+		// column correction according to replaced tab before column
+		column += (TAB_REPLACEMENT.length - 1) * (lines[line - 1].substr(0, column - 1).match(/\t/g) || []).length;
+
+		if (column > MAX_LINE_LENGTH) {
+			cutLeft = column - OFFSET_CORRECTION + 3;
+			column = OFFSET_CORRECTION - 2;
+		}
+
+		for (var i = startLine; i <= endLine; i++) {
+			if (i >= 0 && i < lines.length) {
+				lines[i] = lines[i].replace(/\t/g, TAB_REPLACEMENT);
+				lines[i] = (cutLeft > 0 && lines[i].length > cutLeft ? OVERFLOW_SYMBOLS : '') + lines[i].substr(cutLeft, MAX_LINE_LENGTH - 2) + (lines[i].length > cutLeft + MAX_LINE_LENGTH - 1 ? OVERFLOW_SYMBOLS : '');
+			}
+		}
+
+		return [printLines(startLine, line), new Array(column + maxNumLength + 2).join('-') + '^', printLines(line, endLine)].filter(Boolean).join('\n');
+	}
+
+	var error = function error(message, input, source, line, column) {
+		// use Object.create(), because some VMs prevent setting line/column otherwise
+		// (iOS Safari 10 even throws an exception)
+		var error = Object.create(SyntaxError.prototype);
+		var errorStack = new Error();
+
+		error.name = 'SyntaxError';
+		error.message = line ? message + '\n' + sourceFragment(input, line, column) : message;
+		error.rawMessage = message;
+		error.source = source;
+		error.line = line;
+		error.column = column;
+
+		Object.defineProperty(error, 'stack', {
+			get: function get() {
+				return (errorStack.stack || '').replace(/^(.+\n){1,3}/, String(error) + '\n');
+			}
+		});
+
+		throw error;
 	};
 
 	var parseErrorTypes = {
 		unexpectedEnd: function unexpectedEnd() {
-			return 'Unexpected end of JSON input';
+			return 'Unexpected end of input';
 		},
-		unexpectedToken: function unexpectedToken(token, line, column) {
-			return 'Unexpected token <' + token + '> at ' + line + ':' + column;
+		unexpectedToken: function unexpectedToken(token) {
+			for (var _len = arguments.length, position = Array(_len > 1 ? _len - 1 : 0), _key = 1; _key < _len; _key++) {
+				position[_key - 1] = arguments[_key];
+			}
+
+			return 'Unexpected token <' + token + '> at ' + position.filter(Boolean).join(':');
 		}
 	};
 
 	var tokenizeErrorTypes = {
-		cannotTokenizeSymbol: function cannotTokenizeSymbol(symbol, line, column) {
-			return 'Cannot tokenize symbol <' + symbol + '> at ' + line + ':' + column;
+		unexpectedSymbol: function unexpectedSymbol(symbol) {
+			for (var _len2 = arguments.length, position = Array(_len2 > 1 ? _len2 - 1 : 0), _key2 = 1; _key2 < _len2; _key2++) {
+				position[_key2 - 1] = arguments[_key2];
+			}
+
+			return 'Unexpected symbol <' + symbol + '> at ' + position.filter(Boolean).join(':');
 		}
 	};
 
@@ -245,9 +260,9 @@
 	function parseKeyword(input, index, line, column) {
 		for (var name in keywordTokensMap) {
 			if (keywordTokensMap.hasOwnProperty(name) && input.substr(index, name.length) === name) {
-				var _keywordTokensMap$nam = keywordTokensMap[name];
-				var type = _keywordTokensMap$nam.type;
-				var value = _keywordTokensMap$nam.value;
+				var _keywordTokensMap$nam = keywordTokensMap[name],
+				    type = _keywordTokensMap$nam.type,
+				    value = _keywordTokensMap$nam.value;
 
 
 				return {
@@ -490,7 +505,7 @@
 				line = matched.line;
 				column = matched.column;
 			} else {
-				error(tokenizeErrorTypes.cannotTokenizeSymbol(input.charAt(index), line, column), input, line, column);
+				error(tokenizeErrorTypes.unexpectedSymbol(input.charAt(index), settings.source, line, column), input, settings.source, line, column);
 			}
 		}
 
@@ -523,6 +538,12 @@
 		verbose: true,
 		source: null
 	};
+
+	function errorEof(input, tokenList, settings) {
+		var loc = tokenList.length > 0 ? tokenList[tokenList.length - 1].loc.end : { line: 1, column: 1 };
+
+		error(parseErrorTypes.unexpectedEnd(), input, settings.source, loc.line, loc.column);
+	}
 
 	function parseObject(input, tokenList, index, settings) {
 		// object: LEFT_BRACE (property (COMMA property)*)? RIGHT_BRACE
@@ -582,7 +603,7 @@
 							state = objectStates.COMMA;
 							index++;
 						} else {
-							error(parseErrorTypes.unexpectedToken(input.substring(token.loc.start.offset, token.loc.end.offset), token.loc.start.line, token.loc.start.column), input, token.loc.start.line, token.loc.start.column);
+							error(parseErrorTypes.unexpectedToken(input.substring(token.loc.start.offset, token.loc.end.offset), settings.source, token.loc.start.line, token.loc.start.column), input, settings.source, token.loc.start.line, token.loc.start.column);
 						}
 						break;
 					}
@@ -595,14 +616,14 @@
 							object.children.push(_property.value);
 							state = objectStates.PROPERTY;
 						} else {
-							error(parseErrorTypes.unexpectedToken(input.substring(token.loc.start.offset, token.loc.end.offset), token.loc.start.line, token.loc.start.column), input, token.loc.start.line, token.loc.start.column);
+							error(parseErrorTypes.unexpectedToken(input.substring(token.loc.start.offset, token.loc.end.offset), settings.source, token.loc.start.line, token.loc.start.column), input, settings.source, token.loc.start.line, token.loc.start.column);
 						}
 						break;
 					}
 			}
 		}
 
-		error(parseErrorTypes.unexpectedEnd());
+		errorEof(input, tokenList, settings);
 	}
 
 	function parseProperty(input, tokenList, index, settings) {
@@ -645,7 +666,7 @@
 							state = propertyStates.COLON;
 							index++;
 						} else {
-							error(parseErrorTypes.unexpectedToken(input.substring(token.loc.start.offset, token.loc.end.offset), token.loc.start.line, token.loc.start.column), input, token.loc.start.line, token.loc.start.column);
+							error(parseErrorTypes.unexpectedToken(input.substring(token.loc.start.offset, token.loc.end.offset), settings.source, token.loc.start.line, token.loc.start.column), input, settings.source, token.loc.start.line, token.loc.start.column);
 						}
 						break;
 					}
@@ -727,7 +748,7 @@
 							state = arrayStates.COMMA;
 							index++;
 						} else {
-							error(parseErrorTypes.unexpectedToken(input.substring(token.loc.start.offset, token.loc.end.offset), token.loc.start.line, token.loc.start.column), input, token.loc.start.line, token.loc.start.column);
+							error(parseErrorTypes.unexpectedToken(input.substring(token.loc.start.offset, token.loc.end.offset), settings.source, token.loc.start.line, token.loc.start.column), input, settings.source, token.loc.start.line, token.loc.start.column);
 						}
 						break;
 					}
@@ -743,7 +764,7 @@
 			}
 		}
 
-		error(parseErrorTypes.unexpectedEnd());
+		errorEof(input, tokenList, settings);
 	}
 
 	function parseLiteral(input, tokenList, index, settings) {
@@ -779,7 +800,7 @@
 		if (value) {
 			return value;
 		} else {
-			error(parseErrorTypes.unexpectedToken(input.substring(token.loc.start.offset, token.loc.end.offset), token.loc.start.line, token.loc.start.column), input, token.loc.start.line, token.loc.start.column);
+			error(parseErrorTypes.unexpectedToken(input.substring(token.loc.start.offset, token.loc.end.offset), settings.source, token.loc.start.line, token.loc.start.column), input, settings.source, token.loc.start.line, token.loc.start.column);
 		}
 	}
 
@@ -788,7 +809,7 @@
 		var tokenList = tokenize(input, settings);
 
 		if (tokenList.length === 0) {
-			error(parseErrorTypes.unexpectedEnd());
+			errorEof(input, tokenList, settings);
 		}
 
 		var value = parseValue(input, tokenList, 0, settings);
@@ -797,7 +818,7 @@
 			return value.value;
 		} else {
 			var token = tokenList[value.index];
-			error(parseErrorTypes.unexpectedToken(input.substring(token.loc.start.offset, token.loc.end.offset), token.loc.start.line, token.loc.start.column), input, token.loc.start.line, token.loc.start.column);
+			error(parseErrorTypes.unexpectedToken(input.substring(token.loc.start.offset, token.loc.end.offset), settings.source, token.loc.start.line, token.loc.start.column), input, settings.source, token.loc.start.line, token.loc.start.column);
 		}
 	};
 
