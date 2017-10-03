@@ -1,6 +1,5 @@
 var assert = require('assert');
 var parse = require('../dist/parse.js');
-var json = ``;
 
 describe('Error messages', function() {
     it('unexpected symbol', function() {
