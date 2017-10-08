@@ -1,8 +1,8 @@
 export default {
 	unexpectedEnd: () => (
-		'Unexpected end of JSON input'
+		'Unexpected end of input'
 	),
-	unexpectedToken: (token, line, column) => (
-		`Unexpected token <${token}> at ${line}:${column}`
+	unexpectedToken: (token, ...position) => (
+		`Unexpected token <${token}> at ${position.filter(Boolean).join(':')}`
 	)
 };
