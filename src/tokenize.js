@@ -377,8 +377,9 @@ export function tokenize(input, settings) {
 
 		} else {
 			error(
-				tokenizeErrorTypes.cannotTokenizeSymbol(input.charAt(index), line, column),
+				tokenizeErrorTypes.unexpectedSymbol(input.charAt(index), settings.source, line, column),
 				input,
+				settings.source,
 				line,
 				column
 			);
