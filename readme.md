@@ -26,12 +26,12 @@ parse('{"a": 1}', settings);
 Output
 ```js
 {
-  type: 'object',
+  type: 'Object',
   children: [
     {
-      type: 'property',
+      type: 'Property',
       key: {
-        type: 'identifier',
+        type: 'Identifier',
         value: 'a',
         loc: {
           start: { line: 1, column: 2, offset: 1 },
@@ -40,7 +40,7 @@ Output
         }
       },
       value: {
-        type: 'literal',
+        type: 'Literal',
         value: 1,
         rawValue: '1',
         loc: {
@@ -66,47 +66,47 @@ Output
 
 ## Node types
 
-object:
+Object:
 ```js
 {
-  type: 'object',
-  children: <property[]>,
+  type: 'Object',
+  children: <Property[]>,
   loc: Object | null
 }
 ```
 
-property:
+Property:
 ```js
 {
-  type: 'property',
-  key: <identifier>,
+  type: 'Property',
+  key: <Identifier>,
   value: any,
   loc: Object | null
 }
 ```
 
-identifier:
+Identifier:
 ```js
 {
-  type: 'identifier',
+  type: 'Identifier',
   value: String,
   loc: Object | null
 }
 ```
 
-array:
+Array:
 ```js
 {
-  type: 'array',
+  type: 'Array',
   children: <any[]>,
   loc: Object | null
 }
 ```
 
-literal:
+Literal:
 ```js
 {
-  type: 'literal',
+  type: 'Literal',
   value: String | Number | Boolean | null,
   rawValue: String,
   loc: Object | null

@@ -15,8 +15,8 @@ function location(startLine, startColumn, startOffset, endLine, endColumn, endOf
 }
 
 function createObjectKey(value, location) {
-	var node = {
-		type: 'identifier',
+	let node = {
+		type: 'Identifier',
 		value: value
 	};
 
@@ -28,8 +28,8 @@ function createObjectKey(value, location) {
 }
 
 function createObjectProperty(key, value, location) {
-	var node = {
-		type: 'property',
+	let node = {
+		type: 'Property',
 		key: key,
 		value: value
 	};
@@ -42,8 +42,8 @@ function createObjectProperty(key, value, location) {
 }
 
 function createObject(properties, location) {
-	var node = {
-		type: 'object',
+	let node = {
+		type: 'Object',
 		children: properties
 	};
 
@@ -55,8 +55,8 @@ function createObject(properties, location) {
 }
 
 function createArray(items, location) {
-	var node = {
-		type: 'array',
+	let node = {
+		type: 'Array',
 		children: items
 	};
 
@@ -68,8 +68,8 @@ function createArray(items, location) {
 }
 
 function createLiteral(value, rawValue, location) {
-	var node = {
-		type: 'literal',
+	let node = {
+		type: 'Literal',
 		value: value,
 		rawValue: rawValue
 	};

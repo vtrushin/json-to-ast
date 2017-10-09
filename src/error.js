@@ -1,6 +1,4 @@
-const FRAGMENT_MAX_LENGTH = 20;
 const OVERFLOW_SYMBOLS = '\u2026'; // …
-
 const EXTRA_LINES = 2;
 const MAX_LINE_LENGTH = 100;
 const OFFSET_CORRECTION = 60;

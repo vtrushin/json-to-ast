@@ -37,7 +37,7 @@ const defaultSettings = {
 };
 
 function errorEof(input, tokenList, settings) {
-	var loc = tokenList.length > 0
+	const loc = tokenList.length > 0
 		? tokenList[tokenList.length - 1].loc.end
 		: { line: 1, column: 1 };
 
@@ -54,7 +54,7 @@ function parseObject(input, tokenList, index, settings) {
 	// object: LEFT_BRACE (property (COMMA property)*)? RIGHT_BRACE
 	let startToken;
 	let object = {
-		type: 'object',
+		type: 'Object',
 		children: []
 	};
 	let state = objectStates._START_;
@@ -169,7 +169,7 @@ function parseProperty(input, tokenList, index, settings) {
 	// property: STRING COLON value
 	let startToken;
 	let property = {
-		type: 'property',
+		type: 'Property',
 		key: null,
 		value: null
 	};
@@ -182,7 +182,7 @@ function parseProperty(input, tokenList, index, settings) {
 			case propertyStates._START_: {
 				if (token.type === tokenTypes.STRING) {
 					const key = {
-						type: 'identifier',
+						type: 'Identifier',
 						value: token.value
 					};
 					if (settings.verbose) {
@@ -247,7 +247,7 @@ function parseArray(input, tokenList, index, settings) {
 	// array: LEFT_BRACKET (value (COMMA value)*)? RIGHT_BRACKET
 	let startToken;
 	let array = {
-		type: 'array',
+		type: 'Array',
 		children: []
 	};
 	let state = arrayStates._START_;
@@ -353,7 +353,7 @@ function parseLiteral(input, tokenList, index, settings) {
 
 	if (isLiteral) {
 		const literal = {
-			type: 'literal',
+			type: 'Literal',
 			value: token.value,
 			rawValue: input.substring(token.loc.start.offset, token.loc.end.offset)
 		};
