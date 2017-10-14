@@ -14,13 +14,15 @@
   ],
   "license": "MIT",
   "keywords": [
-    "json",
+    "json-parser",
     "parser",
-    "ast"
+    "ast",
+    "json",
+    "tree"
   ],
-  "main": "dist/parse.js",
+  "main": "build.js",
   "files": [
-    "dist",
+    "build.js",
     "LICENSE",
     "readme.md"
   ],
