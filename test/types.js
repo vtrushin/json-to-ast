@@ -15,7 +15,7 @@ function location(startLine, startColumn, startOffset, endLine, endColumn, endOf
 }
 
 function createObjectKey(value, location) {
-	let node = {
+	const node = {
 		type: 'Identifier',
 		value: value
 	};
@@ -28,7 +28,7 @@ function createObjectKey(value, location) {
 }
 
 function createObjectProperty(key, value, location) {
-	let node = {
+	const node = {
 		type: 'Property',
 		key: key,
 		value: value
@@ -42,7 +42,7 @@ function createObjectProperty(key, value, location) {
 }
 
 function createObject(properties, location) {
-	let node = {
+	const node = {
 		type: 'Object',
 		children: properties
 	};
@@ -55,7 +55,7 @@ function createObject(properties, location) {
 }
 
 function createArray(items, location) {
-	let node = {
+	const node = {
 		type: 'Array',
 		children: items
 	};
@@ -68,7 +68,7 @@ function createArray(items, location) {
 }
 
 function createLiteral(value, rawValue, location) {
-	let node = {
+	const node = {
 		type: 'Literal',
 		value: value,
 		rawValue: rawValue
