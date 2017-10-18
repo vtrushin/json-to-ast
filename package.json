@@ -35,7 +35,7 @@
     "babel-plugin-external-helpers": "^6.22.0",
     "babel-preset-es2015": "^6.24.1",
     "babel-preset-stage-3": "^6.24.1",
-    "code-error-fragment": "^0.0.214",
+    "code-error-fragment": "0.0.215",
     "coveralls": "^2.11.9",
     "mocha": "^2.4.5",
     "rollup": "^0.50.0",
