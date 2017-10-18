@@ -13,10 +13,10 @@
 ## Usage
 
 ```js
-var parse = require('json-to-ast');
+const parse = require('json-to-ast');
 
-var settings = {
-  verbose: true, // Show additional information, like node’s location. Default is <true>
+const settings = {
+  loc: true, // Show location information. Default is <true>
   source: 'data.json' // Adds source information to node’s location. Default is <null>
 };
 
