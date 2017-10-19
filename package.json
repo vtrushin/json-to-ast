@@ -23,9 +23,16 @@
   "main": "build.js",
   "module": "index",
   "jsnext:main": "index",
+  "files": [
+    "build.js",
+    "LICENSE",
+    "readme.md",
+    "changelog.md"
+  ],
   "scripts": {
     "build": "rollup -c",
     "watch": "rollup -c -w",
+    "pretest": "npm run build",
     "test": "mocha",
     "prepublishOnly": "npm run build"
   },
