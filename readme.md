@@ -17,7 +17,7 @@ const parse = require('json-to-ast');
 
 const settings = {
   loc: true, // Appends location information. Default is <true>
-  source: 'data.json' // Adds source information to node’s location. Default is <null>
+  source: 'data.json' // Appends source information to node’s location. Default is <null>
 };
 
 parse('{"a": 1}', settings);
