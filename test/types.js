@@ -17,7 +17,8 @@ function location(startLine, startColumn, startOffset, endLine, endColumn, endOf
 function createObjectKey(value, location) {
 	const node = {
 		type: 'Identifier',
-		value: value
+		value: value,
+		raw: '"' + value + '"'
 	};
 
 	if (location) {
@@ -67,11 +68,11 @@ function createArray(items, location) {
 	return node;
 }
 
-function createLiteral(value, rawValue, location) {
+function createLiteral(value, raw, location) {
 	const node = {
 		type: 'Literal',
 		value: value,
-		rawValue: rawValue
+		raw: raw
 	};
 
 	if (location) {

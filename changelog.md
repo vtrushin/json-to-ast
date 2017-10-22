@@ -1,3 +1,11 @@
+## v2.0.0-alpha1.5
+- Over-escaped identifiers fixing (https://github.com/vtrushin/json-to-ast/issues/17)
+- Changed case for node type names
+- Changed option "verbose" parameter to "loc"
+- Changed "rawValue" to "raw"
+- Added "raw" to "Identifier"
+- Added pretty message output
+
 ## v2.0.0-alpha1.3
 - Fixed issue [Infinite loop in parseObject for empty objects when !verbose](https://github.com/vtrushin/json-to-ast/issues/15)
 

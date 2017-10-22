@@ -128,6 +128,6 @@ var ast = array([
 module.exports = {
 	ast: ast,
 	options: {
-		verbose: false
+		loc: false
 	}
 };

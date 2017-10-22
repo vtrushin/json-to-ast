@@ -24,7 +24,7 @@ var a = object([prop(key('a'/*, location(2, 3, 4, 2, 6, 7)*/), b)]/*, location(1
 module.exports = {
 	ast: a,
 	options: {
-		verbose: false
+		loc: false
 	}
 };
 

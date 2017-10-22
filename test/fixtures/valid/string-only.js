@@ -5,6 +5,6 @@ var string = types.createString;
 module.exports = {
 	ast: string('Some text', location(1, 1, 0, 1, 12, 11)),
 	options: {
-		verbose: true
+		loc: true
 	}
 };

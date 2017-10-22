@@ -16,7 +16,7 @@
 const parse = require('json-to-ast');
 
 const settings = {
-  loc: true, // Show location information. Default is <true>
+  loc: true, // Appends location information. Default is <true>
   source: 'data.json' // Adds source information to node’s location. Default is <null>
 };
 
@@ -33,6 +33,7 @@ Output
       key: {
         type: 'Identifier',
         value: 'a',
+        raw: '"a"',
         loc: {
           start: { line: 1, column: 2, offset: 1 },
           end: { line: 1, column: 5, offset: 4 },
@@ -42,7 +43,7 @@ Output
       value: {
         type: 'Literal',
         value: 1,
-        rawValue: '1',
+        raw: '1',
         loc: {
           start: { line: 1, column: 7, offset: 6 },
           end: { line: 1, column: 8, offset: 7 },
@@ -90,6 +91,7 @@ Identifier:
 {
   type: 'Identifier',
   value: String,
+  raw: String,
   loc: Object | null
 }
 ```
@@ -108,7 +110,7 @@ Literal:
 {
   type: 'Literal',
   value: String | Number | Boolean | null,
-  rawValue: String,
+  raw: String,
   loc: Object | null
 }
 ```

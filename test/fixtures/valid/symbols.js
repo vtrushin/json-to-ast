@@ -26,6 +26,6 @@ var ast = object([
 module.exports = {
 	ast: ast,
 	options: {
-		verbose: false
+		loc: false
 	}
 };
