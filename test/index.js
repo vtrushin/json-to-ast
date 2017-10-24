@@ -3,16 +3,6 @@ var path = require('path');
 var assert = require('assert');
 var parse = require('../build');
 
-function readFile(file) {
-	var src = fs.readFileSync(file, 'utf8');
-	// normalize line endings
-	src = src.replace(/\r\n/, '\n');
-	// remove trailing newline
-	src = src.replace(/\n$/, '');
-
-	return src;
-}
-
 function getFixtures(dirname, callback) {
 	var folderPath = path.join(__dirname, dirname);
 	var folder = fs.readdirSync(folderPath);
@@ -25,7 +15,7 @@ function getFixtures(dirname, callback) {
 		});
 
 	fixtures.forEach(function(fixture) {
-		var inputFile = readFile(path.join(folderPath, fixture + '.json'));
+		var inputFile = fs.readFileSync(path.join(folderPath, fixture + '.json'), 'utf8');
 		var expectedFile;
 		try {
 			expectedFile = require(path.join(folderPath, fixture + '.js'));
@@ -44,7 +34,7 @@ describe('Right test fixtures', function() {
 		it(fixtureName, function() {
 			if (expectedFile) {
 				var parsedFile = parse(inputFile, expectedFile.options);
-				assert.deepEqual(parsedFile, expectedFile.ast, 'asts are not equal');
+				assert.deepEqual(expectedFile.ast, parsedFile, 'asts are not equal');
 			} else {
 				/*try {
 					parse(inputFile);

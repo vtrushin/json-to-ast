@@ -1,25 +1,24 @@
 var types = require('../../types');
 var object = types.createObject;
-var key = types.createObjectKey;
-var prop = types.createObjectProperty;
+var id = types.createIdentifier;
+var prop = types.createProperty;
 var array = types.createArray;
-var string = types.createString;
-var number = types.createNumber;
+var literal = types.createLiteral;
 
 var ast = object([
-	prop(key('a<'), number('2')),
-	prop(key('b)'), object([
-		prop(key('c('), array([
-			string('3!'),
-			string('4:'),
-			string('5;'),
-			string('6\'')
+	prop(id('a<', '"a<"'), literal(2, '2')),
+	prop(id('b)', '"b)"'), object([
+		prop(id('c(', '"c("'), array([
+			literal('3!', '"3!"'),
+			literal('4:', '"4:"'),
+			literal('5;', '"5;"'),
+			literal('6\'', '"6\'"')
 		])),
-		prop(key('d&'), object([
-			prop(key('e!'), string('~_~'))
+		prop(id('d&', '"d&"'), object([
+			prop(id('e!', '"e!"'), literal('~_~', '"~_~"'))
 		])),
-		prop(key(':e'), string('|')),
-		prop(key(' f '), string('*±*∆'))
+		prop(id(':e', '":e"'), literal('|', '"|"')),
+		prop(id(' f ', '" f "'), literal('*±*∆', '"*±*∆"'))
 	]))
 ]);
 
