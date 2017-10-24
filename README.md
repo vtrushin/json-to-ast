@@ -11,6 +11,8 @@
 [coverage-icon]:      https://coveralls.io/repos/github/vtrushin/json-to-ast/badge.svg?branch=master
 [coverage-url]:       https://coveralls.io/github/vtrushin/json-to-ast?branch=master
 
+[astexplorer-url]:   https://astexplorer.net/#/gist/6e328cf76a27ca85e552c9cb583cdd74/1077c8842337972509a29bc9063d17bf90a1a492
+
 # JSON AST parser
 
 [![NPM][npm-icon]][npm-url]
@@ -132,7 +134,7 @@ Literal:
 ```
 
 ## AST explorer
-[Try it online](https://astexplorer.net/#/gist/6e328cf76a27ca85e552c9cb583cdd74/1077c8842337972509a29bc9063d17bf90a1a492) on [astexplorer.net](https://astexplorer.net/)
+[Try it online][astexplorer-url] on [astexplorer.net](https://astexplorer.net/)
 
 ## License
 MIT
