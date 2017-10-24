@@ -98,7 +98,7 @@ Property:
 {
   type: 'Property',
   key: <Identifier>,
-  value: any,
+  value: <(Object | Array | Literal)[]>,
   loc?: Object
 }
 ```
