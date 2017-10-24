@@ -1,5 +1,3 @@
-# JSON AST parser
-
 [npm-icon]:           https://img.shields.io/npm/v/json-to-ast.svg
 [npm-downloads-icon]: https://img.shields.io/npm/dm/json-to-ast.svg
 [npm-url]:            https://www.npmjs.com/package/json-to-ast
@@ -12,6 +10,8 @@
 
 [coverage-icon]:      https://coveralls.io/repos/github/vtrushin/json-to-ast/badge.svg?branch=master
 [coverage-url]:       https://coveralls.io/github/vtrushin/json-to-ast?branch=master
+
+# JSON AST parser
 
 [![NPM][npm-icon]][npm-url]
 [![NPM downloads][npm-downloads-icon]][npm-url]
@@ -29,8 +29,11 @@
 const parse = require('json-to-ast');
 
 const settings = {
-  loc: true, // Appends location information. Default is <true>
-  source: 'data.json' // Appends source information to node’s location. Default is <null>
+  // Appends location information. Default is <true>
+  loc: true,
+  
+  // Appends source information to node’s location. Default is <null>
+  source: 'data.json' 
 };
 
 parse('{"a": 1}', settings);
