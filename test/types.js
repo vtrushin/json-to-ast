@@ -14,11 +14,11 @@ function location(startLine, startColumn, startOffset, endLine, endColumn, endOf
 	}
 }
 
-function createObjectKey(value, location) {
+function createIdentifier(value, raw, location) {
 	const node = {
 		type: 'Identifier',
 		value: value,
-		raw: '"' + value + '"'
+		raw: raw
 	};
 
 	if (location) {
@@ -28,7 +28,7 @@ function createObjectKey(value, location) {
 	return node;
 }
 
-function createObjectProperty(key, value, location) {
+function createProperty(key, value, location) {
 	const node = {
 		type: 'Property',
 		key: key,
@@ -82,36 +82,11 @@ function createLiteral(value, raw, location) {
 	return node;
 }
 
-function createString(value, location) {
-	return createLiteral(value, '"' + value + '"', location);
-}
-
-function createNumber(value, location) {
-	return createLiteral(value, String(value), location);
-}
-
-function createTrue(location) {
-	return createLiteral(true, 'true', location);
-}
-
-function createFalse(location) {
-	return createLiteral(false, 'false', location);
-}
-
-function createNull(location) {
-	return createLiteral(null, 'null', location);
-}
-
 module.exports = {
 	location: location,
-	createObjectKey: createObjectKey,
-	createObjectProperty: createObjectProperty,
+	createIdentifier: createIdentifier,
+	createProperty: createProperty,
 	createObject: createObject,
 	createLiteral: createLiteral,
-	createArray: createArray,
-	createString: createString,
-	createNumber: createNumber,
-	createTrue: createTrue,
-	createFalse: createFalse,
-	createNull: createNull
+	createArray: createArray
 };

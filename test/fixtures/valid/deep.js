@@ -1,25 +1,24 @@
 var types = require('../../types');
-var key = types.createObjectKey;
-var location = types.location;
+var id = types.createIdentifier;
 var object = types.createObject;
-var prop = types.createObjectProperty;
+var prop = types.createProperty;
 var array = types.createArray;
-var string = types.createString;
+var literal = types.createLiteral;
 
-var n = array([string('n')]/*, location()*/);
-var m = array([string('m'), n]/*, location()*/);
-var l = array([string('l'), m]/*, location()*/);
-var k = array([string('k'), l]/*, location()*/);
-var j = array([string('j'), k]/*, location()*/);
-var i = array([string('i'), j]/*, location()*/);
-var h = array([string('h'), i]/*, location()*/);
-var g = object([prop(key('g'), h)]/*, location()*/);
-var f = object([prop(key('f'), g)]/*, location()*/);
-var e = object([prop(key('e'), f)]/*, location()*/);
-var d = object([prop(key('d'), e)]/*, location()*/);
-var c = object([prop(key('c'), d)]/*, location()*/);
-var b = object([prop(key('b'/*, location(3, 5, 15, 3, 8, 18)*/), c)]/*, location()*/);
-var a = object([prop(key('a'/*, location(2, 3, 4, 2, 6, 7)*/), b)]/*, location(1, 1, 0, 29, 2, 516)*/);
+var n = array([literal('n', '"n"')]);
+var m = array([literal('m', '"m"'), n]);
+var l = array([literal('l', '"l"'), m]);
+var k = array([literal('k', '"k"'), l]);
+var j = array([literal('j', '"j"'), k]);
+var i = array([literal('i', '"i"'), j]);
+var h = array([literal('h', '"h"'), i]);
+var g = object([prop(id('g', '"g"'), h)]);
+var f = object([prop(id('f', '"f"'), g)]);
+var e = object([prop(id('e', '"e"'), f)]);
+var d = object([prop(id('d', '"d"'), e)]);
+var c = object([prop(id('c', '"c"'), d)]);
+var b = object([prop(id('b', '"b"'), c)]);
+var a = object([prop(id('a', '"a"'), b)]);
 
 module.exports = {
 	ast: a,
