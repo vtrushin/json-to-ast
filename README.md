@@ -13,10 +13,10 @@
 [coverage-icon]:      https://coveralls.io/repos/github/vtrushin/json-to-ast/badge.svg?branch=master
 [coverage-url]:       https://coveralls.io/github/vtrushin/json-to-ast?branch=master
 
-[![npm-icon]][npm-url]
-[![npm-downloads-icon]][npm-url]
-[![node-versions-icon]][node-url]
-[![test-icon]][test-url]
+[![NPM][npm-icon]][npm-url]
+[![NPM downloads][npm-downloads-icon]][npm-url]
+[![Requirements][node-versions-icon]][node-url]
+[![Travis-CI][test-icon]][test-url]
 
 ## Install
 ```
