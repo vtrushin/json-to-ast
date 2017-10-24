@@ -117,7 +117,7 @@ Array:
 ```js
 {
   type: 'Array',
-  children: <any[]>,
+  children: <(Object | Array | Literal)[]>,
   loc?: Object
 }
 ```
