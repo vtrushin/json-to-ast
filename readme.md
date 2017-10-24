@@ -1,8 +1,28 @@
 # JSON AST parser
 
-[![NPM version](https://img.shields.io/npm/v/json-to-ast.svg)](https://www.npmjs.com/package/json-to-ast)
-[![NPM Downloads](https://img.shields.io/npm/dm/json-to-ast.svg)](https://www.npmjs.com/package/json-to-ast)
-[![Build Status](https://travis-ci.org/vtrushin/json-to-ast.svg?branch=master)](https://travis-ci.org/vtrushin/json-to-ast)
+[npm-icon]:           https://img.shields.io/npm/v/json-to-ast.svg
+[npm-downloads-icon]: https://img.shields.io/npm/dm/json-to-ast.svg
+[npm-url]:            https://www.npmjs.com/package/json-to-ast
+
+[node-versions-icon]: https://img.shields.io/node/v/json-to-ast.svg
+[node-url]:           https://nodejs.org
+
+[test-icon]:          https://travis-ci.org/vtrushin/json-to-ast.svg?branch=master
+[test-url]:           https://travis-ci.org/vtrushin/json-to-ast
+
+[coverage-icon]:      https://coveralls.io/repos/github/vtrushin/json-to-ast/badge.svg?branch=master
+[coverage-url]:       https://coveralls.io/github/vtrushin/json-to-ast?branch=master
+
+[![npm-icon]][npm-url]
+[![npm-downloads-icon]][npm-url]
+[![node-versions-icon]][node-url]
+[![test-icon]][test-url]
+
+<!-- [![NPM version](https://img.shields.io/npm/v/json-to-ast.svg)](https://www.npmjs.com/package/json-to-ast) -->
+<!-- [![NPM Downloads](https://img.shields.io/npm/dm/json-to-ast.svg)](https://www.npmjs.com/package/json-to-ast) -->
+<!-- [![NPM Downloads](https://img.shields.io/node/v/json-to-ast.svg)](https://www.npmjs.com/package/json-to-ast) -->
+
+<!-- [![Build Status](https://travis-ci.org/vtrushin/json-to-ast.svg?branch=master)](https://travis-ci.org/vtrushin/json-to-ast) -->
 <!-- [![Coverage Status](https://coveralls.io/repos/github/vtrushin/json-to-ast/badge.svg?branch=master)](https://coveralls.io/github/vtrushin/json-to-ast?branch=master) -->
 
 ## Install

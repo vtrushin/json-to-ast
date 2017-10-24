@@ -29,6 +29,9 @@
     "readme.md",
     "changelog.md"
   ],
+  "engines": {
+    "node": ">= 4"
+  },
   "scripts": {
     "build": "rollup -c",
     "watch": "rollup -c -w",
