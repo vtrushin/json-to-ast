@@ -89,7 +89,7 @@ Object:
 {
   type: 'Object',
   children: <Property[]>,
-  loc: Object | null
+  loc?: Object
 }
 ```
 
@@ -99,7 +99,7 @@ Property:
   type: 'Property',
   key: <Identifier>,
   value: any,
-  loc: Object | null
+  loc?: Object
 }
 ```
 
@@ -109,7 +109,7 @@ Identifier:
   type: 'Identifier',
   value: String,
   raw: String,
-  loc: Object | null
+  loc?: Object
 }
 ```
 
@@ -118,7 +118,7 @@ Array:
 {
   type: 'Array',
   children: <any[]>,
-  loc: Object | null
+  loc?: Object
 }
 ```
 
@@ -128,7 +128,7 @@ Literal:
   type: 'Literal',
   value: String | Number | Boolean | null,
   raw: String,
-  loc: Object | null
+  loc?: Object
 }
 ```
 
