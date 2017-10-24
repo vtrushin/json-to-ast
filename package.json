@@ -1,8 +1,8 @@
 {
   "name": "json-to-ast",
   "version": "2.0.0-alpha1.4",
-  "description": "JSON AST parser",
   "author": "Vlad Trushin",
+  "description": "JSON AST parser",
   "homepage": "https://github.com/vtrushin/json-to-ast",
   "repository": "vtrushin/json-to-ast",
   "maintainers": [
@@ -12,7 +12,6 @@
       "github-username": "vtrushin"
     }
   ],
-  "license": "MIT",
   "keywords": [
     "json-parser",
     "parser",
@@ -21,8 +20,6 @@
     "tree"
   ],
   "main": "build.js",
-  "module": "index",
-  "jsnext:main": "index",
   "files": [
     "build.js",
     "LICENSE",
@@ -51,5 +48,6 @@
     "rollup": "^0.50.0",
     "rollup-plugin-babel": "^3.0.2",
     "rollup-plugin-node-resolve": "^3.0.0"
-  }
+  },
+  "license": "MIT"
 }
