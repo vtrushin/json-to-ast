@@ -17,7 +17,7 @@ var ast = object([
 		prop(id('d&', '"d&"'), object([
 			prop(id('e!', '"e!"'), literal('~_~', '"~_~"'))
 		])),
-		prop(id(':e', '":e"'), literal('|', '"|"')),
+		prop(id(':e', '":e"'), literal('𠮷', '"𠮷"')),
 		prop(id(' f ', '" f "'), literal('*±*∆', '"*±*∆"'))
 	]))
 ]);

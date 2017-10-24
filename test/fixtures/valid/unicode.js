@@ -12,7 +12,7 @@ var ast = array([
 	]),
 	literal('', '"\\u007f"'),
 	object([
-		prop(id('􏿿', '"\\uDBFF\\uDFFF"'), literal('', '""'))
+		prop(id('􏿿', '"\\uDBFF\\uDFFF"'), literal('𝄞', '"\\uD834\\uDD1E"'))
 	])
 ]);
 
