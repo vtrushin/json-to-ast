@@ -1,6 +1,6 @@
 {
   "name": "json-to-ast",
-  "version": "2.0.0",
+  "version": "2.0.1",
   "author": "Vlad Trushin",
   "description": "JSON AST parser",
   "homepage": "https://github.com/vtrushin/json-to-ast",
@@ -42,11 +42,12 @@
     "babel-plugin-external-helpers": "^6.22.0",
     "babel-preset-es2015": "^6.24.1",
     "babel-preset-stage-3": "^6.24.1",
-    "code-error-fragment": "0.0.226",
+    "code-error-fragment": "0.0.229",
     "coveralls": "^2.11.9",
     "mocha": "^2.4.5",
     "rollup": "^0.50.0",
     "rollup-plugin-babel": "^3.0.2",
+    "rollup-plugin-commonjs": "^8.2.4",
     "rollup-plugin-node-resolve": "^3.0.0"
   },
   "license": "MIT"
