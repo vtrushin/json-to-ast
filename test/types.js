@@ -14,10 +14,11 @@ function location(startLine, startColumn, startOffset, endLine, endColumn, endOf
 	}
 }
 
-function createObjectKey(value, location) {
-	var node = {
-		type: 'identifier',
-		value: value
+function createIdentifier(value, raw, location) {
+	const node = {
+		type: 'Identifier',
+		value: value,
+		raw: raw
 	};
 
 	if (location) {
@@ -27,9 +28,9 @@ function createObjectKey(value, location) {
 	return node;
 }
 
-function createObjectProperty(key, value, location) {
-	var node = {
-		type: 'property',
+function createProperty(key, value, location) {
+	const node = {
+		type: 'Property',
 		key: key,
 		value: value
 	};
@@ -42,8 +43,8 @@ function createObjectProperty(key, value, location) {
 }
 
 function createObject(properties, location) {
-	var node = {
-		type: 'object',
+	const node = {
+		type: 'Object',
 		children: properties
 	};
 
@@ -55,8 +56,8 @@ function createObject(properties, location) {
 }
 
 function createArray(items, location) {
-	var node = {
-		type: 'array',
+	const node = {
+		type: 'Array',
 		children: items
 	};
 
@@ -67,11 +68,11 @@ function createArray(items, location) {
 	return node;
 }
 
-function createLiteral(value, rawValue, location) {
-	var node = {
-		type: 'literal',
+function createLiteral(value, raw, location) {
+	const node = {
+		type: 'Literal',
 		value: value,
-		rawValue: rawValue
+		raw: raw
 	};
 
 	if (location) {
@@ -81,36 +82,11 @@ function createLiteral(value, rawValue, location) {
 	return node;
 }
 
-function createString(value, location) {
-	return createLiteral(value, '"' + value + '"', location);
-}
-
-function createNumber(value, location) {
-	return createLiteral(value, String(value), location);
-}
-
-function createTrue(location) {
-	return createLiteral(true, 'true', location);
-}
-
-function createFalse(location) {
-	return createLiteral(false, 'false', location);
-}
-
-function createNull(location) {
-	return createLiteral(null, 'null', location);
-}
-
 module.exports = {
 	location: location,
-	createObjectKey: createObjectKey,
-	createObjectProperty: createObjectProperty,
+	createIdentifier: createIdentifier,
+	createProperty: createProperty,
 	createObject: createObject,
 	createLiteral: createLiteral,
-	createArray: createArray,
-	createString: createString,
-	createNumber: createNumber,
-	createTrue: createTrue,
-	createFalse: createFalse,
-	createNull: createNull
+	createArray: createArray
 };

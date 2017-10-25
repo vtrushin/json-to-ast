@@ -1,3 +1,11 @@
+## v2.0.0
+- Over-escaped identifier's value fixing (https://github.com/vtrushin/json-to-ast/issues/17)
+- Changed case for node type names
+- Changed option "verbose" parameter to "loc"
+- Changed "rawValue" to "raw"
+- Added "raw" to "Identifier" node
+- Added pretty message output
+
 ## v2.0.0-alpha1.4
 - Changed error's view
 

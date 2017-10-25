@@ -1,10 +1,10 @@
 var types = require('../../types');
 var location = types.location;
-var number = types.createNumber;
+var object = types.createObject;
 
 module.exports = {
-	ast: number('12345', location(1, 1, 0, 1, 6, 5)),
+	ast: object([], location(1, 1, 0, 1, 3, 2)),
 	options: {
-		verbose: true
+		loc: true
 	}
 };
