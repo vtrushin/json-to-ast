@@ -22,7 +22,8 @@ export default {
 				'stage-3'
 			],
 			plugins: [
-				'external-helpers'
+				'external-helpers',
+				'transform-object-assign'
 			],
 			// fixing temporary rollup's regression, remove when https://github.com/rollup/rollup/issues/1595 gets solved
 			externalHelpersWhitelist: babelHelpersList.filter(helperName => helperName !== 'asyncGenerator'),
