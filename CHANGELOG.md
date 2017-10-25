@@ -6,6 +6,9 @@
 - Added "raw" to "Identifier" node
 - Added pretty message output
 
+## v2.0.0-alpha1.4
+- Changed error's view
+
 ## v2.0.0-alpha1.3
 - Fixed issue [Infinite loop in parseObject for empty objects when !verbose](https://github.com/vtrushin/json-to-ast/issues/15)
 
