@@ -23,8 +23,8 @@
   "files": [
     "build.js",
     "LICENSE",
-    "readme.md",
-    "changelog.md"
+    "README.md",
+    "CHANGELOG.md"
   ],
   "engines": {
     "node": ">= 4"
