@@ -88,7 +88,7 @@ Object:
 ```js
 {
   type: 'Object',
-  children: <Property[]>,
+  children: <Property>[],
   loc?: Object
 }
 ```
@@ -98,7 +98,7 @@ Property:
 {
   type: 'Property',
   key: <Identifier>,
-  value: <Object | Array | Literal>,
+  value: Object | Array | <Literal>,
   loc?: Object
 }
 ```
@@ -107,8 +107,8 @@ Identifier:
 ```js
 {
   type: 'Identifier',
-  value: String,
-  raw: String,
+  value: string,
+  raw: string,
   loc?: Object
 }
 ```
@@ -117,7 +117,7 @@ Array:
 ```js
 {
   type: 'Array',
-  children: <(Object | Array | Literal)[]>,
+  children: (Object | Array | <Literal>)[],
   loc?: Object
 }
 ```
@@ -126,8 +126,8 @@ Literal:
 ```js
 {
   type: 'Literal',
-  value: String | Number | Boolean | null,
-  raw: String,
+  value: string | number | boolean | null,
+  raw: string,
   loc?: Object
 }
 ```
