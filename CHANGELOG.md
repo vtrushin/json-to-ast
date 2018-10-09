@@ -1,3 +1,6 @@
+## v2.0.5
+- Increased minimal node version to 6
+
 ## v2.0.0
 - Over-escaped identifier's value fixing (https://github.com/vtrushin/json-to-ast/issues/17)
 - Changed case for node type names
