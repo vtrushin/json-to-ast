@@ -5,10 +5,10 @@ import { list as babelHelpersList } from 'babel-helpers';
 
 export default {
 	input: 'index.js',
-	name: 'jsonToAst',
 	output: {
 		file: 'build.js',
-		format: 'umd'
+		format: 'umd',
+		name: 'jsonToAst',
 	},
 	plugins: [
 		commonjs(),
