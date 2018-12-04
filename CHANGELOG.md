@@ -1,5 +1,8 @@
+## v2.0.6
+- Decreased minimal NodeJS version to 4 (minimal NodeJS version 6 will be in the next major version of "json-to-ast")
+
 ## v2.0.5
-- Increased minimal node version to 6
+- Increased minimal NodeJS version to 6
 
 ## v2.0.0
 - Over-escaped identifier's value fixing (https://github.com/vtrushin/json-to-ast/issues/17)
