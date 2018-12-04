@@ -1,4 +1,4 @@
-## v2.0.6
+## v2.0.7
 - Decreased minimal NodeJS version to 4 (minimal NodeJS version 6 will be in the next major version of "json-to-ast")
 
 ## v2.0.5
