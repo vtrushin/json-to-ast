@@ -39,7 +39,6 @@
   "devDependencies": {
     "@babel/core": "^7.2.0",
     "@babel/preset-env": "^7.2.0",
-    "code-error-fragment": "0.0.230",
     "coveralls": "^3.0.2",
     "mocha": "^5.2.0",
     "rollup": "^0.67.4",
@@ -47,5 +46,9 @@
     "rollup-plugin-commonjs": "^9.2.0",
     "rollup-plugin-node-resolve": "^3.4.0"
   },
-  "license": "MIT"
+  "license": "MIT",
+  "dependencies": {
+    "code-error-fragment": "0.0.230",
+    "grapheme-splitter": "^1.0.4"
+  }
 }
