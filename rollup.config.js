@@ -17,7 +17,7 @@ export default {
 		babel()
 	],
 	watch: {
-		include: 'lib/*.js',
+		include: 'lib/**/*.js',
 		exclude: 'node_modules/**'
 	}
 }
