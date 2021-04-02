@@ -51,11 +51,13 @@ describe('Wrong test fixtures', function() {
 	getFixtures('fixtures/invalid', function(fixtureName, inputFile, expectedFile) {
 		it(fixtureName, function() {
 			if (expectedFile) {
+				let error;
 				try {
 					parse(inputFile, expectedFile.options);
 				} catch (e) {
-					assert.deepEqual(expectedFile.error.message, e.rawMessage, 'asts are not equal');
+					error = e
 				}
+				assert.deepEqual(expectedFile.error.message, error.rawMessage, 'asts are not equal');
 			} else {
 				/*try {
 					parse(inputFile);
