@@ -45,7 +45,7 @@
     "babel-preset-stage-3": "^6.24.1",
     "coveralls": "^3.0.2",
     "mocha": "5.2.0",
-    "rollup": "^0.50.0",
+    "rollup": "^2.79.2",
     "rollup-plugin-babel": "^3.0.2",
     "rollup-plugin-commonjs": "^8.2.4",
     "rollup-plugin-node-resolve": "^3.0.0"
